@@ -123,9 +123,9 @@ const AiChatDemo: React.FC<{ onNavigateToSettings?: () => void }> = ({ onNavigat
     const checkAiEnabled = async () => {
       setAiCheckLoading(true);
       try {
-        const response = await configurationService.getLlmIntegrationOptions();
-        if (response.isSuccess && response.data) {
-          setAiEnabled(response.data.enabled);
+        const response = await configurationService.checkLlmIntegrationEnabled();
+        if (response.isSuccess && response.data !== undefined) {
+          setAiEnabled(response.data);
         } else {
           setAiEnabled(false);
         }

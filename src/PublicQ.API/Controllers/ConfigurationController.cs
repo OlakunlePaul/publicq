@@ -527,6 +527,20 @@ public class ConfigurationController(
                 "Successfully retrieved configuration.")
             .ToActionResult();
     }
+    
+    /// <summary>
+    /// Checks if LLM integration is enabled without requiring admin authorization, as this information is needed for the front end to determine whether to show LLM-related features.
+    /// </summary>
+    /// <returns>Returns <see cref="LlmIntegrationOptions"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
+    [HttpGet("llm-integration/enabled")]
+    [Authorize(Constants.ContributorsPolicy)]
+    public IActionResult CheckLlmIntegrationEnabled()
+    {
+        return Response<bool, GenericOperationStatuses>
+            .Success(llmOptions.CurrentValue.Enabled, GenericOperationStatuses.Completed,
+                "Successfully retrieved configuration.")
+            .ToActionResult();
+    }
 
     /// <summary>
     /// Sets LLM integration configuration

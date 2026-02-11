@@ -146,5 +146,10 @@ export const configurationService = {
   setMcpApiOptions: async (options: McpApiKeyOptions): Promise<Response<GenericOperationStatuses>> => {
     const response = await axios.post<Response<GenericOperationStatuses>>('/configuration/llm-integration/mcp-api-key', options);
     return response.data;
+  },
+
+  checkLlmIntegrationEnabled: async (): Promise<ResponseWithData<boolean, GenericOperationStatuses>> => {
+    const response = await axios.get<ResponseWithData<boolean, GenericOperationStatuses>>('/configuration/llm-integration/enabled');
+    return response.data;
   }
 };
