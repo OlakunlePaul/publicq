@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PublicQ.Infrastructure.Persistence;
 
 #nullable disable
@@ -11,31 +12,35 @@ using PublicQ.Infrastructure.Persistence;
 namespace PublicQ.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251117014829_InitialCreate")]
+    [Migration("20260311210720_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
@@ -50,17 +55,19 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -73,17 +80,19 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -95,17 +104,17 @@ namespace PublicQ.Infrastructure.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -117,10 +126,10 @@ namespace PublicQ.Infrastructure.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("RoleId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -132,16 +141,16 @@ namespace PublicQ.Infrastructure.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Value")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
@@ -151,10 +160,10 @@ namespace PublicQ.Infrastructure.Migrations
             modelBuilder.Entity("PossibleAnswerEntityStaticFileEntity", b =>
                 {
                     b.Property<Guid>("AssociatedStaticFilesId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("PossibleAnswersId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("AssociatedStaticFilesId", "PossibleAnswersId");
 
@@ -166,65 +175,65 @@ namespace PublicQ.Infrastructure.Migrations
             modelBuilder.Entity("PublicQ.Infrastructure.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("AccessFailedCount")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
@@ -242,14 +251,16 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("DataJson")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -259,10 +270,10 @@ namespace PublicQ.Infrastructure.Migrations
             modelBuilder.Entity("PublicQ.Infrastructure.Entities.SystemSettings", b =>
                 {
                     b.Property<string>("Name")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Value")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Name");
 
@@ -510,57 +521,57 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedByUser")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(5000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(5000)");
 
                     b.Property<DateTime>("EndDateUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("GroupId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsPublished")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("NormalizedTitle")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<bool>("RandomizeAnswers")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("RandomizeQuestions")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("ShowResultsImmediately")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("StartDateUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UpdatedByUser")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
@@ -576,18 +587,18 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("AssignmentId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("ExamTakerDisplayName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("ExamTakerId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -600,38 +611,38 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("AnswerRandomizationSeed")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("AssessmentModuleVersionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("CompletedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("DurationInMinutes")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("ExamTakerAssignmentId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("ExamTakerId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<Guid>("GroupMemberId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("HasStarted")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid?>("QuestionRandomizationSeed")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("StartedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -648,29 +659,29 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool?>("IsCorrect")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("ModuleProgressId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("QuestionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("QuestionType")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("RespondedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
-                    b.PrimitiveCollection<string>("SelectedAnswerIds")
+                    b.PrimitiveCollection<Guid[]>("SelectedAnswerIds")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid[]");
 
                     b.Property<string>("TextResponse")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -685,48 +696,48 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasMaxLength(5000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(5000)");
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedByUser")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime?>("EndDateUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsDismissible")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("ShowToAuthenticatedUsersOnly")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("StartDateUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UpdatedByUser")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
 
@@ -738,25 +749,25 @@ namespace PublicQ.Infrastructure.Migrations
             modelBuilder.Entity("PublicQ.Infrastructure.Persistence.Entities.ExamTakerEntity", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .HasMaxLength(254)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(254)");
 
                     b.Property<string>("FullName")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(254)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(254)");
 
                     b.HasKey("Id");
 
@@ -770,44 +781,44 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedByUser")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(5000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(5000)");
 
                     b.Property<bool>("IsMemberOrderLocked")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("NormalizedTitle")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UpdatedByUserId")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<bool>("WaitModuleCompletion")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
@@ -821,16 +832,16 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("AssessmentModuleId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("GroupId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("OrderNumber")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -846,38 +857,40 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Category")
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("Exception")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("Level")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Message")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<string>("RequestId")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UserEmail")
                         .HasMaxLength(450)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(450)");
 
                     b.Property<string>("UserId")
                         .HasMaxLength(450)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(450)");
 
                     b.HasKey("Id");
 
@@ -892,22 +905,22 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Body")
                         .IsRequired()
                         .HasMaxLength(10000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(10000)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasMaxLength(300)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(300)");
 
                     b.HasKey("Id");
 
@@ -917,28 +930,28 @@ namespace PublicQ.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("f2a1a4c8-8e6a-4f1c-b9f8-9f2c4c622dd9"),
-                            Body = "<!DOCTYPE html>\n<html lang=\"en\" style=\"margin:0;padding:0;\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n    <meta name=\"x-apple-disable-message-reformatting\" />\n    <meta name=\"format-detection\" content=\"telephone=no,address=no,email=no,date=no,url=no\" />\n    <meta name=\"color-scheme\" content=\"light dark\" />\n    <meta name=\"supported-color-schemes\" content=\"light dark\" />\n    <title>Welcome to PublicQ</title>\n    <style>\n      body {\n        margin:0;\n        padding:0;\n        background:linear-gradient(135deg,#e6f0ff,#f9fbff);\n        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;\n        color:#1e2330;\n      }\n      .container {\n        max-width:800px;\n        margin:0 auto;\n        padding:32px 20px;\n      }\n      .card {\n        background:rgba(255,255,255,0.85);\n        border-radius:16px;\n        padding:32px;\n        box-shadow:0 8px 20px rgba(0,0,0,0.1);\n      }\n      h1 {\n        margin:0 0 20px 0;\n        font-size:24px;\n        font-weight:600;\n        color:#0b5fff;\n        text-align:center;\n      }\n      p {\n        margin:0 0 16px 0;\n        font-size:16px;\n        line-height:1.6;\n      }\n      .footer {\n        margin-top:28px;\n        font-size:12px;\n        color:#6b7280;\n        text-align:center;\n      }\n      @media (max-width:600px) {\n        .card { padding:20px; }\n        h1 { font-size:20px; }\n        p { font-size:15px; }\n      }\n      @media (prefers-color-scheme: dark) {\n        body {\n          background:linear-gradient(135deg,#0f1115,#1b1e24);\n          color:#e7e7ea;\n        }\n        .card {\n          background:rgba(30,33,40,0.85);\n          border:1px solid #2a2f3a;\n        }\n        h1 { color:#7cb8ff; }\n        .footer { color:#a7acb8; }\n      }\n    </style>\n  </head>\n  <body>\n    <div class=\"container\">\n      <div class=\"card\">\n        <h1>Welcome to PublicQ</h1>\n        <p>Hello <strong>{{User}}</strong>,</p>\n        <p>\n          Thank you for joining <span style=\"color:#0b5fff;font-weight:600;\">PublicQ</span>!  \n          We are excited to have you on board.\n        </p>\n        <p>Best regards,<br/>PublicQ Team</p>\n        <div class=\"footer\">\n          If you did not create a PublicQ account, you can safely ignore this message.\n        </div>\n      </div>\n    </div>\n  </body>\n</html>",
+                            Body = "<!DOCTYPE html>\r\n<html lang=\"en\" style=\"margin:0;padding:0;\">\r\n  <head>\r\n    <meta charset=\"utf-8\" />\r\n    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\r\n    <meta name=\"x-apple-disable-message-reformatting\" />\r\n    <meta name=\"format-detection\" content=\"telephone=no,address=no,email=no,date=no,url=no\" />\r\n    <meta name=\"color-scheme\" content=\"light dark\" />\r\n    <meta name=\"supported-color-schemes\" content=\"light dark\" />\r\n    <title>Welcome to PublicQ</title>\r\n    <style>\r\n      body {\r\n        margin:0;\r\n        padding:0;\r\n        background:linear-gradient(135deg,#e6f0ff,#f9fbff);\r\n        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;\r\n        color:#1e2330;\r\n      }\r\n      .container {\r\n        max-width:800px;\r\n        margin:0 auto;\r\n        padding:32px 20px;\r\n      }\r\n      .card {\r\n        background:rgba(255,255,255,0.85);\r\n        border-radius:16px;\r\n        padding:32px;\r\n        box-shadow:0 8px 20px rgba(0,0,0,0.1);\r\n      }\r\n      h1 {\r\n        margin:0 0 20px 0;\r\n        font-size:24px;\r\n        font-weight:600;\r\n        color:#0b5fff;\r\n        text-align:center;\r\n      }\r\n      p {\r\n        margin:0 0 16px 0;\r\n        font-size:16px;\r\n        line-height:1.6;\r\n      }\r\n      .footer {\r\n        margin-top:28px;\r\n        font-size:12px;\r\n        color:#6b7280;\r\n        text-align:center;\r\n      }\r\n      @media (max-width:600px) {\r\n        .card { padding:20px; }\r\n        h1 { font-size:20px; }\r\n        p { font-size:15px; }\r\n      }\r\n      @media (prefers-color-scheme: dark) {\r\n        body {\r\n          background:linear-gradient(135deg,#0f1115,#1b1e24);\r\n          color:#e7e7ea;\r\n        }\r\n        .card {\r\n          background:rgba(30,33,40,0.85);\r\n          border:1px solid #2a2f3a;\r\n        }\r\n        h1 { color:#7cb8ff; }\r\n        .footer { color:#a7acb8; }\r\n      }\r\n    </style>\r\n  </head>\r\n  <body>\r\n    <div class=\"container\">\r\n      <div class=\"card\">\r\n        <h1>Welcome to PublicQ</h1>\r\n        <p>Hello <strong>{{User}}</strong>,</p>\r\n        <p>\r\n          Thank you for joining <span style=\"color:#0b5fff;font-weight:600;\">PublicQ</span>!  \r\n          We are excited to have you on board.\r\n        </p>\r\n        <p>Best regards,<br/>PublicQ Team</p>\r\n        <div class=\"footer\">\r\n          If you did not create a PublicQ account, you can safely ignore this message.\r\n        </div>\r\n      </div>\r\n    </div>\r\n  </body>\r\n</html>",
                             Name = "Default Welcome Email",
                             Subject = "Dear {{User}}, welcome to PublicQ!"
                         },
                         new
                         {
                             Id = new Guid("6863fdeb-ed8d-41ba-8567-c00cf8561470"),
-                            Body = "<!DOCTYPE html>\n<html lang=\"en\" style=\"margin:0;padding:0;\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n    <meta name=\"x-apple-disable-message-reformatting\" />\n    <meta name=\"format-detection\" content=\"telephone=no,address=no,email=no,date=no,url=no\" />\n    <meta name=\"color-scheme\" content=\"light dark\" />\n    <meta name=\"supported-color-schemes\" content=\"light dark\" />\n    <title>Welcome to PublicQ</title>\n    <style>\n      body {\n        margin:0;\n        padding:0;\n        background:linear-gradient(135deg,#e6f0ff,#f9fbff);\n        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;\n        color:#1e2330;\n      }\n      .container {\n        max-width:800px;\n        margin:0 auto;\n        padding:32px 20px;\n      }\n      .card {\n        background:rgba(255,255,255,0.85);\n        border-radius:16px;\n        padding:32px;\n        box-shadow:0 8px 20px rgba(0,0,0,0.1);\n      }\n      h1 {\n        margin:0 0 20px 0;\n        font-size:24px;\n        font-weight:600;\n        color:#0b5fff;\n        text-align:center;\n      }\n      p {\n        margin:0 0 16px 0;\n        font-size:16px;\n        line-height:1.6;\n      }\n      .cta {\n        display:block;\n        margin:20px auto 10px auto;\n        width:max-content;\n        text-decoration:none;\n        background:#0b5fff;\n        color:#ffffff !important;\n        padding:12px 20px;\n        border-radius:10px;\n        font-weight:600;\n      }\n      .link-fallback {\n        background:#f1f4fb;\n        border-radius:8px;\n        padding:12px 16px;\n        margin:12px 0 0 0;\n        font-family:monospace;\n        font-size:14px;\n        color:#0b5fff;\n        word-break:break-all;\n      }\n      .footer {\n        margin-top:28px;\n        font-size:12px;\n        color:#6b7280;\n        text-align:center;\n      }\n      @media (max-width:600px) {\n        .card { padding:20px; }\n        h1 { font-size:20px; }\n        p { font-size:15px; }\n      }\n      @media (prefers-color-scheme: dark) {\n        body {\n          background:linear-gradient(135deg,#0f1115,#1b1e24);\n          color:#e7e7ea;\n        }\n        .card {\n          background:rgba(30,33,40,0.85);\n          border:1px solid #2a2f3a;\n        }\n        h1 { color:#7cb8ff; }\n        .cta { background:#7cb8ff; color:#0f1115 !important; }\n        .link-fallback { background:#252b36; color:#7cb8ff; }\n        .footer { color:#a7acb8; }\n      }\n    </style>\n  </head>\n  <body>\n    <div class=\"container\">\n      <div class=\"card\">\n        <h1>Welcome to PublicQ</h1>\n        <p>Hello <strong>{{User}}</strong>,</p>\n        <p>\n          Your account on <a href=\"{{BaseUrl}}\" target=\"_blank\" rel=\"noopener\" style=\"color:#0b5fff;font-weight:600;text-decoration:none;\">PublicQ</a> has been created successfully.  \n          We’re glad to welcome you to the platform.\n        </p>\n\n        <!-- Primary CTA button -->\n        <a class=\"cta\" href=\"{{CreatePasswordUrl}}\" target=\"_blank\" rel=\"noopener\">Create Your Password</a>\n\n        <!-- Fallback plain link -->\n        <div class=\"link-fallback\">\n          {{CreatePasswordUrl}}\n        </div>\n\n        <p style=\"margin-top:16px;\">If you didn’t sign up for a PublicQ account, you can safely ignore this email.</p>\n        <p>Best regards,<br/>PublicQ Team</p>\n\n        <div class=\"footer\">\n          Your account is ready — let’s get started!\n        </div>\n      </div>\n    </div>\n  </body>\n</html>",
+                            Body = "<!DOCTYPE html>\r\n<html lang=\"en\" style=\"margin:0;padding:0;\">\r\n  <head>\r\n    <meta charset=\"utf-8\" />\r\n    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\r\n    <meta name=\"x-apple-disable-message-reformatting\" />\r\n    <meta name=\"format-detection\" content=\"telephone=no,address=no,email=no,date=no,url=no\" />\r\n    <meta name=\"color-scheme\" content=\"light dark\" />\r\n    <meta name=\"supported-color-schemes\" content=\"light dark\" />\r\n    <title>Welcome to PublicQ</title>\r\n    <style>\r\n      body {\r\n        margin:0;\r\n        padding:0;\r\n        background:linear-gradient(135deg,#e6f0ff,#f9fbff);\r\n        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;\r\n        color:#1e2330;\r\n      }\r\n      .container {\r\n        max-width:800px;\r\n        margin:0 auto;\r\n        padding:32px 20px;\r\n      }\r\n      .card {\r\n        background:rgba(255,255,255,0.85);\r\n        border-radius:16px;\r\n        padding:32px;\r\n        box-shadow:0 8px 20px rgba(0,0,0,0.1);\r\n      }\r\n      h1 {\r\n        margin:0 0 20px 0;\r\n        font-size:24px;\r\n        font-weight:600;\r\n        color:#0b5fff;\r\n        text-align:center;\r\n      }\r\n      p {\r\n        margin:0 0 16px 0;\r\n        font-size:16px;\r\n        line-height:1.6;\r\n      }\r\n      .cta {\r\n        display:block;\r\n        margin:20px auto 10px auto;\r\n        width:max-content;\r\n        text-decoration:none;\r\n        background:#0b5fff;\r\n        color:#ffffff !important;\r\n        padding:12px 20px;\r\n        border-radius:10px;\r\n        font-weight:600;\r\n      }\r\n      .link-fallback {\r\n        background:#f1f4fb;\r\n        border-radius:8px;\r\n        padding:12px 16px;\r\n        margin:12px 0 0 0;\r\n        font-family:monospace;\r\n        font-size:14px;\r\n        color:#0b5fff;\r\n        word-break:break-all;\r\n      }\r\n      .footer {\r\n        margin-top:28px;\r\n        font-size:12px;\r\n        color:#6b7280;\r\n        text-align:center;\r\n      }\r\n      @media (max-width:600px) {\r\n        .card { padding:20px; }\r\n        h1 { font-size:20px; }\r\n        p { font-size:15px; }\r\n      }\r\n      @media (prefers-color-scheme: dark) {\r\n        body {\r\n          background:linear-gradient(135deg,#0f1115,#1b1e24);\r\n          color:#e7e7ea;\r\n        }\r\n        .card {\r\n          background:rgba(30,33,40,0.85);\r\n          border:1px solid #2a2f3a;\r\n        }\r\n        h1 { color:#7cb8ff; }\r\n        .cta { background:#7cb8ff; color:#0f1115 !important; }\r\n        .link-fallback { background:#252b36; color:#7cb8ff; }\r\n        .footer { color:#a7acb8; }\r\n      }\r\n    </style>\r\n  </head>\r\n  <body>\r\n    <div class=\"container\">\r\n      <div class=\"card\">\r\n        <h1>Welcome to PublicQ</h1>\r\n        <p>Hello <strong>{{User}}</strong>,</p>\r\n        <p>\r\n          Your account on <a href=\"{{BaseUrl}}\" target=\"_blank\" rel=\"noopener\" style=\"color:#0b5fff;font-weight:600;text-decoration:none;\">PublicQ</a> has been created successfully.  \r\n          We’re glad to welcome you to the platform.\r\n        </p>\r\n\r\n        <!-- Primary CTA button -->\r\n        <a class=\"cta\" href=\"{{CreatePasswordUrl}}\" target=\"_blank\" rel=\"noopener\">Create Your Password</a>\r\n\r\n        <!-- Fallback plain link -->\r\n        <div class=\"link-fallback\">\r\n          {{CreatePasswordUrl}}\r\n        </div>\r\n\r\n        <p style=\"margin-top:16px;\">If you didn’t sign up for a PublicQ account, you can safely ignore this email.</p>\r\n        <p>Best regards,<br/>PublicQ Team</p>\r\n\r\n        <div class=\"footer\">\r\n          Your account is ready — let’s get started!\r\n        </div>\r\n      </div>\r\n    </div>\r\n  </body>\r\n</html>",
                             Name = "Default Welcome Email with Create Password Link",
                             Subject = "Dear {{User}}, welcome to PublicQ!"
                         },
                         new
                         {
                             Id = new Guid("bfc0e145-396f-4bc1-ae2f-14e528fe55b3"),
-                            Body = "<!DOCTYPE html>\n<html lang=\"en\" style=\"margin:0;padding:0;\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n    <meta name=\"x-apple-disable-message-reformatting\" />\n    <meta name=\"format-detection\" content=\"telephone=no,address=no,email=no,date=no,url=no\" />\n    <meta name=\"color-scheme\" content=\"light dark\" />\n    <meta name=\"supported-color-schemes\" content=\"light dark\" />\n    <title>Password Reset</title>\n    <style>\n      body {\n        margin:0;\n        padding:0;\n        background:linear-gradient(135deg,#e6f0ff,#f9fbff);\n        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;\n        color:#1e2330;\n      }\n      .container {\n        max-width:800px;\n        margin:0 auto;\n        padding:32px 20px;\n      }\n      .card {\n        background:rgba(255,255,255,0.85);\n        border-radius:16px;\n        padding:32px;\n        box-shadow:0 8px 20px rgba(0,0,0,0.1);\n      }\n      h1 {\n        margin:0 0 20px 0;\n        font-size:24px;\n        font-weight:600;\n        color:#0b5fff;\n        text-align:center;\n      }\n      p {\n        margin:0 0 16px 0;\n        font-size:16px;\n        line-height:1.6;\n      }\n      .password-box {\n        background:#f1f4fb;\n        border-radius:8px;\n        padding:12px 16px;\n        margin:16px 0;\n        font-family:monospace;\n        font-size:16px;\n        font-weight:600;\n        color:#0b5fff;\n        text-align:center;\n      }\n      .footer {\n        margin-top:28px;\n        font-size:12px;\n        color:#6b7280;\n        text-align:center;\n      }\n      @media (max-width:600px) {\n        .card { padding:20px; }\n        h1 { font-size:20px; }\n        p { font-size:15px; }\n      }\n      @media (prefers-color-scheme: dark) {\n        body {\n          background:linear-gradient(135deg,#0f1115,#1b1e24);\n          color:#e7e7ea;\n        }\n        .card {\n          background:rgba(30,33,40,0.85);\n          border:1px solid #2a2f3a;\n        }\n        h1 { color:#7cb8ff; }\n        .password-box {\n          background:#252b36;\n          color:#7cb8ff;\n        }\n        .footer { color:#a7acb8; }\n      }\n    </style>\n  </head>\n  <body>\n    <div class=\"container\">\n      <div class=\"card\">\n        <h1>Password Reset by Administrator</h1>\n        <p>Hello <strong>{{User}}</strong>,</p>\n        <p>\n          Your password has been reset by the <strong>system administrator</strong>.  \n        </p>\n        <p>Here is your new password:</p>\n        <div class=\"password-box\">\n          {{Password}}\n        </div>\n        <p>Best regards,<br/>PublicQ Team</p>\n        <div class=\"footer\">\n          If you did not expect this reset, please contact support immediately.\n        </div>\n      </div>\n    </div>\n  </body>\n</html>",
+                            Body = "<!DOCTYPE html>\r\n<html lang=\"en\" style=\"margin:0;padding:0;\">\r\n  <head>\r\n    <meta charset=\"utf-8\" />\r\n    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\r\n    <meta name=\"x-apple-disable-message-reformatting\" />\r\n    <meta name=\"format-detection\" content=\"telephone=no,address=no,email=no,date=no,url=no\" />\r\n    <meta name=\"color-scheme\" content=\"light dark\" />\r\n    <meta name=\"supported-color-schemes\" content=\"light dark\" />\r\n    <title>Password Reset</title>\r\n    <style>\r\n      body {\r\n        margin:0;\r\n        padding:0;\r\n        background:linear-gradient(135deg,#e6f0ff,#f9fbff);\r\n        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;\r\n        color:#1e2330;\r\n      }\r\n      .container {\r\n        max-width:800px;\r\n        margin:0 auto;\r\n        padding:32px 20px;\r\n      }\r\n      .card {\r\n        background:rgba(255,255,255,0.85);\r\n        border-radius:16px;\r\n        padding:32px;\r\n        box-shadow:0 8px 20px rgba(0,0,0,0.1);\r\n      }\r\n      h1 {\r\n        margin:0 0 20px 0;\r\n        font-size:24px;\r\n        font-weight:600;\r\n        color:#0b5fff;\r\n        text-align:center;\r\n      }\r\n      p {\r\n        margin:0 0 16px 0;\r\n        font-size:16px;\r\n        line-height:1.6;\r\n      }\r\n      .password-box {\r\n        background:#f1f4fb;\r\n        border-radius:8px;\r\n        padding:12px 16px;\r\n        margin:16px 0;\r\n        font-family:monospace;\r\n        font-size:16px;\r\n        font-weight:600;\r\n        color:#0b5fff;\r\n        text-align:center;\r\n      }\r\n      .footer {\r\n        margin-top:28px;\r\n        font-size:12px;\r\n        color:#6b7280;\r\n        text-align:center;\r\n      }\r\n      @media (max-width:600px) {\r\n        .card { padding:20px; }\r\n        h1 { font-size:20px; }\r\n        p { font-size:15px; }\r\n      }\r\n      @media (prefers-color-scheme: dark) {\r\n        body {\r\n          background:linear-gradient(135deg,#0f1115,#1b1e24);\r\n          color:#e7e7ea;\r\n        }\r\n        .card {\r\n          background:rgba(30,33,40,0.85);\r\n          border:1px solid #2a2f3a;\r\n        }\r\n        h1 { color:#7cb8ff; }\r\n        .password-box {\r\n          background:#252b36;\r\n          color:#7cb8ff;\r\n        }\r\n        .footer { color:#a7acb8; }\r\n      }\r\n    </style>\r\n  </head>\r\n  <body>\r\n    <div class=\"container\">\r\n      <div class=\"card\">\r\n        <h1>Password Reset by Administrator</h1>\r\n        <p>Hello <strong>{{User}}</strong>,</p>\r\n        <p>\r\n          Your password has been reset by the <strong>system administrator</strong>.  \r\n        </p>\r\n        <p>Here is your new password:</p>\r\n        <div class=\"password-box\">\r\n          {{Password}}\r\n        </div>\r\n        <p>Best regards,<br/>PublicQ Team</p>\r\n        <div class=\"footer\">\r\n          If you did not expect this reset, please contact support immediately.\r\n        </div>\r\n      </div>\r\n    </div>\r\n  </body>\r\n</html>",
                             Name = "Default Password Reset Email",
                             Subject = "Dear {{User}}, your password has been reset"
                         },
                         new
                         {
                             Id = new Guid("a5091d38-fa5e-4cdb-b4bc-22381aeaf8be"),
-                            Body = "<!DOCTYPE html>\n<html lang=\"en\" style=\"margin:0;padding:0;\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n    <meta name=\"x-apple-disable-message-reformatting\" />\n    <meta name=\"format-detection\" content=\"telephone=no,address=no,email=no,date=no,url=no\" />\n    <meta name=\"color-scheme\" content=\"light dark\" />\n    <meta name=\"supported-color-schemes\" content=\"light dark\" />\n    <title>Reset Your Password</title>\n    <style>\n      body {\n        margin:0;\n        padding:0;\n        background:linear-gradient(135deg,#e6f0ff,#f9fbff);\n        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;\n        color:#1e2330;\n      }\n      .container {\n        max-width:800px;\n        margin:0 auto;\n        padding:32px 20px;\n      }\n      .card {\n        background:rgba(255,255,255,0.85);\n        border-radius:16px;\n        padding:32px;\n        box-shadow:0 8px 20px rgba(0,0,0,0.1);\n      }\n      h1 {\n        margin:0 0 20px 0;\n        font-size:24px;\n        font-weight:600;\n        color:#0b5fff;\n        text-align:center;\n      }\n      p {\n        margin:0 0 16px 0;\n        font-size:16px;\n        line-height:1.6;\n      }\n      .cta {\n        display:block;\n        margin:20px auto 10px auto;\n        width:max-content;\n        text-decoration:none;\n        background:#0b5fff;\n        color:#ffffff !important;\n        padding:12px 20px;\n        border-radius:10px;\n        font-weight:600;\n      }\n      .link-fallback {\n        background:#f1f4fb;\n        border-radius:8px;\n        padding:12px 16px;\n        margin:12px 0 0 0;\n        font-family:monospace;\n        font-size:14px;\n        color:#0b5fff;\n        word-break:break-all;\n      }\n      .footer {\n        margin-top:28px;\n        font-size:12px;\n        color:#6b7280;\n        text-align:center;\n      }\n      @media (max-width:600px) {\n        .card { padding:20px; }\n        h1 { font-size:20px; }\n        p { font-size:15px; }\n      }\n      @media (prefers-color-scheme: dark) {\n        body {\n          background:linear-gradient(135deg,#0f1115,#1b1e24);\n          color:#e7e7ea;\n        }\n        .card {\n          background:rgba(30,33,40,0.85);\n          border:1px solid #2a2f3a;\n        }\n        h1 { color:#7cb8ff; }\n        .link-fallback {\n          background:#252b36;\n          color:#7cb8ff;\n        }\n        .footer { color:#a7acb8; }\n      }\n    </style>\n  </head>\n  <body>\n    <div class=\"container\">\n      <div class=\"card\">\n        <h1>Reset Your Password</h1>\n        <p>Hello <strong>{{User}}</strong>,</p>\n        <p>We received a request to reset your password. Click the button below to create a new one:</p>\n\n        <!-- Primary CTA uses the reset link -->\n        <a class=\"cta\" href=\"{{ResetLink}}\" target=\"_blank\" rel=\"noopener\">Reset Password</a>\n\n        <!-- Fallback plain link (placed under {{ResetLink}}) -->\n        <div class=\"link-fallback\">\n          {{ResetLink}}\n        </div>\n\n        <p style=\"margin-top:16px;\">If you didn’t request a password reset, you can safely ignore this email.</p>\n        <p>Best regards,<br/>PublicQ Team</p>\n\n        <div class=\"footer\">\n          This link will expire after a short period for security reasons.\n        </div>\n      </div>\n    </div>\n  </body>\n</html>",
+                            Body = "<!DOCTYPE html>\r\n<html lang=\"en\" style=\"margin:0;padding:0;\">\r\n  <head>\r\n    <meta charset=\"utf-8\" />\r\n    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\r\n    <meta name=\"x-apple-disable-message-reformatting\" />\r\n    <meta name=\"format-detection\" content=\"telephone=no,address=no,email=no,date=no,url=no\" />\r\n    <meta name=\"color-scheme\" content=\"light dark\" />\r\n    <meta name=\"supported-color-schemes\" content=\"light dark\" />\r\n    <title>Reset Your Password</title>\r\n    <style>\r\n      body {\r\n        margin:0;\r\n        padding:0;\r\n        background:linear-gradient(135deg,#e6f0ff,#f9fbff);\r\n        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;\r\n        color:#1e2330;\r\n      }\r\n      .container {\r\n        max-width:800px;\r\n        margin:0 auto;\r\n        padding:32px 20px;\r\n      }\r\n      .card {\r\n        background:rgba(255,255,255,0.85);\r\n        border-radius:16px;\r\n        padding:32px;\r\n        box-shadow:0 8px 20px rgba(0,0,0,0.1);\r\n      }\r\n      h1 {\r\n        margin:0 0 20px 0;\r\n        font-size:24px;\r\n        font-weight:600;\r\n        color:#0b5fff;\r\n        text-align:center;\r\n      }\r\n      p {\r\n        margin:0 0 16px 0;\r\n        font-size:16px;\r\n        line-height:1.6;\r\n      }\r\n      .cta {\r\n        display:block;\r\n        margin:20px auto 10px auto;\r\n        width:max-content;\r\n        text-decoration:none;\r\n        background:#0b5fff;\r\n        color:#ffffff !important;\r\n        padding:12px 20px;\r\n        border-radius:10px;\r\n        font-weight:600;\r\n      }\r\n      .link-fallback {\r\n        background:#f1f4fb;\r\n        border-radius:8px;\r\n        padding:12px 16px;\r\n        margin:12px 0 0 0;\r\n        font-family:monospace;\r\n        font-size:14px;\r\n        color:#0b5fff;\r\n        word-break:break-all;\r\n      }\r\n      .footer {\r\n        margin-top:28px;\r\n        font-size:12px;\r\n        color:#6b7280;\r\n        text-align:center;\r\n      }\r\n      @media (max-width:600px) {\r\n        .card { padding:20px; }\r\n        h1 { font-size:20px; }\r\n        p { font-size:15px; }\r\n      }\r\n      @media (prefers-color-scheme: dark) {\r\n        body {\r\n          background:linear-gradient(135deg,#0f1115,#1b1e24);\r\n          color:#e7e7ea;\r\n        }\r\n        .card {\r\n          background:rgba(30,33,40,0.85);\r\n          border:1px solid #2a2f3a;\r\n        }\r\n        h1 { color:#7cb8ff; }\r\n        .link-fallback {\r\n          background:#252b36;\r\n          color:#7cb8ff;\r\n        }\r\n        .footer { color:#a7acb8; }\r\n      }\r\n    </style>\r\n  </head>\r\n  <body>\r\n    <div class=\"container\">\r\n      <div class=\"card\">\r\n        <h1>Reset Your Password</h1>\r\n        <p>Hello <strong>{{User}}</strong>,</p>\r\n        <p>We received a request to reset your password. Click the button below to create a new one:</p>\r\n\r\n        <!-- Primary CTA uses the reset link -->\r\n        <a class=\"cta\" href=\"{{ResetLink}}\" target=\"_blank\" rel=\"noopener\">Reset Password</a>\r\n\r\n        <!-- Fallback plain link (placed under {{ResetLink}}) -->\r\n        <div class=\"link-fallback\">\r\n          {{ResetLink}}\r\n        </div>\r\n\r\n        <p style=\"margin-top:16px;\">If you didn’t request a password reset, you can safely ignore this email.</p>\r\n        <p>Best regards,<br/>PublicQ Team</p>\r\n\r\n        <div class=\"footer\">\r\n          This link will expire after a short period for security reasons.\r\n        </div>\r\n      </div>\r\n    </div>\r\n  </body>\r\n</html>",
                             Name = "Default Forget Password",
                             Subject = "Dear {{User}}, here is your password reset link"
                         });
@@ -948,15 +961,15 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedByUser")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
 
@@ -967,50 +980,50 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("AssessmentModuleId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedByUser")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(5000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(5000)");
 
                     b.Property<int>("DurationInMinutes")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsPublished")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("NormalizedTitle")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<int>("PassingScorePercentage")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("UpdatedByUser")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<int>("Version")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -1027,21 +1040,21 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsCorrect")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Order")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("QuestionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(1000)");
 
                     b.HasKey("Id");
 
@@ -1054,21 +1067,21 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("AssessmentModuleVersionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Order")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasMaxLength(5000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(5000)");
 
                     b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -1081,28 +1094,28 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("AssessmentModuleId")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("AssessmentModuleVersionEntityId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("FileUrl")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(500)");
 
                     b.Property<bool>("IsModuleLevelFile")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Label")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("UploadedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -1117,40 +1130,40 @@ namespace PublicQ.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Body")
                         .IsRequired()
                         .HasMaxLength(20480)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(20480)");
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("JsonData")
                         .IsRequired()
                         .HasMaxLength(20480)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(20480)");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UpdatedBy")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
 
@@ -1160,10 +1173,10 @@ namespace PublicQ.Infrastructure.Migrations
             modelBuilder.Entity("QuestionEntityStaticFileEntity", b =>
                 {
                     b.Property<Guid>("AssociatedStaticFilesId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("QuestionsId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uuid");
 
                     b.HasKey("AssociatedStaticFilesId", "QuestionsId");
 

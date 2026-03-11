@@ -91,7 +91,8 @@ app.MapControllers();
 
 // Configure static file serving for uploads
 var fileStorageOptions = app.Services.GetRequiredService<IOptions<FileStorageOptions>>().Value;
-var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), fileStorageOptions.StaticContentPath);
+var staticContentPath = fileStorageOptions.StaticContentPath ?? "static";
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), staticContentPath);
 if (!Directory.Exists(uploadsPath))
 {
     Directory.CreateDirectory(uploadsPath);
@@ -100,7 +101,7 @@ if (!Directory.Exists(uploadsPath))
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
-    RequestPath = $"/{fileStorageOptions.StaticContentPath}"
+    RequestPath = $"/{staticContentPath}"
 });
 
 // This maps all other than /api and /mcp requests to the React app when it runs in dev
