@@ -16,7 +16,7 @@ COPY src/ ./src/
 RUN dotnet restore PublicQ.sln
 RUN dotnet publish ./src/PublicQ.API/PublicQ.API.csproj -c Release -o /out /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 COPY --from=be-build /out .
