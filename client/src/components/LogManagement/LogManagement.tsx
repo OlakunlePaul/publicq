@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { LogService } from '../../services/logService';
 import { configurationService } from '../../services/configurationService';
 import { LogEntry } from '../../models/log-entry';
 import { LogFilter, defaultLogFilter, LogLevels } from '../../models/log-filter';
 import { LogConfiguration, LogLevel, getLogLevels, defaultLogConfiguration } from '../../models/log-configuration';
-import { PaginatedResponse } from '../../models/paginatedResponse';
+import { GenericOperationStatuses } from '../../models/GenericOperationStatuses';
 import { formatDateToLocal, parseUtcDate } from '../../utils/dateUtils';
 import cssStyles from './LogManagement.module.css';
 
@@ -22,7 +22,6 @@ const LogManagement: React.FC<LogManagementProps> = ({ logConfig, setLogConfig }
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [totalPages, setTotalPages] = useState(0);
-  const [totalLogs, setTotalLogs] = useState(0);
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   
@@ -39,16 +38,86 @@ const LogManagement: React.FC<LogManagementProps> = ({ logConfig, setLogConfig }
   const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
   const [showLogDetail, setShowLogDetail] = useState(false);
 
+  const loadLogs = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await LogService.getLogs(currentPage, pageSize, filter);
+      if (response && response.data) {
+        setLogs(response.data.data || []);
+        setTotalPages(response.data.totalPages || 0);
+      }
+    } catch (err: any) {
+      setError('Failed to fetch logs: ' + (err.message || 'Unknown error'));
+      setLogs([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, pageSize, filter]);
+
   useEffect(() => {
     loadLogs();
-  }, [currentPage, pageSize, filter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loadLogs]);
+
+  const loadLogConfiguration = useCallback(async () => {
+    setConfigLoading(true);
+    setConfigError('');
+    try {
+      const response = await configurationService.getLogOptions();
+      if (response.status === GenericOperationStatuses.Completed && response.data) {
+        setLogConfig({ ...response.data, dataLoaded: true });
+        setOriginalConfig(response.data);
+      } else {
+        setConfigError('Failed to load log configuration');
+      }
+    } catch (err: any) {
+      setConfigError('Failed to load log configuration: ' + (err.message || 'Unknown error'));
+    } finally {
+      setConfigLoading(false);
+    }
+  }, [setLogConfig]);
 
   // Load configuration on component mount
   useEffect(() => {
     if (!logConfig.dataLoaded) {
       loadLogConfiguration();
     }
+  }, [logConfig.dataLoaded, loadLogConfiguration]);
+
+  const closeLogDetail = useCallback(() => {
+    setShowLogDetail(false);
+    setSelectedLog(null);
   }, []);
+
+  const cancelLogLevelChange = useCallback(() => {
+    setShowPerformanceWarning(false);
+    setPendingLogLevel(null);
+  }, []);
+
+  const confirmLogLevelChange = useCallback(async () => {
+    if (!pendingLogLevel) return;
+    
+    setConfigLoading(true);
+    setConfigError('');
+    try {
+      const updatedConfig = { ...logConfig, logLevel: pendingLogLevel };
+      const response = await configurationService.setLogOptions(updatedConfig);
+      if (response.status === GenericOperationStatuses.Completed) {
+        setLogConfig(prev => ({ ...prev, logLevel: pendingLogLevel }));
+        setOriginalConfig(prev => ({ ...prev, logLevel: pendingLogLevel }));
+        setConfigSuccess('Log level updated successfully');
+        setTimeout(() => setConfigSuccess(''), 5000);
+      } else {
+        throw new Error('Failed to update log level');
+      }
+    } catch (err: any) {
+      setConfigError('Failed to update log level: ' + (err.message || 'Unknown error'));
+    } finally {
+      setConfigLoading(false);
+      setShowPerformanceWarning(false);
+      setPendingLogLevel(null);
+    }
+  }, [pendingLogLevel, logConfig, setLogConfig]);
 
   // Keyboard event handler for modals
   useEffect(() => {
@@ -75,7 +144,170 @@ const LogManagement: React.FC<LogManagementProps> = ({ logConfig, setLogConfig }
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [showPerformanceWarning, showLogDetail]);
+  }, [showPerformanceWarning, showLogDetail, closeLogDetail, cancelLogLevelChange, confirmLogLevelChange]);
+
+  const saveLogConfiguration = useCallback(async () => {
+    setConfigLoading(true);
+    setConfigError('');
+    setConfigSuccess('');
+    try {
+      const configToSave = {
+        enable: logConfig.enable,
+        logLevel: logConfig.logLevel,
+        retentionPeriodInDays: logConfig.retentionPeriodInDays
+      };
+      
+      const response = await configurationService.setLogOptions(configToSave);
+      if (response.status === GenericOperationStatuses.Completed) {
+        setConfigSuccess('Log configuration saved successfully!');
+        setOriginalConfig(configToSave);
+        setTimeout(() => setConfigSuccess(''), 3000);
+      } else {
+        throw new Error('Failed to save log configuration');
+      }
+    } catch (err: any) {
+      setConfigError(err?.response?.data?.message || err.message || 'Failed to save log configuration');
+    } finally {
+      setConfigLoading(false);
+    }
+  }, [logConfig]);
+
+  const resetLogConfiguration = useCallback(() => {
+    setLogConfig({ ...originalConfig, dataLoaded: true });
+    setConfigError('');
+    setConfigSuccess('');
+  }, [originalConfig, setLogConfig]);
+
+  const hasConfigChanges = useCallback(() => {
+    return (
+      logConfig.enable !== originalConfig.enable ||
+      logConfig.logLevel !== originalConfig.logLevel ||
+      logConfig.retentionPeriodInDays !== originalConfig.retentionPeriodInDays
+    );
+  }, [logConfig, originalConfig]);
+
+  const handleLogLevelChange = useCallback(async (newLevel: LogLevel) => {
+    if (newLevel === LogLevel.Information || newLevel === LogLevel.Debug) {
+      setPendingLogLevel(newLevel);
+      setShowPerformanceWarning(true);
+    } else {
+      setConfigLoading(true);
+      setConfigError('');
+      try {
+        const updatedConfig = { ...logConfig, logLevel: newLevel };
+        const response = await configurationService.setLogOptions(updatedConfig);
+        if (response.status === GenericOperationStatuses.Completed) {
+          setLogConfig(prev => ({ ...prev, logLevel: newLevel }));
+          setOriginalConfig(prev => ({ ...prev, logLevel: newLevel }));
+          setConfigSuccess('Log level updated successfully');
+          setTimeout(() => setConfigSuccess(''), 5000);
+        } else {
+          throw new Error('Failed to update log level');
+        }
+      } catch (err: any) {
+        setConfigError('Failed to update log level: ' + (err.message || 'Unknown error'));
+      } finally {
+        setConfigLoading(false);
+      }
+    }
+  }, [logConfig, setLogConfig]);
+
+  const openLogDetail = useCallback((log: LogEntry) => {
+    setSelectedLog(log);
+    setShowLogDetail(true);
+  }, []);
+
+  const handleFilterChange = useCallback((field: keyof LogFilter, value: any) => {
+    let processedValue = value;
+    if ((field === 'fromDate' || field === 'toDate') && value) {
+      processedValue = new Date(value).toISOString();
+    }
+    setFilter(prev => ({
+      ...prev,
+      [field]: processedValue
+    }));
+    setCurrentPage(1);
+  }, []);
+
+  const clearFilters = useCallback(() => {
+    setFilter(defaultLogFilter);
+    setCurrentPage(1);
+  }, []);
+
+  const formatTimestamp = useCallback((timestamp: Date | string) => {
+    return formatDateToLocal(typeof timestamp === 'string' ? timestamp : timestamp.toISOString());
+  }, []);
+
+  const getLevelColor = useCallback((level: string) => {
+    switch (level) {
+      case 'Critical': return '#dc2626';
+      case 'Error': return '#ea580c';
+      case 'Warning': return '#d97706';
+      case 'Information': return '#0ea5e9';
+      case 'Debug': return '#6b7280';
+      default: return '#374151';
+    }
+  }, []);
+
+  const getLevelIcon = useCallback((level: string) => {
+    switch (level) {
+      case 'Critical': return <img src="/images/icons/fail.svg" alt="Critical" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} />;
+      case 'Error': return <img src="/images/icons/fail.svg" alt="Error" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} />;
+      case 'Warning': return <img src="/images/icons/warning.svg" alt="Warning" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} />;
+      case 'Information': return <img src="/images/icons/information.svg" alt="Info" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} />;
+      case 'Debug': return <img src="/images/icons/magnifying-glass.svg" alt="Debug" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} />;
+      default: return <img src="/images/icons/notepad.svg" alt="Log" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} />;
+    }
+  }, []);
+
+  const truncateMessage = useCallback((message: string, maxLength: number = 100) => {
+    if (message.length <= maxLength) return message;
+    return message.substring(0, maxLength) + '...';
+  }, []);
+
+  const convertLogsToCSV = useCallback((logsToConvert: LogEntry[]): string => {
+    const headers = ['Level', 'Timestamp', 'Category', 'Message', 'User ID', 'User Email', 'Request ID', 'Machine Name', 'Exception'];
+    const rows = logsToConvert.map(log => [
+      log.level || '',
+      formatTimestamp(log.timestamp),
+      log.category || '',
+      (log.message || '').replace(/"/g, '""'),
+      log.userId || '',
+      log.userEmail || '',
+      log.requestId || '',
+      log.machineName || '',
+      (log.exception || '').replace(/"/g, '""')
+    ]);
+    const allRows = [headers, ...rows];
+    return allRows.map(row => row.map(field => `"${field}"`).join(',')).join('\n');
+  }, [formatTimestamp]);
+
+  const handleDownloadCSV = useCallback(async () => {
+    try {
+      setCsvLoading(true);
+      setError('');
+      const response = await LogService.exportLogs(filter);
+      if (response && response.isSuccess && response.data) {
+        const csvContent = convertLogsToCSV(response.data);
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `logs_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else {
+        setError('Failed to download logs CSV');
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Failed to download logs CSV');
+    } finally {
+      setCsvLoading(false);
+    }
+  }, [filter, convertLogsToCSV]);
 
   useEffect(() => {
     if (autoRefresh) {
@@ -162,285 +394,6 @@ const LogManagement: React.FC<LogManagementProps> = ({ logConfig, setLogConfig }
     };
   }, []);
 
-  const loadLogs = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const response = await LogService.getLogs(currentPage, pageSize, filter);
-      if (response.isSuccess) {
-        const paginatedData = response.data as PaginatedResponse<LogEntry>;
-        setLogs(paginatedData.data);
-        setTotalPages(paginatedData.totalPages);
-        setTotalLogs(paginatedData.totalCount);
-      } else {
-        setError('Failed to load logs');
-      }
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to load logs');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadLogConfiguration = async () => {
-    setConfigLoading(true);
-    setConfigError('');
-    try {
-      const response = await configurationService.getLogOptions();
-      if (response.isSuccess) {
-        const config = response.data;
-        setLogConfig({ ...config, dataLoaded: true });
-        setOriginalConfig(config);
-      } else {
-        setConfigError('Failed to load log configuration');
-      }
-    } catch (err: any) {
-      setConfigError(err?.response?.data?.message || 'Failed to load log configuration');
-    } finally {
-      setConfigLoading(false);
-    }
-  };
-
-  const saveLogConfiguration = async () => {
-    setConfigLoading(true);
-    setConfigError('');
-    setConfigSuccess('');
-    try {
-      const configToSave = {
-        enable: logConfig.enable,
-        logLevel: logConfig.logLevel,
-        retentionPeriodInDays: logConfig.retentionPeriodInDays
-      };
-      
-      const response = await configurationService.setLogOptions(configToSave);
-      if (response.isSuccess) {
-        setConfigSuccess('Log configuration saved successfully!');
-        setOriginalConfig(configToSave);
-        setTimeout(() => setConfigSuccess(''), 3000);
-      } else {
-        setConfigError('Failed to save log configuration');
-      }
-    } catch (err: any) {
-      setConfigError(err?.response?.data?.message || 'Failed to save log configuration');
-    } finally {
-      setConfigLoading(false);
-    }
-  };
-
-  const resetLogConfiguration = () => {
-    setLogConfig({ ...originalConfig, dataLoaded: true });
-    setConfigError('');
-    setConfigSuccess('');
-  };
-
-  const hasConfigChanges = () => {
-    return (
-      logConfig.enable !== originalConfig.enable ||
-      logConfig.logLevel !== originalConfig.logLevel ||
-      logConfig.retentionPeriodInDays !== originalConfig.retentionPeriodInDays
-    );
-  };
-
-  const handleLogLevelChange = (newLogLevel: LogLevel) => {
-    // Check if the new log level could cause performance issues
-    if ((newLogLevel === LogLevel.Debug || newLogLevel === LogLevel.Information) && 
-        newLogLevel !== originalConfig.logLevel) {
-      setPendingLogLevel(newLogLevel);
-      setShowPerformanceWarning(true);
-    } else {
-      setLogConfig({ ...logConfig, logLevel: newLogLevel });
-    }
-  };
-
-  const confirmLogLevelChange = async () => {
-    if (pendingLogLevel) {
-      setLogConfig({ ...logConfig, logLevel: pendingLogLevel });
-      
-      // Auto-save the configuration
-      setConfigLoading(true);
-      setConfigError('');
-      setConfigSuccess('');
-      
-      try {
-        const configToSave = {
-          enable: logConfig.enable,
-          logLevel: pendingLogLevel,
-          retentionPeriodInDays: logConfig.retentionPeriodInDays
-        };
-        
-        const response = await configurationService.setLogOptions(configToSave);
-        if (response.isSuccess) {
-          setConfigSuccess('Log configuration saved successfully!');
-          setOriginalConfig(configToSave);
-          setTimeout(() => setConfigSuccess(''), 3000);
-        } else {
-          setConfigError('Failed to save log configuration');
-        }
-      } catch (err: any) {
-        setConfigError(err?.response?.data?.message || 'Failed to save log configuration');
-      } finally {
-        setConfigLoading(false);
-      }
-    }
-    
-    setShowPerformanceWarning(false);
-    setPendingLogLevel(null);
-  };
-
-  const cancelLogLevelChange = () => {
-    setShowPerformanceWarning(false);
-    setPendingLogLevel(null);
-  };
-
-  // Log detail modal handlers
-  const openLogDetail = (log: LogEntry) => {
-    setSelectedLog(log);
-    setShowLogDetail(true);
-  };
-
-  const closeLogDetail = () => {
-    setShowLogDetail(false);
-    setSelectedLog(null);
-  };
-
-  const handleFilterChange = (field: keyof LogFilter, value: any) => {
-    let processedValue = value;
-    
-    // Convert datetime-local values to UTC for date fields
-    if ((field === 'fromDate' || field === 'toDate') && value) {
-      // datetime-local input gives us a string in format: "2023-10-05T14:30"
-      // We need to treat this as local time and convert to UTC
-      processedValue = new Date(value).toISOString();
-    }
-    
-    setFilter({
-      ...filter,
-      [field]: processedValue
-    });
-    setCurrentPage(1); // Reset to first page when filter changes
-  };
-
-  const clearFilters = () => {
-    setFilter(defaultLogFilter);
-    setCurrentPage(1);
-  };
-
-  const formatTimestamp = (timestamp: Date | string) => {
-    // Use the existing UTC conversion utility
-    return formatDateToLocal(typeof timestamp === 'string' ? timestamp : timestamp.toISOString());
-  };
-
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case 'Critical':
-        return '#dc2626'; // Red
-      case 'Error':
-        return '#ea580c'; // Orange-red
-      case 'Warning':
-        return '#d97706'; // Orange
-      case 'Information':
-        return '#0ea5e9'; // Blue
-      case 'Debug':
-        return '#6b7280'; // Gray
-      default:
-        return '#374151'; // Default gray
-    }
-  };
-
-  const getLevelIcon = (level: string) => {
-    switch (level) {
-      case 'Critical':
-        return <img src="/images/icons/fail.svg" alt="Critical" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} />;
-      case 'Error':
-        return <img src="/images/icons/fail.svg" alt="Error" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} />;
-      case 'Warning':
-        return <img src="/images/icons/warning.svg" alt="Warning" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} />;
-      case 'Information':
-        return <img src="/images/icons/information.svg" alt="Info" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} />;
-      case 'Debug':
-        return <img src="/images/icons/magnifying-glass.svg" alt="Debug" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} />;
-      default:
-        return <img src="/images/icons/notepad.svg" alt="Log" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} />;
-    }
-  };
-
-  const truncateMessage = (message: string, maxLength: number = 100) => {
-    if (message.length <= maxLength) return message;
-    return message.substring(0, maxLength) + '...';
-  };
-
-  const handleDownloadCSV = async () => {
-    try {
-      setCsvLoading(true);
-      setError('');
-
-      // Call the exportLogs API to get all logs matching the current filter
-      const response = await LogService.exportLogs(filter);
-      
-      if (response.isSuccess && response.data) {
-        // Convert logs to CSV format
-        const csvContent = convertLogsToCSV(response.data);
-        
-        // Create and download the file
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        
-        link.setAttribute('href', url);
-        link.setAttribute('download', `logs_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        URL.revokeObjectURL(url);
-      } else {
-        setError('Failed to export logs: ' + (response.message || 'Unknown error'));
-      }
-    } catch (err) {
-      console.error('Error downloading CSV:', err);
-      setError('Error downloading CSV: ' + (err instanceof Error ? err.message : 'Unknown error'));
-    } finally {
-      setCsvLoading(false);
-    }
-  };
-
-  const convertLogsToCSV = (logs: LogEntry[]): string => {
-    // Define CSV headers
-    const headers = [
-      'Level',
-      'Timestamp', 
-      'Category',
-      'Message',
-      'User ID',
-      'User Email',
-      'Request ID',
-      'Machine Name',
-      'Exception'
-    ];
-
-    // Convert logs to CSV rows
-    const rows = logs.map(log => [
-      log.level || '',
-      formatTimestamp(log.timestamp),
-      log.category || '',
-      (log.message || '').replace(/"/g, '""'), // Escape quotes in message
-      log.userId || '',
-      log.userEmail || '',
-      log.requestId || '',
-      log.machineName || '',
-      (log.exception || '').replace(/"/g, '""') // Escape quotes in exception
-    ]);
-
-    // Combine headers and rows
-    const allRows = [headers, ...rows];
-    
-    // Convert to CSV string
-    return allRows.map(row => 
-      row.map(field => `"${field}"`).join(',')
-    ).join('\n');
-  };
 
   return (
     <div style={styles.container}>

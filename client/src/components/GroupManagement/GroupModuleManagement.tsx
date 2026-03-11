@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Group } from '../../models/group';
 import { AssessmentModuleDto } from '../../models/assessment-module';
 import { groupService } from '../../services/groupService';
@@ -27,6 +27,23 @@ const AddModuleModal = ({ isOpen, availableModules, loading, onConfirm, onCancel
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
+  const handleConfirm = useCallback(() => {
+    if (!selectedModuleId) {
+      setError('Please select an assessment module');
+      return;
+    }
+    
+    // Check if the selected module is published and current
+    const selectedModule = availableModules.find(m => m.id === selectedModuleId);
+    if (!selectedModule?.hasPublishedVersions || !selectedModule?.latestVersion?.isPublished) {
+      setError('Selected module must have a published current version before it can be added to a group');
+      return;
+    }
+    
+    setError('');
+    onConfirm(selectedModuleId);
+  }, [selectedModuleId, availableModules, onConfirm]);
+
   useEffect(() => {
     if (isOpen) {
       setSelectedModuleId('');
@@ -53,24 +70,9 @@ const AddModuleModal = ({ isOpen, availableModules, loading, onConfirm, onCancel
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
-  }, [isOpen, selectedModuleId]);
+  }, [isOpen, onCancel, handleConfirm]);
 
-  const handleConfirm = () => {
-    if (!selectedModuleId) {
-      setError('Please select an assessment module');
-      return;
-    }
-    
-    // Check if the selected module is published and current
-    const selectedModule = availableModules.find(m => m.id === selectedModuleId);
-    if (!selectedModule?.hasPublishedVersions || !selectedModule?.latestVersion?.isPublished) {
-      setError('Selected module must have a published current version before it can be added to a group');
-      return;
-    }
-    
-    setError('');
-    onConfirm(selectedModuleId);
-  };
+
 
   if (!isOpen) return null;
 
@@ -278,12 +280,27 @@ const GroupModuleManagement = ({ isOpen, group, onClose, onGroupUpdated }: Group
     setLocalGroup(group);
   }, [group]);
 
+  const loadAvailableModules = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await assessmentService.fetchAllModules(1, 100); // Higher limit for dropdown
+      setAvailableModules(response.data?.data || []);
+    } catch (err: any) {
+      setError('Failed to load available modules');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Only load available modules when opening the add module modal
   useEffect(() => {
     if (addModuleModal) {
       loadAvailableModules();
     }
-  }, [addModuleModal]);
+  }, [addModuleModal, loadAvailableModules]);
+
+
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -299,28 +316,6 @@ const GroupModuleManagement = ({ isOpen, group, onClose, onGroupUpdated }: Group
     }
   }, [isOpen, onClose]);
 
-  const loadAvailableModules = async () => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await assessmentService.fetchAllModules(1, 100);
-      if (!response.isFailed) {
-        // Show all modules, but filter out ones already in the group
-        const existingModuleIds = localGroup.groupMembers.map(member => member.assessmentModuleId);
-        const filteredModules = response.data.data.filter(
-          module => !existingModuleIds.includes(module.id)
-        );
-        setAvailableModules(filteredModules);
-      } else {
-        setError('Failed to load assessment modules');
-      }
-    } catch (err: any) {
-      setError('Failed to load assessment modules: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAddModule = async (moduleId: string) => {
     setLoading(true);

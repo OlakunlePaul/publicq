@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { configurationService } from '../../services/configurationService';
 import { AuthOptions } from '../../models/auth-options';
 import cssStyles from './TokenManagement.module.css';
@@ -38,14 +38,7 @@ const TokenManagement: React.FC<TokenManagementProps> = ({ tokenConfig, setToken
   const [success, setSuccess] = useState('');
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
-  useEffect(() => {
-    if (tokenConfig.dataLoaded) {
-      return;
-    }
-    loadTokenOptions();
-  }, []);
-
-  const loadTokenOptions = async () => {
+  const loadTokenOptions = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -58,7 +51,14 @@ const TokenManagement: React.FC<TokenManagementProps> = ({ tokenConfig, setToken
     } finally {
       setLoading(false);
     }
-  };
+  }, [setTokenConfig]);
+
+  useEffect(() => {
+    if (tokenConfig.dataLoaded) {
+      return;
+    }
+    loadTokenOptions();
+  }, [tokenConfig.dataLoaded, loadTokenOptions]);
 
   const hasCriticalChanges = () => {
     return tokenConfig.jwtSettings.secret !== originalOptions.jwtSettings.secret ||
@@ -66,7 +66,7 @@ const TokenManagement: React.FC<TokenManagementProps> = ({ tokenConfig, setToken
            tokenConfig.jwtSettings.audience !== originalOptions.jwtSettings.audience;
   };
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     // Validate JWT Secret
     if (!tokenConfig.jwtSettings.secret || tokenConfig.jwtSettings.secret.trim().length < 32) {
       setError('JWT Secret must be at least 32 characters long');
@@ -81,7 +81,7 @@ const TokenManagement: React.FC<TokenManagementProps> = ({ tokenConfig, setToken
     }
 
     return true;
-  };
+  }, [tokenConfig.jwtSettings.secret, tokenConfig.jwtSettings.tokenExpiryMinutes]);
 
   const handleSaveTokenOptions = async () => {
     // Validate form fields
@@ -99,7 +99,7 @@ const TokenManagement: React.FC<TokenManagementProps> = ({ tokenConfig, setToken
     await performSave();
   };
 
-  const performSave = async () => {
+  const performSave = useCallback(async () => {
     setLoading(true);
     setError('');
     setSuccess('');
@@ -113,16 +113,16 @@ const TokenManagement: React.FC<TokenManagementProps> = ({ tokenConfig, setToken
     } finally {
       setLoading(false);
     }
-  };
+  }, [tokenConfig]);
 
-  const handleConfirmSave = async () => {
+  const handleConfirmSave = useCallback(async () => {
     // Validate again before confirming (in case user changed values while modal was open)
     if (!validateForm()) {
       setShowConfirmationModal(false);
       return;
     }
     await performSave();
-  };
+  }, [validateForm, performSave]);
 
   const hasUnsavedChanges = () => {
     return tokenConfig.jwtSettings.secret !== originalOptions.jwtSettings.secret ||
@@ -181,7 +181,7 @@ const TokenManagement: React.FC<TokenManagementProps> = ({ tokenConfig, setToken
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
       }
-    }, [showConfirmationModal, loading]);
+    }, []);
 
     if (!showConfirmationModal) return null;
 

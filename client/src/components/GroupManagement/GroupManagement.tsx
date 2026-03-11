@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Group, GroupCreate, GroupUpdate } from '../../models/group';
 import { Assignment } from '../../models/assignment-base';
 import { groupService } from '../../services/groupService';
@@ -69,6 +69,38 @@ const GroupFormModal = ({ isOpen, group, apiError, onConfirm, onCancel }: GroupF
     }
   }, [apiError]);
 
+  const validateForm = useCallback((): boolean => {
+    if (!formData.title.trim()) {
+      setError('Title is required');
+      return false;
+    }
+    if (formData.title.length > VALIDATION_CONSTRAINTS.GROUP.TITLE_MAX_LENGTH) {
+      setError(`Title must not exceed ${VALIDATION_CONSTRAINTS.GROUP.TITLE_MAX_LENGTH} characters`);
+      return false;
+    }
+    if (formData.description.length > VALIDATION_CONSTRAINTS.GROUP.DESCRIPTION_MAX_LENGTH) {
+      setError(`Description must not exceed ${VALIDATION_CONSTRAINTS.GROUP.DESCRIPTION_MAX_LENGTH} characters`);
+      return false;
+    }
+    setError('');
+    return true;
+  }, [formData.title, formData.description]);
+
+  const handleConfirm = useCallback(() => {
+    if (validateForm()) {
+      if (group) {
+        // Update existing group
+        onConfirm({
+          ...formData,
+          id: group.id,
+        } as GroupUpdate);
+      } else {
+        // Create new group
+        onConfirm(formData as GroupCreate);
+      }
+    }
+  }, [formData, group, onConfirm, validateForm]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isOpen) {
@@ -86,24 +118,9 @@ const GroupFormModal = ({ isOpen, group, apiError, onConfirm, onCancel }: GroupF
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
-  }, [isOpen, formData]);
+  }, [isOpen, onCancel, handleConfirm]);
 
-  const validateForm = (): boolean => {
-    if (!formData.title.trim()) {
-      setError('Title is required');
-      return false;
-    }
-    if (formData.title.length > VALIDATION_CONSTRAINTS.GROUP.TITLE_MAX_LENGTH) {
-      setError(`Title must not exceed ${VALIDATION_CONSTRAINTS.GROUP.TITLE_MAX_LENGTH} characters`);
-      return false;
-    }
-    if (formData.description.length > VALIDATION_CONSTRAINTS.GROUP.DESCRIPTION_MAX_LENGTH) {
-      setError(`Description must not exceed ${VALIDATION_CONSTRAINTS.GROUP.DESCRIPTION_MAX_LENGTH} characters`);
-      return false;
-    }
-    setError('');
-    return true;
-  };
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -114,30 +131,7 @@ const GroupFormModal = ({ isOpen, group, apiError, onConfirm, onCancel }: GroupF
     if (error) setError('');
   };
 
-  const handleConfirm = () => {
-    if (validateForm()) {
-      if (group) {
-        // Update existing group
-        onConfirm({
-          id: group.id,
-          title: formData.title.trim(),
-          description: formData.description.trim(),
-          waitModuleCompletion: formData.waitModuleCompletion,
-          isMemberOrderLocked: formData.isMemberOrderLocked,
-          groupMembers: group.groupMembers,
-        });
-      } else {
-        // Create new group
-        onConfirm({
-          title: formData.title.trim(),
-          description: formData.description.trim(),
-          waitModuleCompletion: formData.waitModuleCompletion,
-          isMemberOrderLocked: formData.isMemberOrderLocked,
-          groupMembers: [],
-        });
-      }
-    }
-  };
+
 
   if (!isOpen) return null;
 
@@ -452,6 +446,46 @@ const GroupManagement = ({ groupManagementData, setGroupManagementData }: GroupM
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [formModal.isOpen, moduleManagement.isOpen]);
 
+
+  const loadGroups = useCallback(async (page: number = pageNumber, searchTerm: string = '', currentPageSize: number = pageSize) => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await groupService.getGroups(page, currentPageSize);
+      
+      // Filter by search term if provided (client-side filtering for now)
+      let filteredGroups = response.data || [];
+      if (searchTerm && Array.isArray(filteredGroups)) {
+        filteredGroups = filteredGroups.filter(group => 
+          group.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          group.description.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+      
+      setGroupManagementData(prev => ({
+        ...prev,
+        groups: filteredGroups,
+        totalPages: response.totalPages || 1,
+        currentPage: page,
+        dataLoaded: true,
+      }));
+    } catch (err: any) {
+      setError('Failed to load groups: ' + (err.response?.data?.message || err.message));
+      // Set empty array on error to prevent map errors
+      setGroupManagementData(prev => ({
+        ...prev,
+        groups: [],
+        totalPages: 1,
+        currentPage: 1,
+        dataLoaded: true,
+      }));
+    } finally {
+      setLoading(false);
+    }
+  }, [pageNumber, pageSize, setGroupManagementData]);
+
+
   // Add mobile responsive styles
   useEffect(() => {
     const style = document.createElement('style');
@@ -546,50 +580,13 @@ const GroupManagement = ({ groupManagementData, setGroupManagementData }: GroupM
     };
   }, []);
 
-  const loadGroups = async (page: number = pageNumber, searchTerm: string = '', currentPageSize: number = pageSize) => {
-    setLoading(true);
-    setError('');
 
-    try {
-      const response = await groupService.getGroups(page, currentPageSize);
-      
-      // Filter by search term if provided (client-side filtering for now)
-      let filteredGroups = response.data || [];
-      if (searchTerm && Array.isArray(filteredGroups)) {
-        filteredGroups = filteredGroups.filter(group => 
-          group.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          group.description.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-      
-      setGroupManagementData(prev => ({
-        ...prev,
-        groups: filteredGroups,
-        totalPages: response.totalPages || 1,
-        currentPage: page,
-        dataLoaded: true,
-      }));
-    } catch (err: any) {
-      setError('Failed to load groups: ' + (err.response?.data?.message || err.message));
-      // Set empty array on error to prevent map errors
-      setGroupManagementData(prev => ({
-        ...prev,
-        groups: [],
-        totalPages: 1,
-        currentPage: 1,
-        dataLoaded: true,
-      }));
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  // Load groups only if data hasn't been loaded yet
   useEffect(() => {
     if (!dataLoaded) {
       loadGroups(1);
     }
-  }, [dataLoaded]);
+  }, [dataLoaded, loadGroups]);
 
   // Handle page size changes
   useEffect(() => {
@@ -600,7 +597,7 @@ const GroupManagement = ({ groupManagementData, setGroupManagementData }: GroupM
     
     // Reset to page 1 when page size changes and reload data
     loadGroups(1, search, pageSize);
-  }, [pageSize]);
+  }, [pageSize, loadGroups, search]);
 
   const handlePrevious = () => {
     if (pageNumber > 1) {

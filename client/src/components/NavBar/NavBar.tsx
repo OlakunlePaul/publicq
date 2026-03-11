@@ -6,7 +6,6 @@ import { UserPolicies } from '../../models/user-policy';
 import { cn } from '../../utils/cn';
 import { PageService } from '../../services/pageService';
 import { PageType } from '../../models/page-type';
-import { GenericOperationStatuses } from '../../models/GenericOperationStatuses';
 import { ROUTES } from '../../constants/contstants';
 import navStyles from './NavBar.module.css';
 
@@ -14,7 +13,7 @@ const NavBar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hasContactPage, setHasContactPage] = useState(false);
 
-  const { token, logout, userRoles } = useAuth();
+  const { token, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Assignment } from '../../models/assignment';
 import { Group } from '../../models/group';
@@ -64,6 +64,184 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
   const [celebratingModules, setCelebratingModules] = useState<Set<string>>(new Set());
   const [launching, setLaunching] = useState(false);
 
+  const convertToEnum = useCallback((status: ModuleStatus | string): ModuleStatus => {
+    return typeof status === 'string' 
+      ? ModuleStatus[status as keyof typeof ModuleStatus] 
+      : status;
+  }, []);
+
+  const getModuleTimeInfo = useCallback((memberState: GroupMemberState) => {
+    // Calculate time information from GroupMemberState timing properties
+    if (!memberState.startedAtUtc && !memberState.durationInMinutes) {
+      return null; // No timing info available
+    }
+
+    const result: any = {};
+    const statusEnum = convertToEnum(memberState.status);
+    const isCompleted = statusEnum === ModuleStatus.Completed;
+
+    // If module has a duration limit, use server-calculated time remaining
+    if (memberState.durationInMinutes && memberState.startedAtUtc) {
+      // Use server-calculated time remaining to prevent clock manipulation (TimeSpan format: "HH:MM:SS")
+      let remainingMinutes = 0;
+      if (memberState.timeRemaining && typeof memberState.timeRemaining === 'string') {
+        const parts = memberState.timeRemaining.split(':');
+        const hours = parseInt(parts[0] || '0', 10);
+        const minutes = parseInt(parts[1] || '0', 10);
+        const seconds = parseInt(parts[2] || '0', 10);
+        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+        remainingMinutes = Math.ceil(totalSeconds / 60);
+      }
+      
+      // Only show remaining time for non-completed modules
+      if (remainingMinutes > 0 && !isCompleted) {
+        if (remainingMinutes < 60) {
+          result.remainingDisplay = `${remainingMinutes}m remaining`;
+        } else {
+          const hours = Math.floor(remainingMinutes / 60);
+          const minutes = remainingMinutes % 60;
+          result.remainingDisplay = `${hours}h ${minutes}m remaining`;
+        }
+        result.remainingMinutes = remainingMinutes;
+      }
+      // If time expired, don't show anything - status badge will handle it
+    } else if (memberState.durationInMinutes && !isCompleted) {
+      // Module has duration but hasn't started yet - show duration with green color (only for non-completed)
+      const duration = memberState.durationInMinutes;
+      if (duration < 60) {
+        result.durationDisplay = `${duration}m duration`;
+      } else {
+        const hours = Math.floor(duration / 60);
+        const minutes = duration % 60;
+        result.durationDisplay = `${hours}h ${minutes}m duration`;
+      }
+      result.remainingMinutes = duration; // Use duration for color calculation
+      result.remainingDisplay = result.durationDisplay; // Show duration in header
+    }
+
+    // If completed, show completion time in local timezone
+    if (memberState.completedAtUtc) {
+      // Convert UTC string to local Date object
+      const completedTime = new Date(memberState.completedAtUtc + 'Z'); // Ensure it's treated as UTC
+      const localDateString = completedTime.toLocaleDateString();
+      const localTimeString = completedTime.toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      });
+      result.completedDisplay = `Completed ${localDateString} at ${localTimeString}`;
+    }
+
+    return Object.keys(result).length > 0 ? result : null;
+  }, [convertToEnum]);
+
+  const loadAssignmentData = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      // Try to get group state which contains all group info and member states with current status
+      try {
+        const groupStateResponse = await sessionService.getGroupState(user.id, assignment.id);
+        
+        if (groupStateResponse.isSuccess && groupStateResponse.data) {
+          // Create group object from group state data
+          const groupData: Group = {
+            id: groupStateResponse.data.id,
+            title: groupStateResponse.data.title,
+            description: groupStateResponse.data.description,
+            waitModuleCompletion: groupStateResponse.data.waitModuleCompletion,
+            isMemberOrderLocked: groupStateResponse.data.isMemberOrderLocked,
+            groupMembers: [], // We'll set the member states separately
+            updatedAtUtc: new Date().toISOString(),
+            createdByUserId: '',
+            createdByUser: '',
+            updatedByUserId: '',
+            createdAtUtc: new Date().toISOString()
+          };
+          
+          setGroup(groupData);
+          
+          // The group state should already contain the member states with their current status
+          const memberStates = groupStateResponse.data.groupMembers.map((member) => ({
+            id: member.id,
+            name: member.assessmentModuleTitle || member.name || '',
+            status: member.status,
+            groupId: member.groupId,
+            orderNumber: member.orderNumber,
+            assessmentModuleId: member.assessmentModuleId,
+            assessmentModuleTitle: member.assessmentModuleTitle,
+            assessmentModuleDescription: member.assessmentModuleDescription,
+            startedAtUtc: member.startedAtUtc,
+            completedAtUtc: member.completedAtUtc,
+            durationInMinutes: member.durationInMinutes,
+            timeRemaining: member.timeRemaining,
+            staticFileUrls: member.staticFileUrls,
+            passed: member.passed,
+            passingScorePercentage: member.passingScorePercentage,
+            scorePercentage: member.scorePercentage,
+          }));
+          
+          setGroupMemberStates(memberStates);
+          
+          // Initialize time states for tracking expiration
+          const initialTimeStates = new Map<string, number>();
+          memberStates.forEach(memberState => {
+            const timeInfo = getModuleTimeInfo(memberState);
+            initialTimeStates.set(memberState.id, timeInfo?.remainingMinutes || 0);
+          });
+          setPreviousTimeStates(initialTimeStates);
+          
+          return; // Successfully loaded from group state, we're done
+        }
+      } catch (groupStateError) {
+        // Group state not available (user hasn't started any modules), falling back to group service
+      }
+      
+      // Fallback: Load group data from group service for cases where user hasn't started any modules
+      const groupData = await groupService.getGroup(assignment.groupId);
+      setGroup(groupData);
+      
+      // Create default "Not Started" states since no session state exists yet
+      if (groupData.groupMembers && groupData.groupMembers.length > 0) {
+        const defaultMemberStates = groupData.groupMembers.map((member) => ({
+          id: member.id,
+          name: member.assessmentModuleTitle,
+          status: ModuleStatus.NotStarted,
+          groupId: member.groupId,
+          orderNumber: member.orderNumber,
+          assessmentModuleId: member.assessmentModuleId,
+          assessmentModuleTitle: member.assessmentModuleTitle,
+          assessmentModuleDescription: member.assessmentModuleDescription,
+          assessmentModule: member.assessmentModule,
+          startedAtUtc: undefined,
+          completedAtUtc: undefined,
+          durationInMinutes: undefined,
+          staticFileUrls: member.assessmentModule?.latestVersion?.staticFileUrls,
+          staticFileIds: member.assessmentModule?.latestVersion?.staticFileIds,
+          passed: undefined,
+          passingScorePercentage: undefined,
+          scorePercentage: undefined,
+        }));
+        setGroupMemberStates(defaultMemberStates);
+        
+        // Initialize time states for tracking expiration
+        const initialTimeStates = new Map<string, number>();
+        defaultMemberStates.forEach(memberState => {
+          const timeInfo = getModuleTimeInfo(memberState);
+          initialTimeStates.set(memberState.id, timeInfo?.remainingMinutes || 0);
+        });
+        setPreviousTimeStates(initialTimeStates);
+      } else {
+        setGroupMemberStates([]);
+      }
+    } catch (err: any) {
+      setError('Failed to load assignment details: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  }, [user.id, assignment.id, assignment.groupId, getModuleTimeInfo]);
+
   // Update UI every minute to refresh time remaining displays
   useEffect(() => {
     const interval = setInterval(() => {
@@ -97,7 +275,7 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
     }, 60000); // Update every minute
 
     return () => clearInterval(interval);
-  }, [groupMemberStates, previousTimeStates]);
+  }, [groupMemberStates, previousTimeStates, getModuleTimeInfo, loadAssignmentData]);
 
   // Refresh data when page becomes visible (user returns from another tab)
   useEffect(() => {
@@ -117,11 +295,11 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [groupMemberStates]);
+  }, [groupMemberStates, getModuleTimeInfo, loadAssignmentData]);
 
   useEffect(() => {
     loadAssignmentData();
-  }, [assignment.id]); // Changed from assignment.groupId to assignment.id
+  }, [loadAssignmentData]); // Changed from assignment.id to loadAssignmentData
 
   useEffect(() => {
     if (group && groupMemberStates) {
@@ -146,7 +324,7 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
         }
       });
     }
-  }, [group, groupMemberStates]);
+  }, [group, groupMemberStates, celebratingModules]);
 
   // Check scroll indicators when modal opens or content changes
   useEffect(() => {
@@ -264,7 +442,6 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
 
     const preventContextMenu = (e: MouseEvent) => {
       // Allow context menu for text selection to enable copying
-      const target = e.target as HTMLElement;
       const selection = window.getSelection();
       
       // If there's selected text, allow the context menu for copy functionality
@@ -442,183 +619,7 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
     };
   }, []);
 
-  const loadAssignmentData = async () => {
-    setLoading(true);
-    setError('');
-    
-    try {
-      // Try to get group state which contains all group info and member states with current status
-      try {
-        const groupStateResponse = await sessionService.getGroupState(user.id, assignment.id);
-        
-        if (groupStateResponse.isSuccess && groupStateResponse.data) {
-          // Create group object from group state data
-          const groupData: Group = {
-            id: groupStateResponse.data.id,
-            title: groupStateResponse.data.title,
-            description: groupStateResponse.data.description,
-            waitModuleCompletion: groupStateResponse.data.waitModuleCompletion,
-            isMemberOrderLocked: groupStateResponse.data.isMemberOrderLocked,
-            groupMembers: [], // We'll set the member states separately
-            updatedAtUtc: new Date().toISOString(),
-            createdByUserId: '',
-            createdByUser: '',
-            updatedByUserId: '',
-            createdAtUtc: new Date().toISOString()
-          };
-          
-          setGroup(groupData);
-          
-          // The group state should already contain the member states with their current status
-          const memberStates = groupStateResponse.data.groupMembers.map((member) => ({
-            id: member.id,
-            name: member.assessmentModuleTitle || member.name || '',
-            status: member.status,
-            groupId: member.groupId,
-            orderNumber: member.orderNumber,
-            assessmentModuleId: member.assessmentModuleId,
-            assessmentModuleTitle: member.assessmentModuleTitle,
-            assessmentModuleDescription: member.assessmentModuleDescription,
-            startedAtUtc: member.startedAtUtc,
-            completedAtUtc: member.completedAtUtc,
-            durationInMinutes: member.durationInMinutes,
-            timeRemaining: member.timeRemaining,
-            staticFileUrls: member.staticFileUrls,
-            passed: member.passed,
-            passingScorePercentage: member.passingScorePercentage,
-            scorePercentage: member.scorePercentage,
-          }));
-          
-          setGroupMemberStates(memberStates);
-          
-          // Initialize time states for tracking expiration
-          const initialTimeStates = new Map<string, number>();
-          memberStates.forEach(memberState => {
-            const timeInfo = getModuleTimeInfo(memberState);
-            initialTimeStates.set(memberState.id, timeInfo?.remainingMinutes || 0);
-          });
-          setPreviousTimeStates(initialTimeStates);
-          
-          return; // Successfully loaded from group state, we're done
-        }
-      } catch (groupStateError) {
-        // Group state not available (user hasn't started any modules), falling back to group service
-      }
-      
-      // Fallback: Load group data from group service for cases where user hasn't started any modules
-      const groupData = await groupService.getGroup(assignment.groupId);
-      setGroup(groupData);
 
-      // Create default "Not Started" states since no session state exists yet
-      if (groupData.groupMembers && groupData.groupMembers.length > 0) {
-        const defaultMemberStates = groupData.groupMembers.map((member) => ({
-          id: member.id,
-          name: member.assessmentModuleTitle,
-          status: ModuleStatus.NotStarted,
-          groupId: member.groupId,
-          orderNumber: member.orderNumber,
-          assessmentModuleId: member.assessmentModuleId,
-          assessmentModuleTitle: member.assessmentModuleTitle,
-          assessmentModuleDescription: member.assessmentModuleDescription,
-          assessmentModule: member.assessmentModule,
-          startedAtUtc: undefined,
-          completedAtUtc: undefined,
-          durationInMinutes: undefined,
-          staticFileUrls: member.assessmentModule?.latestVersion?.staticFileUrls,
-          staticFileIds: member.assessmentModule?.latestVersion?.staticFileIds,
-          passed: undefined,
-          passingScorePercentage: undefined,
-          scorePercentage: undefined,
-        }));
-        setGroupMemberStates(defaultMemberStates);
-        
-        // Initialize time states for tracking expiration
-        const initialTimeStates = new Map<string, number>();
-        defaultMemberStates.forEach(memberState => {
-          const timeInfo = getModuleTimeInfo(memberState);
-          initialTimeStates.set(memberState.id, timeInfo?.remainingMinutes || 0);
-        });
-        setPreviousTimeStates(initialTimeStates);
-      } else {
-        setGroupMemberStates([]);
-      }
-    } catch (err: any) {
-      setError('Failed to load assignment details: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const convertToEnum = (status: ModuleStatus | string): ModuleStatus => {
-    return typeof status === 'string' 
-      ? ModuleStatus[status as keyof typeof ModuleStatus] 
-      : status;
-  };
-
-  const getModuleTimeInfo = (memberState: GroupMemberState) => {
-    // Calculate time information from GroupMemberState timing properties
-    if (!memberState.startedAtUtc && !memberState.durationInMinutes) {
-      return null; // No timing info available
-    }
-
-    const result: any = {};
-    const statusEnum = convertToEnum(memberState.status);
-    const isCompleted = statusEnum === ModuleStatus.Completed;
-
-    // If module has a duration limit, use server-calculated time remaining
-    if (memberState.durationInMinutes && memberState.startedAtUtc) {
-      // Use server-calculated time remaining to prevent clock manipulation (TimeSpan format: "HH:MM:SS")
-      let remainingMinutes = 0;
-      if (memberState.timeRemaining && typeof memberState.timeRemaining === 'string') {
-        const parts = memberState.timeRemaining.split(':');
-        const hours = parseInt(parts[0] || '0', 10);
-        const minutes = parseInt(parts[1] || '0', 10);
-        const seconds = parseInt(parts[2] || '0', 10);
-        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
-        remainingMinutes = Math.ceil(totalSeconds / 60);
-      }
-      
-      // Only show remaining time for non-completed modules
-      if (remainingMinutes > 0 && !isCompleted) {
-        if (remainingMinutes < 60) {
-          result.remainingDisplay = `${remainingMinutes}m remaining`;
-        } else {
-          const hours = Math.floor(remainingMinutes / 60);
-          const minutes = remainingMinutes % 60;
-          result.remainingDisplay = `${hours}h ${minutes}m remaining`;
-        }
-        result.remainingMinutes = remainingMinutes;
-      }
-      // If time expired, don't show anything - status badge will handle it
-    } else if (memberState.durationInMinutes && !isCompleted) {
-      // Module has duration but hasn't started yet - show duration with green color (only for non-completed)
-      const duration = memberState.durationInMinutes;
-      if (duration < 60) {
-        result.durationDisplay = `${duration}m duration`;
-      } else {
-        const hours = Math.floor(duration / 60);
-        const minutes = duration % 60;
-        result.durationDisplay = `${hours}h ${minutes}m duration`;
-      }
-      result.remainingMinutes = duration; // Use duration for color calculation
-      result.remainingDisplay = result.durationDisplay; // Show duration in header
-    }
-
-    // If completed, show completion time in local timezone
-    if (memberState.completedAtUtc) {
-      // Convert UTC string to local Date object
-      const completedTime = new Date(memberState.completedAtUtc + 'Z'); // Ensure it's treated as UTC
-      const localDateString = completedTime.toLocaleDateString();
-      const localTimeString = completedTime.toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: true 
-      });
-      result.completedDisplay = `Completed ${localDateString} at ${localTimeString}`;
-    }
-
-    return Object.keys(result).length > 0 ? result : null;
-  };
 
   const refreshGroupMemberStates = async (examTakerAssignmentId: string) => {
     try {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { configurationService } from '../../services/configurationService';
 
 interface UserRegistrationManagementProps {
@@ -15,14 +15,7 @@ const UserRegistrationManagement: React.FC<UserRegistrationManagementProps> = ({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  useEffect(() => {
-    if (userRegistrationConfig.dataLoaded) {
-      return;
-    }
-    loadUserRegistrationOptions();
-  }, []);
-
-  const loadUserRegistrationOptions = async () => {
+  const loadUserRegistrationOptions = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -35,7 +28,14 @@ const UserRegistrationManagement: React.FC<UserRegistrationManagementProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [setUserRegistrationConfig]);
+
+  useEffect(() => {
+    if (userRegistrationConfig.dataLoaded) {
+      return;
+    }
+    loadUserRegistrationOptions();
+  }, [userRegistrationConfig.dataLoaded, loadUserRegistrationOptions]);
 
   const handleToggleChange = async (enabled: boolean) => {
     setUserRegistrationConfig({ ...userRegistrationConfig, enabled });

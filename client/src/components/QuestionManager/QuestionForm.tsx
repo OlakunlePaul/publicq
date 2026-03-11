@@ -72,11 +72,9 @@ export const QuestionForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [lastSubmissionTime, setLastSubmissionTime] = useState(0);
-  const [answerFiles, setAnswerFiles] = useState<Record<number, File[]>>({});
-  // Map to store blob URLs to their corresponding files
   const [blobUrlsToFiles, setBlobUrlsToFiles] = useState<Record<string, File>>({});
   // Track existing answer attachment file names for better display
-  const [localAnswerAttachmentNames, setLocalAnswerAttachmentNames] = useState<Record<string, string>>(answerAttachmentNames);
+  const [localAnswerAttachmentNames] = useState<Record<string, string>>(answerAttachmentNames);
   
   // Preview modal state
   const [showPreview, setShowPreview] = useState(false);
@@ -554,7 +552,6 @@ export const QuestionForm = ({
               value={formData.type}
               onChange={e => {
                 const newType = parseInt(e.target.value) as QuestionType;
-                const currentType = formData.type;
                 let newAnswers = formData.answers;
                 
                 // Adjust answers based on question type
@@ -775,12 +772,6 @@ export const QuestionForm = ({
                           accept=".jpg,.jpeg,.png,.mp3,.mp4"
                           onChange={e => {
                             const files = Array.from(e.target.files || []);
-                            
-                            // Store files by answer index
-                            setAnswerFiles(prev => ({
-                              ...prev,
-                              [index]: [...(prev[index] || []), ...files]
-                            }));
                             
                             // Create blob URLs and store the mapping
                             const urlFileMap: Record<string, File> = {};

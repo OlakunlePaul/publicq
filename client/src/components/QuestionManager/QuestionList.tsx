@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { QuestionDto, AssessmentModuleVersionDto } from "../../models/assessment-module";
 import { assessmentService } from "../../services/assessmentService";
 import { questionService } from "../../services/questionService";
@@ -27,11 +27,7 @@ export const QuestionList = ({ moduleId, moduleVersionId, moduleVersionIsPublish
   const [answerAttachmentNames, setAnswerAttachmentNames] = useState<Record<string, string>>({});
   const [answerAttachmentUrls, setAnswerAttachmentUrls] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    loadQuestions();
-  }, [moduleVersionId]);
-
-  const loadQuestions = async () => {
+  const loadQuestions = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await assessmentService.fetchModuleLatestVersion(moduleVersionId);
@@ -49,7 +45,11 @@ export const QuestionList = ({ moduleId, moduleVersionId, moduleVersionIsPublish
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [moduleVersionId, onVersionDataLoaded, onQuestionsChange]);
+
+  useEffect(() => {
+    loadQuestions();
+  }, [loadQuestions]);
 
   const handleQuestionAdded = async (newQuestion: QuestionCreateDto) => {
     

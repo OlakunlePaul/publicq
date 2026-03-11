@@ -1,0 +1,154 @@
+﻿
+> client@0.1.0 build
+> react-scripts build
+
+node.exe : (node:15684) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\hp\AppData\Roaming\npm ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:15684) [D...ts.F_OK instead:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Creating an optimized production build...
+Compiled with warnings.
+
+[eslint] 
+src\components\AiConfiguration\AiConfiguration.tsx
+  Line 5:10:  'ResponseWithData' is defined but never used  @typescript-eslint/no-unused-vars
+
+src\components\AssessmentModuleForm\ModuleForm.tsx
+  Line 300:23:  'staticFileIds' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+src\components\AssignmentAccess\AssignmentAccess.tsx
+  Line 185:25:  The ref value 'requestCounterRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'requestCounterRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+src\components\AssignmentExecution\AssignmentExecution.tsx
+  Line 100:6:   React Hook useEffect has missing dependencies: 'getModuleTimeInfo' and 'loadAssignmentData'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 120:6:   React Hook useEffect has missing dependencies: 'getModuleTimeInfo' and 'loadAssignmentData'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 124:6:   React Hook useEffect has a missing dependency: 'loadAssignmentData'. Either include it or remove the dependency array                            react-hooks/exhaustive-deps
+  Line 149:6:   React Hook useEffect has a missing dependency: 'celebratingModules'. Either include it or remove the dependency array                            react-hooks/exhaustive-deps
+  Line 267:13:  'target' is assigned a value but never used                                                                                                      @typescript-eslint/no-unused-vars
+
+src\components\AssignmentFullReport\AssignmentFullReport.tsx
+  Line 61:6:   React Hook useEffect has a missing dependency: 'fetchAssignmentReport'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 310:9:  'toggleStudentDetails' is assigned a value but never used                                                                 @typescript-eslint/no-unused-vars
+
+src\components\AssignmentManagement\AssignmentManagement.tsx
+  Line 11:10:   'GenericOperationStatuses' is defined but never used                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  Line 109:6:   React Hook useEffect has missing dependencies: 'handleConfirm' and 'onCancel'. Either include them or remove the dependency array. If 'onCancel' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+  Line 490:6:   React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array                                                                                                                                            react-hooks/exhaustive-deps
+  Line 509:6:   React Hook useEffect has missing dependencies: 'handleConfirm' and 'onCancel'. Either include them or remove the dependency array. If 'onCancel' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+  Line 631:13:  'usersToMove' is assigned a value but never used                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  Line 947:6:   React Hook useEffect has a missing dependency: 'loadAssignments'. Either include it or remove the dependency array                                                                                                                                     react-hooks/exhaustive-deps
+  Line 958:6:   React Hook useEffect has missing dependencies: 'loadAssignments' and 'search'. Either include them or remove the dependency array                                                                                                                      react-hooks/exhaustive-deps
+
+src\components\CacheManagement\CacheManagement.tsx
+  Line 40:6:  React Hook useEffect has missing dependencies: 'cacheConfig.dataLoaded' and 'loadCacheOptions'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\DemoExam\DemoExam.tsx
+  Line 1:27:  'useEffect' is defined but never used        @typescript-eslint/no-unused-vars
+  Line 4:23:  'DEMO_ASSIGNMENT' is defined but never used  @typescript-eslint/no-unused-vars
+  Line 4:40:  'DEMO_USER' is defined but never used        @typescript-eslint/no-unused-vars
+  Line 5:10:  'ModuleProgress' is defined but never used   @typescript-eslint/no-unused-vars
+
+src\components\FileStorageManagement\FileStorageManagement.tsx
+  Line 24:6:  React Hook useEffect has missing dependencies: 'fileStorageConfig.dataLoaded' and 'loadFileStorageOptions'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\GroupManagement\GroupManagement.tsx
+  Line 89:6:   React Hook useEffect has missing dependencies: 'handleConfirm' and 'onCancel'. Either include them or remove the dependency array. If 'onCancel' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+  Line 592:6:  React Hook useEffect has a missing dependency: 'loadGroups'. Either include it or remove the dependency array                                                                                                                                          react-hooks/exhaustive-deps
+  Line 603:6:  React Hook useEffect has missing dependencies: 'loadGroups' and 'search'. Either include them or remove the dependency array                                                                                                                           react-hooks/exhaustive-deps
+
+src\components\GroupManagement\GroupModuleManagement.tsx
+  Line 56:6:   React Hook useEffect has missing dependencies: 'handleConfirm' and 'onCancel'. Either include them or remove the dependency array. If 'onCancel' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+  Line 286:6:  React Hook useEffect has a missing dependency: 'loadAvailableModules'. Either include it or remove the dependency array                                                                                                                                react-hooks/exhaustive-deps
+
+src\components\IpRateLimiting\IpRateLimiting.tsx
+  Line 37:6:  React Hook useEffect has a missing dependency: 'loadRateLimitOptions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\LogManagement\LogManagement.tsx
+  Line 25:10:  'totalLogs' is assigned a value but never used                                                                                                        @typescript-eslint/no-unused-vars
+  Line 51:6:   React Hook useEffect has missing dependencies: 'loadLogConfiguration' and 'logConfig.dataLoaded'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 78:6:   React Hook useEffect has a missing dependency: 'confirmLogLevelChange'. Either include it or remove the dependency array                              react-hooks/exhaustive-deps
+
+src\components\ModuleManagement\ModuleManagement.tsx
+  Line 159:6:  React Hook useEffect has a missing dependency: 'handleCreateModule'. Either include it or remove the dependency array          react-hooks/exhaustive-deps
+  Line 317:6:  React Hook useEffect has a missing dependency: 'loadModules'. Either include it or remove the dependency array                 react-hooks/exhaustive-deps
+  Line 328:6:  React Hook useEffect has missing dependencies: 'loadModules' and 'search'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\NavBar\NavBar.tsx
+  Line 16:26:  'userRoles' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+src\components\PasswordManagement\PasswordManagement.tsx
+  Line 32:6:  React Hook useEffect has missing dependencies: 'loadPasswordPolicy' and 'passwordConfig.dataLoaded'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\QuestionManager\QuestionForm.tsx
+  Line 75:10:   'answerFiles' is assigned a value but never used                    @typescript-eslint/no-unused-vars
+  Line 79:38:   'setLocalAnswerAttachmentNames' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  Line 557:23:  'currentType' is assigned a value but never used                    @typescript-eslint/no-unused-vars
+
+src\components\QuestionManager\QuestionList.tsx
+  Line 32:6:  React Hook useEffect has a missing dependency: 'loadQuestions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\Questions\Questions.tsx
+  Line 62:10:   'windowWidth' is assigned a value but never used                                                                                              @typescript-eslint/no-unused-vars
+  Line 124:6:   React Hook useEffect has missing dependencies: 'loadModuleData', 'navigate', and 'state'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 215:15:  'seconds' is assigned a value but never used                                                                                                  @typescript-eslint/no-unused-vars
+
+src\components\ReportsAnalytics\UsersReports.tsx
+  Line 24:29:    'parseUtcDate' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+  Line 61:6:     React Hook useEffect has a missing dependency: 'loadExamTakers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 123:6:    React Hook useEffect has a missing dependency: 'loadExamTakers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 1075:11:  'isWithinPeriod' is assigned a value but never used                                                                @typescript-eslint/no-unused-vars
+  Line 1185:9:   'getStatusColor' is assigned a value but never used                                                                @typescript-eslint/no-unused-vars
+  Line 1194:9:   'getStatusTextColor' is assigned a value but never used                                                            @typescript-eslint/no-unused-vars
+
+src\components\TokenManagement\TokenManagement.tsx
+  Line 46:6:   React Hook useEffect has missing dependencies: 'loadTokenOptions' and 'tokenConfig.dataLoaded'. Either include them or remove the dependency array                                                                                                                             react-hooks/exhaustive-deps
+  Line 184:8:  React Hook useEffect has unnecessary dependencies: 'loading' and 'showConfirmationModal'. Either exclude them or remove the dependency array. Outer scope values like 'showConfirmationModal' aren't valid dependencies because mutating them doesn't re-render the component  react-hooks/exhaustive-deps
+
+src\components\UserManagement\UserManagement.tsx
+  Line 114:6:    React Hook useEffect has a missing dependency: 'checkEmailConfiguration'. Either include it or remove the dependency array                                                                                                                             react-hooks/exhaustive-deps
+  Line 161:6:    React Hook useEffect has missing dependencies: 'handleConfirm' and 'onCancel'. Either include them or remove the dependency array. If 'onCancel' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+  Line 549:6:    React Hook useEffect has missing dependencies: 'handleConfirm' and 'onCancel'. Either include them or remove the dependency array. If 'onCancel' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+  Line 1118:6:   React Hook useEffect has a missing dependency: 'loadUsers'. Either include it or remove the dependency array                                                                                                                                           react-hooks/exhaustive-deps
+  Line 1259:23:  'field' is assigned a value but never used                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+
+src\pages\Admin.tsx
+  Line 361:6:  React Hook useEffect has missing dependencies: 'dashboardDataLoaded' and 'dashboardLoading'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\Register.tsx
+  Line 185:6:  React Hook useCallback has an unnecessary dependency: 'confirmPassword'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\ResetPassword.tsx
+  Line 221:6:  React Hook useCallback has an unnecessary dependency: 'confirmPassword'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  606.68 kB  build\static\js\main.13a5f74f.js
+  43.59 kB   build\static\css\main.38630732.css
+  33.51 kB   build\static\js\265.598e4165.chunk.js
+  8.71 kB    build\static\js\82.947832ec.chunk.js
+  1.71 kB    build\static\js\206.0ce7f948.chunk.js
+
+The bundle size is significantly larger than recommended.
+Consider reducing it with code splitting: https://goo.gl/9VhYWB
+You can also analyze the project dependencies: https://goo.gl/LeUzfb
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  npm install -g serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+

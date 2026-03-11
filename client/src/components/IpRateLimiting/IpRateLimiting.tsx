@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { configurationService } from '../../services/configurationService';
 import { IpRateLimitOptions } from '../../models/ip-rate-limit-options';
 import { IpRateLimitUpdateRequest } from '../../models/ip-rate-limit-update-request';
@@ -32,11 +32,7 @@ const IpRateLimiting: React.FC<IpRateLimitingProps> = ({ onStatusChange }) => {
   });
   const [newWhitelistIp, setNewWhitelistIp] = useState('');
 
-  useEffect(() => {
-    loadRateLimitOptions();
-  }, []);
-
-  const loadRateLimitOptions = async () => {
+  const loadRateLimitOptions = useCallback(async () => {
     try {
       setLoading(true);
       const response = await configurationService.getIpRateLimitOptions();
@@ -76,7 +72,11 @@ const IpRateLimiting: React.FC<IpRateLimitingProps> = ({ onStatusChange }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [onStatusChange]);
+
+  useEffect(() => {
+    loadRateLimitOptions();
+  }, [loadRateLimitOptions]);
 
   const parsePeriodToSeconds = (period: string): number => {
     const match = period.match(/^(\d+)([smhd])$/);

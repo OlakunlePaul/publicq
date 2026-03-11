@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { CONSTANTS } from '../constants/contstants';
 import { UserCreateRequest } from "../models/userCreateRequest";
 import { ResponseWithData } from "../models/responseWithData";
-import { GenericOperationStatuses } from "../models/GenericOperationStatuses";
 import { useAuth } from "../context/AuthContext";
 import { userService } from "../services/userService";
 import { configurationService } from "../services/configurationService";
@@ -76,19 +75,7 @@ const Register = () => {
   };
 
 
-  const validateForm = () => {
-    // Check if any field has validation errors by using the existing getFieldError function
-    // This prevents duplication of validation messages
-    const hasEmailError = getFieldError('email');
-    const hasFullNameError = getFieldError('fullName');
-    const hasPasswordError = getFieldError('password');
-    const hasConfirmPasswordError = getFieldError('confirmPassword');
-
-    // Return true if any field has errors, false if all fields are valid
-    return hasEmailError || hasFullNameError || hasPasswordError || hasConfirmPasswordError;
-  };
-
-  const getFieldError = (fieldName: string) => {
+  const getFieldError = useCallback((fieldName: string) => {
     if (!touched[fieldName]) return null;
 
     switch (fieldName) {
@@ -127,7 +114,19 @@ const Register = () => {
         break;
     }
     return null;
-  };
+  }, [username, fullName, password, confirmPassword, passwordPolicy, touched]);
+
+  const validateForm = useCallback(() => {
+    // Check if any field has validation errors by using the existing getFieldError function
+    // This prevents duplication of validation messages
+    const hasEmailError = getFieldError('email');
+    const hasFullNameError = getFieldError('fullName');
+    const hasPasswordError = getFieldError('password');
+    const hasConfirmPasswordError = getFieldError('confirmPassword');
+
+    // Return true if any field has errors, false if all fields are valid
+    return !!(hasEmailError || hasFullNameError || hasPasswordError || hasConfirmPasswordError);
+  }, [getFieldError]);
 
   const handleFieldTouch = (fieldName: string) => {
     setTouched({ ...touched, [fieldName]: true });
@@ -174,7 +173,7 @@ const Register = () => {
       // Redirect to home page after successful registration
       navigate('/');
     } catch (err: any) {
-      const result = err.response?.data as ResponseWithData<string, GenericOperationStatuses> | undefined;
+      const result = err.response?.data as ResponseWithData<string, any> | undefined;
       if (result?.errors) {
         setErrors(result.errors);
       } else {
@@ -183,7 +182,7 @@ const Register = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [username, fullName, dateOfBirth, password, confirmPassword, isSubmitting, navigate]);
+  }, [username, fullName, dateOfBirth, password, isSubmitting, navigate, saveToken, validateForm]);
 
   // Handle Ctrl+Enter keyboard shortcut
   useEffect(() => {

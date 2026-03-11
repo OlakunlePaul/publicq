@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import {
@@ -21,7 +21,7 @@ import { reportingService } from '../../services/reportingService';
 import { IndividualUserReport } from '../../models/individual-user-report';
 import { ExamTakerReport, ExamTakerAssignmentReport } from '../../models/reporting';
 import { ModuleStatus } from '../../models/module-status';
-import { formatDateToLocal, parseUtcDate, isBeforeNow, isAfterNow } from '../../utils/dateUtils';
+import { formatDateToLocal, isBeforeNow, isAfterNow } from '../../utils/dateUtils';
 import styles from './UsersReports.module.css';
 
 interface UsersReportsProps {
@@ -51,25 +51,8 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
     setCurrentPage(1); // Reset to first page when changing page size
   };
 
-  // Handle real-time search with debouncing (like UserTable)
-  useEffect(() => {
-    const debounceTimeout = setTimeout(() => {
-      setCurrentPage(1);
-      loadExamTakers(1, searchTerm);
-    }, 300);
-    return () => clearTimeout(debounceTimeout);
-  }, [searchTerm, searchType]);
-
-  // Handle page size changes
-  useEffect(() => {
-    if (!isInitialMount.current) { // Only reload if it's not the initial mount
-      loadExamTakers(1, searchTerm);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageSize]);
-
   // Load exam takers data
-  const loadExamTakers = async (page: number = 1, search: string = '') => {
+  const loadExamTakers = useCallback(async (page: number = 1, search: string = '') => {
     try {
       setLoading(true);
       setError('');
@@ -94,10 +77,27 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pageSize, searchType]);
+
+  // Handle real-time search with debouncing (like UserTable)
+  useEffect(() => {
+    const debounceTimeout = setTimeout(() => {
+      setCurrentPage(1);
+      loadExamTakers(1, searchTerm);
+    }, 300);
+    return () => clearTimeout(debounceTimeout);
+  }, [searchTerm, searchType, loadExamTakers]);
+
+  // Handle page size changes
+  useEffect(() => {
+    if (!isInitialMount.current) { // Only reload if it's not the initial mount
+      loadExamTakers(1, searchTerm);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageSize, loadExamTakers]);
 
   // Load exam taker report
-  const loadExamTakerReport = async (examTaker: IndividualUserReport) => {
+  const loadExamTakerReport = useCallback(async (examTaker: IndividualUserReport) => {
     try {
       setReportLoading(true);
       setLoadingExamTakerId(examTaker.examTakerId);
@@ -114,13 +114,13 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
       setReportLoading(false);
       setLoadingExamTakerId(null);
     }
-  };
+  }, []);
 
   // Load data on component mount
   useEffect(() => {
     loadExamTakers(1);
     isInitialMount.current = false; // Mark initial mount as complete
-  }, []);
+  }, [loadExamTakers]);
 
   // Add ESC key handler for closing modals
   useEffect(() => {
@@ -1072,9 +1072,6 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
     // Determine if assignment is within its scheduled timeline
     const isBeforeStart = hasStartDate && isBeforeNow(assignment.assignmentStartDateUtc, now);
     const isAfterEnd = hasEndDate && isAfterNow(assignment.assignmentEndDateUtc, now);
-    const isWithinPeriod = hasStartDate && hasEndDate && 
-                          !isBeforeNow(assignment.assignmentStartDateUtc, now) && 
-                          !isAfterNow(assignment.assignmentEndDateUtc, now);
 
     // Check module completion status
     let moduleCompletionStatus = 'not-started';
@@ -1177,25 +1174,6 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
       case 'scheduled': return '#3730a3'; // Dark blue
       case 'not submitted': return '#dc2626'; // Dark red
       case 'not started': return '#374151'; // Dark gray
-      default: return '#374151';
-    }
-  };
-
-  // Get status color for badges
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'completed': return '#dcfce7';
-      case 'in progress': return '#fef3c7';
-      case 'not started': return '#fef2f2';
-      default: return '#f3f4f6';
-    }
-  };
-
-  const getStatusTextColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'completed': return '#166534';
-      case 'in progress': return '#92400e';
-      case 'not started': return '#dc2626';
       default: return '#374151';
     }
   };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { configurationService } from '../../services/configurationService';
 import { CacheConfiguration } from '../../models/cache-configuration';
 import { CacheService } from '../../services/cacheService';
@@ -32,14 +32,7 @@ const CacheManagement: React.FC<CacheManagementProps> = ({ cacheConfig, setCache
     loading: false
   });
 
-  useEffect(() => {
-    if (cacheConfig.dataLoaded) {
-      return;
-    }
-    loadCacheOptions();
-  }, []);
-
-  const loadCacheOptions = async () => {
+  const loadCacheOptions = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -57,7 +50,16 @@ const CacheManagement: React.FC<CacheManagementProps> = ({ cacheConfig, setCache
     } finally {
       setLoading(false);
     }
-  };
+  }, [setCacheConfig]);
+
+  useEffect(() => {
+    if (cacheConfig.dataLoaded) {
+      return;
+    }
+    loadCacheOptions();
+  }, [cacheConfig.dataLoaded, loadCacheOptions]);
+
+
 
   const checkCacheHealth = async (connectionString: string) => {
     setHealthStatus(prev => ({ ...prev, loading: true }));

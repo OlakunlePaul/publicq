@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AssessmentModuleDto } from '../../models/assessment-module';
 import { assessmentService } from '../../services/assessmentService';
@@ -145,6 +145,11 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
     isLoading: boolean;
   }>({ isOpen: false, moduleId: '', moduleTitle: '', isLoading: false });
 
+  const handleCreateModule = useCallback(() => {
+    // Navigate directly to create a new module
+    navigate('/module/create');
+  }, [navigate]);
+
   // Handle Ctrl+N keyboard shortcut for creating new module
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -156,7 +161,7 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [handleCreateModule]);
 
   // Add mobile responsive styles
   useEffect(() => {
@@ -252,7 +257,7 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
     };
   }, []);
 
-  const loadModules = async (page: number = pageNumber, searchTerm: string = '', currentPageSize: number = pageSize) => {
+  const loadModules = useCallback(async (page: number = pageNumber, searchTerm: string = '', currentPageSize: number = pageSize) => {
     setLoading(true);
     setError('');
 
@@ -307,14 +312,14 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
     } finally {
       setLoading(false);
     }
-  };
+  }, [pageNumber, pageSize, setModuleManagementData]);
 
   // Load modules only if data hasn't been loaded yet
   useEffect(() => {
     if (!dataLoaded) {
       loadModules(1);
     }
-  }, [dataLoaded]);
+  }, [dataLoaded, loadModules]);
 
   // Handle page size changes
   useEffect(() => {
@@ -325,7 +330,7 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
     
     // Reset to page 1 when page size changes and reload data
     loadModules(1, search, pageSize);
-  }, [pageSize]);
+  }, [pageSize, search, loadModules]);
 
   const handlePrevious = () => {
     if (pageNumber > 1) {
@@ -361,10 +366,7 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
     }
   };
 
-  const handleCreateModule = () => {
-    // Navigate directly to create a new module
-    navigate('/module/create');
-  };
+
 
   const handleDeleteModule = (module: AssessmentModuleDto) => {
     setDeleteModal({ 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Assignment, AssignmentCreate, AssignmentUpdate } from '../../models/assignment';
 import { Group } from '../../models/group';
 import { User } from '../../models/user';
@@ -8,7 +8,6 @@ import { userService } from '../../services/userService';
 import { formatDateToLocal } from '../../utils/dateUtils';
 import UserTable from '../Shared/UserTable';
 import { VALIDATION_CONSTRAINTS } from '../../constants/contstants';
-import { GenericOperationStatuses } from '../../models/GenericOperationStatuses';
 import cssStyles from './AssignmentManagement.module.css';
 import { cn } from '../../utils/cn';
 
@@ -89,34 +88,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
     }
   }, [isOpen, assignment]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen) {
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          onCancel();
-        } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-          e.preventDefault();
-          handleConfirm();
-        }
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [isOpen, formData]);
-
-  const loadGroups = async () => {
-    try {
-      const response = await groupService.getGroups(1, 100); // Get first 100 groups
-      setGroups(response.data || []);
-    } catch (error) {
-    }
-  };
-
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     if (!formData.title.trim()) {
       setError('Title is required');
       return false;
@@ -147,18 +119,9 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
     }
     setError('');
     return true;
-  };
+  }, [formData.title, formData.description, formData.startDateUtc, formData.endDateUtc, formData.groupId]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
-    }));
-    if (error) setError('');
-  };
-
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(() => {
     if (validateForm()) {
       // Convert local datetime to UTC ISO string
       const startUtc = new Date(formData.startDateUtc).toISOString();
@@ -191,7 +154,47 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
         });
       }
     }
+  }, [formData, assignment, onConfirm, validateForm]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isOpen) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          onCancel();
+        } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          handleConfirm();
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, onCancel, handleConfirm]);
+
+  const loadGroups = async () => {
+    try {
+      const response = await groupService.getGroups(1, 100); // Get first 100 groups
+      setGroups(response.data || []);
+    } catch (error) {
+    }
   };
+
+
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+    }));
+    if (error) setError('');
+  };
+
+
 
   if (!isOpen) return null;
 
@@ -480,35 +483,7 @@ const ExamTakerManagementModal: React.FC<ExamTakerManagementModalProps> = ({
   const [availableUsersLoading, setAvailableUsersLoading] = useState(false);
   const [availableUsersSearch, setAvailableUsersSearch] = useState('');
   const [availableUsersPageSize, setAvailableUsersPageSize] = useState(10);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (isOpen) {
-      loadData();
-      setError('');
-    }
-  }, [isOpen, currentExamTakers]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen) {
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          onCancel();
-        } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-          e.preventDefault();
-          handleConfirm();
-        }
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [isOpen]);
-
-  const loadAvailableUsers = async (page: number = 1, searchTerm: string = '', currentPageSize: number = availableUsersPageSize) => {
+  const loadAvailableUsers = useCallback(async (page: number = 1, searchTerm: string = '', currentPageSize: number = availableUsersPageSize) => {
     setAvailableUsersLoading(true);
     try {
       let response;
@@ -534,15 +509,48 @@ const ExamTakerManagementModal: React.FC<ExamTakerManagementModalProps> = ({
     } finally {
       setAvailableUsersLoading(false);
     }
-  };
+  }, [availableUsersPageSize]);
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     // Use the passed assigned users instead of fetching them again
     setAssignedUsers(currentAssignedUsers);
     
     // Load available users separately (this has its own loading state)
     loadAvailableUsers(1, '');
-  };
+  }, [currentAssignedUsers, loadAvailableUsers]);
+
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      loadData();
+      setError('');
+    }
+  }, [isOpen, currentExamTakers, loadData]);
+
+  const handleConfirm = useCallback(() => {
+    const finalExamTakerIds = assignedUsers.map(user => user.id);
+    onConfirm(finalExamTakerIds);
+  }, [assignedUsers, onConfirm]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isOpen) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          onCancel();
+        } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          handleConfirm();
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, onCancel, handleConfirm]);
 
   const handleAvailableUsersPageChange = (page: number) => {
     loadAvailableUsers(page, availableUsersSearch, availableUsersPageSize);
@@ -627,9 +635,6 @@ const ExamTakerManagementModal: React.FC<ExamTakerManagementModalProps> = ({
 
   const moveToUnassigned = () => {
     if (selectedAssigned.length > 0) {
-      // Get the users to move from the assigned users list
-      const usersToMove = assignedUsers.filter(user => selectedAssigned.includes(user.id));
-      
       // Remove from assigned users
       setAssignedUsers(prev => prev.filter(user => !selectedAssigned.includes(user.id)));
       
@@ -641,10 +646,7 @@ const ExamTakerManagementModal: React.FC<ExamTakerManagementModalProps> = ({
     }
   };
 
-  const handleConfirm = () => {
-    const finalExamTakerIds = assignedUsers.map(user => user.id);
-    onConfirm(finalExamTakerIds);
-  };
+
 
   if (!isOpen) return null;
 
@@ -907,7 +909,7 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
     };
   }, []);
 
-  const loadAssignments = async (page: number = pageNumber, searchTerm: string = '', currentPageSize: number = pageSize) => {
+  const loadAssignments = useCallback(async (page: number = pageNumber, searchTerm: string = '', currentPageSize: number = pageSize) => {
     setLoading(true);
     setError('');
 
@@ -937,14 +939,14 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
     } finally {
       setLoading(false);
     }
-  };
+  }, [pageNumber, pageSize, setAssignmentManagementData]);
 
   // Load assignments only if data hasn't been loaded yet
   useEffect(() => {
     if (!dataLoaded) {
       loadAssignments(1);
     }
-  }, [dataLoaded]);
+  }, [dataLoaded, loadAssignments]);
 
   // Handle page size changes
   useEffect(() => {
@@ -955,7 +957,7 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
     
     // Reset to page 1 when page size changes and reload data
     loadAssignments(1, search, pageSize);
-  }, [pageSize]);
+  }, [pageSize, loadAssignments, search]);
 
   const handlePrevious = () => {
     if (pageNumber > 1) {

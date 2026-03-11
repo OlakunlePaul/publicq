@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Questions from '../Questions/Questions';
-import { DEMO_MODULE, DEMO_ASSIGNMENT, DEMO_USER, DEMO_CORRECT_ANSWERS } from './mockDemoData';
-import { ModuleProgress } from '../../models/module-progress';
+import { DEMO_MODULE, DEMO_CORRECT_ANSWERS } from './mockDemoData';
+
 import { ROUTES } from '../../constants/contstants';
 import styles from './DemoExam.module.css';
 

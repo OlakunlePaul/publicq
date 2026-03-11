@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { configurationService } from '../../services/configurationService';
 import { EmailOption } from '../../models/email-option';
 import { MessageProvider } from '../../models/MessageProvider';
@@ -46,21 +46,7 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
   });
   const [smtpLoaded, setSmtpLoaded] = useState(false);
 
-  useEffect(() => {
-    if (emailOptions.dataLoaded) {
-      return;
-    }
-    loadEmailOptions();
-  }, []);
-
-  // Load SMTP options when SMTP provider is selected
-  useEffect(() => {
-    if (emailOptions.messageProvider === MessageProvider.Smtp && emailOptions.enabled && !smtpLoaded) {
-      loadSmtpOptions();
-    }
-  }, [emailOptions.messageProvider, emailOptions.enabled, smtpLoaded]);
-
-  const loadEmailOptions = async () => {
+  const loadEmailOptions = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -72,9 +58,9 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
     } finally {
       setLoading(false);
     }
-  };
+  }, [setEmailOptions]);
 
-  const loadSmtpOptions = async () => {
+  const loadSmtpOptions = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -89,7 +75,21 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (emailOptions.dataLoaded) {
+      return;
+    }
+    loadEmailOptions();
+  }, [emailOptions.dataLoaded, loadEmailOptions]);
+
+  // Load SMTP options when SMTP provider is selected
+  useEffect(() => {
+    if (emailOptions.messageProvider === MessageProvider.Smtp && emailOptions.enabled && !smtpLoaded) {
+      loadSmtpOptions();
+    }
+  }, [emailOptions.messageProvider, emailOptions.enabled, smtpLoaded, loadSmtpOptions]);
 
   const handleSaveEmailOptions = async () => {
     setLoading(true);

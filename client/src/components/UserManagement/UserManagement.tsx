@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { User } from '../../models/user';
 import { userService } from '../../services/userService';
 import { UserCreateByAdminRequest } from '../../models/userCreateByAdminRequest';
@@ -89,31 +89,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
   const [emailEnabled, setEmailEnabled] = useState<boolean | null>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        email: '',
-        fullName: '',
-        password: '',
-        id: '',
-        dateOfBirth: '',
-      });
-      setIsExamTaker(false);
-      setValidationError('');
-      
-      // Check email configuration when modal opens
-      checkEmailConfiguration();
-      
-      // Auto-focus on email input when modal opens
-      setTimeout(() => {
-        if (emailInputRef.current) {
-          emailInputRef.current.focus();
-        }
-      }, 100); // Small delay to ensure modal is rendered
-    }
-  }, [isOpen]);
-
-  const checkEmailConfiguration = async () => {
+  const checkEmailConfiguration = useCallback(async () => {
     try {
       const emailOptions = await configurationService.getEmailOptions();
       const isEmailEnabled = emailOptions.enabled || false;
@@ -139,28 +115,33 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
         }));
       }
     }
-  };
+  }, [formData.password]);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen) {
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          onCancel();
-        } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-          e.preventDefault();
-          handleConfirm();
-        }
-      }
-    };
-
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
+      setFormData({
+        email: '',
+        fullName: '',
+        password: '',
+        id: '',
+        dateOfBirth: '',
+      });
+      setIsExamTaker(false);
+      setValidationError('');
+      
+      // Check email configuration when modal opens
+      checkEmailConfiguration();
+      
+      // Auto-focus on email input when modal opens
+      setTimeout(() => {
+        if (emailInputRef.current) {
+          emailInputRef.current.focus();
+        }
+      }, 100); // Small delay to ensure modal is rendered
     }
-  }, [isOpen, formData, isExamTaker]);
+  }, [isOpen, checkEmailConfiguration]);
 
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     // For regular users, email is required
     if (!isExamTaker) {
       if (!formData.email.trim()) {
@@ -220,7 +201,29 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
     
     setValidationError('');
     return true;
-  };
+  }, [emailEnabled, formData.email, formData.fullName, formData.id, formData.password, isExamTaker]);
+
+  const handleConfirm = useCallback(() => {
+    if (validateForm()) {
+      if (isExamTaker) {
+        const examTakerRequest: ExamTakerCreateRequest = {
+          fullName: formData.fullName.trim(),
+          ...(formData.id.trim() && { id: formData.id.trim() }),
+          ...(formData.email.trim() && { email: formData.email.trim() }),
+          ...(formData.dateOfBirth.trim() && { dateOfBirth: formData.dateOfBirth.trim() })
+        };
+        onConfirm(examTakerRequest, true);
+      } else {
+        const userRequest: UserCreateByAdminRequest = {
+          email: formData.email.trim(),
+          fullName: formData.fullName.trim(),
+          ...(formData.password.trim() && { password: formData.password.trim() }),
+          ...(formData.dateOfBirth.trim() && { dateOfBirth: formData.dateOfBirth.trim() })
+        };
+        onConfirm(userRequest, false);
+      }
+    }
+  }, [formData, isExamTaker, onConfirm, validateForm]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -249,27 +252,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
     if (validationError) setValidationError('');
   };
 
-  const handleConfirm = () => {
-    if (validateForm()) {
-      if (isExamTaker) {
-        const examTakerRequest: ExamTakerCreateRequest = {
-          fullName: formData.fullName.trim(),
-          ...(formData.id.trim() && { id: formData.id.trim() }),
-          ...(formData.email.trim() && { email: formData.email.trim() }),
-          ...(formData.dateOfBirth.trim() && { dateOfBirth: formData.dateOfBirth.trim() })
-        };
-        onConfirm(examTakerRequest, true);
-      } else {
-        const userRequest: UserCreateByAdminRequest = {
-          email: formData.email.trim(),
-          fullName: formData.fullName.trim(),
-          ...(formData.password.trim() && { password: formData.password.trim() }),
-          ...(formData.dateOfBirth.trim() && { dateOfBirth: formData.dateOfBirth.trim() })
-        };
-        onConfirm(userRequest, false);
-      }
-    }
-  };
+
 
   if (!isOpen) return null;
 
@@ -529,26 +512,7 @@ const ResetPasswordModal = ({ isOpen, userEmail, onConfirm, onCancel }: ResetPas
     }
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen) {
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          onCancel();
-        } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-          e.preventDefault();
-          handleConfirm();
-        }
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [isOpen, password]);
-
-  const validatePassword = (pwd: string): boolean => {
+  const validatePassword = useCallback((pwd: string): boolean => {
     if (!passwordPolicy) {
       setError('Password policy not loaded');
       return false;
@@ -586,7 +550,13 @@ const ResetPasswordModal = ({ isOpen, userEmail, onConfirm, onCancel }: ResetPas
 
     setError('');
     return true;
-  };
+  }, [passwordPolicy]);
+
+  const handleConfirm = useCallback(() => {
+    if (validatePassword(password)) {
+      onConfirm(password);
+    }
+  }, [password, onConfirm, validatePassword]);
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPassword = e.target.value;
@@ -596,11 +566,7 @@ const ResetPasswordModal = ({ isOpen, userEmail, onConfirm, onCancel }: ResetPas
     }
   };
 
-  const handleConfirm = () => {
-    if (validatePassword(password)) {
-      onConfirm(password);
-    }
-  };
+
 
   if (!isOpen) return null;
 
@@ -1082,7 +1048,7 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
   const [searchType, setSearchType] = useState<'email' | 'id'>('email');
 
   // Load users data
-  const loadUsers = async (page: number = 1, newPageSize: number = pageSize, search: string = searchTerm, searchBy: 'email' | 'id' = searchType) => {
+  const loadUsers = useCallback(async (page: number = 1, newPageSize: number = pageSize, search: string = searchTerm, searchBy: 'email' | 'id' = searchType) => {
     setLoading(true);
     setError('');
     try {
@@ -1108,14 +1074,14 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
     } finally {
       setLoading(false);
     }
-  };
+  }, [pageSize, searchTerm, searchType, setUserManagementData]);
 
   // Load users on component mount or when page size changes
   useEffect(() => {
     if (!userManagementData.dataLoaded) {
       loadUsers(1, pageSize);
     }
-  }, [userManagementData.dataLoaded, pageSize]);
+  }, [userManagementData.dataLoaded, pageSize, loadUsers]);
 
   // Handle page size changes with proper reset
   const handlePageSizeChange = (newPageSize: number) => {
@@ -1164,6 +1130,10 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleCreateUser = useCallback(() => {
+    setCreateUserModal({ isOpen: true });
+  }, []);
+
   // Handle Ctrl+N keyboard shortcut for creating new user
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1175,7 +1145,7 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [createUserModal.isOpen]);
+  }, [createUserModal.isOpen, handleCreateUser]);
 
   // Add mobile responsive styles
   useEffect(() => {
@@ -1214,9 +1184,7 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
     };
   }, []);
 
-  const handleCreateUser = () => {
-    setCreateUserModal({ isOpen: true });
-  };
+
 
   const handleDeleteUser = (userEmail: string, userId: string) => {
     setDeleteModal({ isOpen: true, userEmail, userId });
@@ -1256,7 +1224,7 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
           }
           
           // Add validation errors
-          for (const [field, messages] of Object.entries(data.errors)) {
+          for (const messages of Object.values(data.errors)) {
             if (Array.isArray(messages)) {
               errorDetails.push(...messages);
             } else if (typeof messages === 'string') {

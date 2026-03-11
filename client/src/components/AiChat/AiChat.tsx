@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { cn } from '../../utils/cn';
 import { Button } from '../Button/Button';
-import Input from '../Shared/Input';
 import { Card } from '../Shared/Card';
 import styles from './AiChat.module.css';
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import {
@@ -34,10 +34,10 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
   const [assignmentReport, setAssignmentReport] = useState<AssignmentReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
+
 
   // Fetch full assignment report
-  const fetchAssignmentReport = async () => {
+  const fetchAssignmentReport = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -54,11 +54,11 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [assignmentId]);
 
   useEffect(() => {
     fetchAssignmentReport();
-  }, [assignmentId]);
+  }, [fetchAssignmentReport]);
 
   // Add mobile responsive styles
   useEffect(() => {
@@ -306,10 +306,7 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
     ].filter(item => item.value > 0);
   };
 
-  // Toggle student details expansion
-  const toggleStudentDetails = (studentId: string) => {
-    setExpandedStudent(expandedStudent === studentId ? null : studentId);
-  };
+
 
   // Get module progress for the current assignment
   const getModuleProgress = (student: any) => {

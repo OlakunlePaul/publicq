@@ -5,7 +5,7 @@ import FormGroup from "../Shared/FormGroup";
 import { ModuleVersionSettings } from "./ModuleVersionSettings";
 import StaticFileUpload from "../Shared/StaticFileUpload";
 import { StaticFileDto } from "../../models/static-file";
-import { AssessmentModuleDto } from "../../models/assessment-module";
+import type { AssessmentModuleDto } from "../../models/assessment-module";
 import { AssessmentModuleVersionUpdateDto } from "../../models/assessment-modules-update";
 import { VALIDATION_CONSTRAINTS } from "../../constants/contstants";
 import { parseFileUploadError } from "../../utils/fileUploadErrorHandler";
@@ -32,7 +32,7 @@ export const ModuleForm = ({ onSuccess, onBackToModules }: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touched, setTouched] = useState<{[key: string]: boolean}>({});
 
-  const validateForm = (): string[] => {
+  const validateForm = useCallback((): string[] => {
     const errors: string[] = [];
 
     // Title validation
@@ -68,7 +68,7 @@ export const ModuleForm = ({ onSuccess, onBackToModules }: Props) => {
     }
 
     return errors;
-  };
+  }, [form]);
 
   const getFieldError = (fieldName: string): string | null => {
     if (!touched[fieldName]) return null;
@@ -189,7 +189,7 @@ export const ModuleForm = ({ onSuccess, onBackToModules }: Props) => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [form, staticFiles, isSubmitting]); // Dependencies for useCallback
+  }, [form, staticFiles, isSubmitting, onSuccess, validateForm]); // Dependencies for useCallback
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -297,9 +297,6 @@ export const ModuleForm = ({ onSuccess, onBackToModules }: Props) => {
                 setStaticFiles(files);
                 
                 // Log file IDs from StaticFileDto objects
-                const staticFileIds = files
-                  .filter((file): file is StaticFileDto => !('lastModified' in file))
-                  .map(file => file.id);
               }} 
             />
           </div>

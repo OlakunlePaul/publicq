@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { configurationService } from '../../services/configurationService';
 import styles from './FileStorageManagement.module.css';
 
@@ -16,14 +16,7 @@ const FileStorageManagement: React.FC<FileStorageManagementProps> = ({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  useEffect(() => {
-    if (fileStorageConfig.dataLoaded) {
-      return;
-    }
-    loadFileStorageOptions();
-  }, []);
-
-  const loadFileStorageOptions = async () => {
+  const loadFileStorageOptions = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -41,7 +34,16 @@ const FileStorageManagement: React.FC<FileStorageManagementProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [setFileStorageConfig]);
+
+  useEffect(() => {
+    if (fileStorageConfig.dataLoaded) {
+      return;
+    }
+    loadFileStorageOptions();
+  }, [fileStorageConfig.dataLoaded, loadFileStorageOptions]);
+
+
 
   const validateForm = () => {
     if (fileStorageConfig.maxSizeKb < 1) {

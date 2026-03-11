@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { configurationService } from '../../services/configurationService';
 import { PasswordPolicyOptions } from '../../models/password-policy-options';
 import styles from './PasswordManagement.module.css';
@@ -24,14 +24,7 @@ const PasswordManagement: React.FC<PasswordManagementProps> = ({ passwordConfig,
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  useEffect(() => {
-    if (passwordConfig.dataLoaded) {
-      return;
-    }
-    loadPasswordPolicy();
-  }, []);
-
-  const loadPasswordPolicy = async () => {
+  const loadPasswordPolicy = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -44,7 +37,14 @@ const PasswordManagement: React.FC<PasswordManagementProps> = ({ passwordConfig,
     } finally {
       setLoading(false);
     }
-  };
+  }, [setPasswordConfig]);
+
+  useEffect(() => {
+    if (passwordConfig.dataLoaded) {
+      return;
+    }
+    loadPasswordPolicy();
+  }, [passwordConfig.dataLoaded, loadPasswordPolicy]);
 
   const validateForm = () => {
     // Validate required length

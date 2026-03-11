@@ -48,9 +48,7 @@ class McpClientService {
           version: '1.0.0'
         },
         {
-          capabilities: {
-            tools: {}
-          }
+          capabilities: {}
         }
       );
 

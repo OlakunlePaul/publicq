@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Assignment } from '../../models/assignment';
 import { assignmentService } from '../../services/assignmentService';
 import { userService } from '../../services/userService';
@@ -91,6 +91,52 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
     }
   };
 
+  // Increment request counter to track this specific request
+  const loadAssignments = useCallback(async (userId: string) => {
+    // Prevent multiple simultaneous calls
+    if (loadingRef.current) {
+      return;
+    }
+    
+    // Increment request counter to track this specific request
+    const currentRequestId = ++requestCounterRef.current;
+    loadingRef.current = true;
+    setLoading(true);
+    setError('');
+    
+    try {
+      const response = await assignmentService.getAvailableAssignments(userId);
+      
+      // Only update state if this is still the latest request
+      if (currentRequestId === requestCounterRef.current) {
+        // Only update state if we got valid data
+        if (response && response.data) {
+          const assignmentsData = response.data || [];
+          setAssignments(assignmentsData);
+          
+          // Store server time from the first assignment if available
+          if (assignmentsData.length > 0 && assignmentsData[0].serverUtcNow) {
+            setServerTime(new Date(assignmentsData[0].serverUtcNow));
+          }
+        } else {
+          setError('Invalid response received from server');
+        }
+      } else {
+      }
+    } catch (err: any) {
+      // Only set error if this is still the latest request
+      if (currentRequestId === requestCounterRef.current) {
+        setError('Failed to load assignments: ' + (err.response?.data?.message || err.message));
+      }
+    } finally {
+      // Only update loading state if this is still the latest request
+      if (currentRequestId === requestCounterRef.current) {
+        loadingRef.current = false;
+        setLoading(false);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const userId = getTokenUserId();
     // Handle authenticated user
@@ -167,7 +213,7 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
     if (!userId) {
       validateAndLoadExamTaker();
     }
-  }, [userId]);
+  }, [userId, loadAssignments]);
 
   // Update current time every minute to refresh assignment statuses
   useEffect(() => {
@@ -180,57 +226,16 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
 
   // Cleanup on unmount
   useEffect(() => {
+    // Read ref value once into a local variable for consistent use in cleanup
+    const currentRef = requestCounterRef;
     return () => {
       // Cancel any pending requests
-      requestCounterRef.current++;
+      currentRef.current++;
       loadingRef.current = false;
     };
   }, []);
 
-  const loadAssignments = async (userId: string) => {
-    // Prevent multiple simultaneous calls
-    if (loadingRef.current) {
-      return;
-    }
-    
-    // Increment request counter to track this specific request
-    const currentRequestId = ++requestCounterRef.current;
-    loadingRef.current = true;
-    setLoading(true);
-    setError('');
-    
-    try {
-      const response = await assignmentService.getAvailableAssignments(userId);
-      
-      // Only update state if this is still the latest request
-      if (currentRequestId === requestCounterRef.current) {
-        // Only update state if we got valid data
-        if (response && response.data) {
-          const assignmentsData = response.data || [];
-          setAssignments(assignmentsData);
-          
-          // Store server time from the first assignment if available
-          if (assignmentsData.length > 0 && assignmentsData[0].serverUtcNow) {
-            setServerTime(new Date(assignmentsData[0].serverUtcNow));
-          }
-        } else {
-          setError('Invalid response received from server');
-        }
-      } else {
-      }
-    } catch (err: any) {
-      // Only set error if this is still the latest request
-      if (currentRequestId === requestCounterRef.current) {
-        setError('Failed to load assignments: ' + (err.response?.data?.message || err.message));
-      }
-    } finally {
-      // Only update loading state if this is still the latest request
-      if (currentRequestId === requestCounterRef.current) {
-        loadingRef.current = false;
-        setLoading(false);
-      }
-    }
-  };
+
 
   const handleGuestAccess = async () => {
     if (!examTakerId.trim()) {

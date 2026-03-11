@@ -358,7 +358,7 @@ const Admin = () => {
     };
 
     fetchDashboardData();
-  }, []); // Empty dependency array - only run once on mount
+  }, [dashboardDataLoaded, dashboardLoading]); // Only run when state allows initialization
 
   const renderContent = () => {
     switch (activeSection) {

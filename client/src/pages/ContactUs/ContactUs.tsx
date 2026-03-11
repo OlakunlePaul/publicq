@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { PageService } from '../../services/pageService';
 import { ContactPageDto } from '../../models/contact-page-dto';
 import { PageType } from '../../models/page-type';
-import { GenericOperationStatuses } from '../../models/GenericOperationStatuses';
 import contactStyles from './ContactUs.module.css';
 
 const ContactUs: React.FC = () => {

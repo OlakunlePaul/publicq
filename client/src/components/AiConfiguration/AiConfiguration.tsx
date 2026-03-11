@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { configurationService } from '../../services/configurationService';
 import { LlmIntegrationOptions, OpenAIOptions, LlmProvider } from '../../models/llm-integration-options';
 import { McpApiKeyOptions, ApiKey } from '../../models/mcp-api-key-options';
-import { GenericOperationStatuses } from '../../models/GenericOperationStatuses';
 import { localDateTimeStringToUtc, formatDateToLocal } from '../../utils/dateUtils';
 import styles from './AiConfiguration.module.css';
 
@@ -51,19 +50,19 @@ const AiConfiguration: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  useEffect(() => {
-    loadConfiguration();
-    loadMcpApiKeys();
+  const loadOpenAiOptions = useCallback(async () => {
+    try {
+      const response = await configurationService.getOpenAIOptions();
+      if (response.isSuccess && response.data) {
+        setOpenAiOptions(response.data);
+        setOriginalOpenAiOptions(response.data);
+      }
+    } catch (err: any) {
+      console.error('Failed to load OpenAI configuration:', err);
+    }
   }, []);
 
-  // Load OpenAI options when OpenAI provider is selected
-  useEffect(() => {
-    if (llmOptions.provider === LlmProvider.OpenAI && llmOptions.enabled && !dataLoaded) {
-      loadOpenAiOptions();
-    }
-  }, [llmOptions.provider, llmOptions.enabled]);
-
-  const loadConfiguration = async () => {
+  const loadConfiguration = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -84,21 +83,9 @@ const AiConfiguration: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadOpenAiOptions]);
 
-  const loadOpenAiOptions = async () => {
-    try {
-      const response = await configurationService.getOpenAIOptions();
-      if (response.isSuccess && response.data) {
-        setOpenAiOptions(response.data);
-        setOriginalOpenAiOptions(response.data);
-      }
-    } catch (err: any) {
-      console.error('Failed to load OpenAI configuration:', err);
-    }
-  };
-
-  const loadMcpApiKeys = async () => {
+  const loadMcpApiKeys = useCallback(async () => {
     try {
       const response = await configurationService.getMcpApiOptions();
       if (response.isSuccess && response.data) {
@@ -108,7 +95,19 @@ const AiConfiguration: React.FC = () => {
     } catch (err: any) {
       console.error('Failed to load MCP API keys:', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadConfiguration();
+    loadMcpApiKeys();
+  }, [loadConfiguration, loadMcpApiKeys]);
+
+  // Load OpenAI options when OpenAI provider is selected
+  useEffect(() => {
+    if (llmOptions.provider === LlmProvider.OpenAI && llmOptions.enabled && !dataLoaded) {
+      loadOpenAiOptions();
+    }
+  }, [llmOptions.provider, llmOptions.enabled, dataLoaded, loadOpenAiOptions]);
 
   const handleSaveLlmOptions = async () => {
     setLoading(true);

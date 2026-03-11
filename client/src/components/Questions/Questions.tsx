@@ -59,7 +59,7 @@ const Questions: React.FC<QuestionsProps> = ({
   const [isTimeBoxHidden, setIsTimeBoxHidden] = useState(false);
   const [showColon, setShowColon] = useState(true);
   const [freeTextAnswers, setFreeTextAnswers] = useState<Record<string, string>>({});
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [, setWindowWidth] = useState(window.innerWidth);
   const [timerStartTime, setTimerStartTime] = useState<Date | null>(null);
   const [initialTimeRemaining, setInitialTimeRemaining] = useState<number | null>(null);
 
@@ -105,6 +105,58 @@ const Questions: React.FC<QuestionsProps> = ({
     }
   };
 
+  const loadModuleData = useCallback(async () => {
+    if (!state || !state.assignment || !state.groupMember || !state.user) {
+      setError('Missing required data to load module');
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    
+    try {
+      // If we don't have module progress yet, we need to get it to get the correct version ID
+      let currentModuleProgress = moduleProgress;
+      
+      if (!currentModuleProgress) {
+        // Get module progress to get the correct version ID
+        const progressResponse = await sessionService.getModuleProgress(
+          state.user.id,
+          state.assignment.id,
+          state.groupMember.assessmentModuleId
+        );
+
+        if (progressResponse.isSuccess && progressResponse.data) {
+          currentModuleProgress = progressResponse.data;
+          setModuleProgress(currentModuleProgress);
+        } else {
+          setError('Failed to create module progress: ' + (progressResponse.message || 'Unknown error'));
+          return;
+        }
+      }
+
+      // Now get the module version for the exam taker using the version ID from progress
+      const versionId = currentModuleProgress.assessmentModuleVersionId;
+      
+      const moduleVersionResponse = await sessionService.getModuleVersionForExamTaker(
+        state.user.id,
+        state.assignment.id,
+        versionId
+      );
+
+      if (moduleVersionResponse.isSuccess && moduleVersionResponse.data) {
+        setModuleVersion(moduleVersionResponse.data);
+      } else {
+        setError('Failed to load module data: ' + (moduleVersionResponse.message || 'Unknown error'));
+      }
+    } catch (err: any) {
+      setError('Failed to load questions: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  }, [state, moduleProgress]);
+
   useEffect(() => {
     // In demo mode, skip state validation and use demo data
     if (demoMode) {
@@ -121,7 +173,7 @@ const Questions: React.FC<QuestionsProps> = ({
     }
 
     loadModuleData();
-  }, [demoMode, demoModuleVersion]);
+  }, [demoMode, demoModuleVersion, loadModuleData, navigate, state]);
 
   // Add keyboard event handlers
   useEffect(() => {
@@ -212,7 +264,6 @@ const Questions: React.FC<QuestionsProps> = ({
         
         const hours = Math.floor(remainingSeconds / 3600);
         const minutes = Math.floor((remainingSeconds % 3600) / 60);
-        const seconds = remainingSeconds % 60;
         const expired = remainingSeconds <= 0;
         const totalMinutes = expired ? 0 : Math.ceil(remainingSeconds / 60);
         const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
@@ -252,57 +303,7 @@ const Questions: React.FC<QuestionsProps> = ({
     return () => clearInterval(interval);
   }, [demoMode, demoStartTime, timerStartTime, initialTimeRemaining, showTimeExpiredModal, moduleVersion?.durationInMinutes]);
 
-  const loadModuleData = async () => {
-    if (!state || !state.assignment || !state.groupMember || !state.user) {
-      setError('Missing required data to load module');
-      setLoading(false);
-      return;
-    }
 
-    setLoading(true);
-    setError('');
-    
-    try {
-      // If we don't have module progress yet, we need to get it to get the correct version ID
-      let currentModuleProgress = moduleProgress;
-      
-      if (!currentModuleProgress) {
-        // Get module progress to get the correct version ID
-        const progressResponse = await sessionService.getModuleProgress(
-          state.user.id,
-          state.assignment.id,
-          state.groupMember.assessmentModuleId
-        );
-
-        if (progressResponse.isSuccess && progressResponse.data) {
-          currentModuleProgress = progressResponse.data;
-          setModuleProgress(currentModuleProgress);
-        } else {
-          setError('Failed to create module progress: ' + (progressResponse.message || 'Unknown error'));
-          return;
-        }
-      }
-
-      // Now get the module version for the exam taker using the version ID from progress
-      const versionId = currentModuleProgress.assessmentModuleVersionId;
-      
-      const moduleVersionResponse = await sessionService.getModuleVersionForExamTaker(
-        state.user.id,
-        state.assignment.id,
-        versionId
-      );
-
-      if (moduleVersionResponse.isSuccess && moduleVersionResponse.data) {
-        setModuleVersion(moduleVersionResponse.data);
-      } else {
-        setError('Failed to load module data: ' + (moduleVersionResponse.message || 'Unknown error'));
-      }
-    } catch (err: any) {
-      setError('Failed to load questions: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleBack = async () => {
     // In demo mode, call the exit callback

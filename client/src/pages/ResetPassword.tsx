@@ -46,28 +46,7 @@ const ResetPassword = () => {
   const { saveToken } = useAuth();
   const passwordInputRef = useRef<HTMLInputElement>(null);
 
-  // Extract email and token from URL parameters and validate token
-  useEffect(() => {
-    const emailParam = searchParams.get('email');
-    const tokenParam = searchParams.get('token');
-    
-    if (!emailParam || !tokenParam) {
-      setIsValidLink(false);
-      setIsCheckingToken(false);
-      setErrors(['Invalid password link. Please request a new password creation link.']);
-      return;
-    }
-    
-    setEmail(emailParam);
-    setToken(tokenParam);
-    
-    // Validate the token before showing the form
-    validateResetToken(emailParam, tokenParam);
-    
-    loadPasswordPolicy();
-  }, [searchParams]);
-
-  const validateResetToken = async (email: string, token: string) => {
+  const validateResetToken = useCallback(async (email: string, token: string) => {
     setIsCheckingToken(true);
     try {
       const response = await userService.checkResetToken({ email, token });
@@ -97,9 +76,9 @@ const ResetPassword = () => {
     } finally {
       setIsCheckingToken(false);
     }
-  };
+  }, []);
 
-  const loadPasswordPolicy = async () => {
+  const loadPasswordPolicy = useCallback(async () => {
     setPolicyLoading(true);
     try {
       const response = await configurationService.getPasswordPolicy();
@@ -116,15 +95,30 @@ const ResetPassword = () => {
     } finally {
       setPolicyLoading(false);
     }
-  };
+  }, []);
 
-  const validateForm = () => {
-    const hasPasswordError = getFieldError('password');
-    const hasConfirmPasswordError = getFieldError('confirmPassword');
-    return hasPasswordError || hasConfirmPasswordError;
-  };
+  // Extract email and token from URL parameters and validate token
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    const tokenParam = searchParams.get('token');
+    
+    if (!emailParam || !tokenParam) {
+      setIsValidLink(false);
+      setIsCheckingToken(false);
+      setErrors(['Invalid password link. Please request a new password creation link.']);
+      return;
+    }
+    
+    setEmail(emailParam);
+    setToken(tokenParam);
+    
+    // Validate the token before showing the form
+    validateResetToken(emailParam, tokenParam);
+    
+    loadPasswordPolicy();
+  }, [searchParams, validateResetToken, loadPasswordPolicy]);
 
-  const getFieldError = (fieldName: string) => {
+  const getFieldError = useCallback((fieldName: string) => {
     if (!touched[fieldName]) return null;
 
     switch (fieldName) {
@@ -156,7 +150,13 @@ const ResetPassword = () => {
         break;
     }
     return null;
-  };
+  }, [password, confirmPassword, passwordPolicy, touched]);
+
+  const validateForm = useCallback(() => {
+    const hasPasswordError = getFieldError('password');
+    const hasConfirmPasswordError = getFieldError('confirmPassword');
+    return hasPasswordError || hasConfirmPasswordError;
+  }, [getFieldError]);
 
   const handleFieldTouch = (fieldName: string) => {
     setTouched({ ...touched, [fieldName]: true });
@@ -218,7 +218,7 @@ const ResetPassword = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [password, confirmPassword, email, token, isSubmitting, isValidLink, navigate, saveToken]);
+  }, [password, email, token, isSubmitting, isValidLink, navigate, saveToken, validateForm]);
 
   const handleBackToLogin = () => {
     navigate('/login');

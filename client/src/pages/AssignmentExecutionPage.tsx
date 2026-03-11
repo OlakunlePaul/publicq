@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AssignmentExecution from '../components/AssignmentExecution/AssignmentExecution';
 import { Assignment } from '../models/assignment';
@@ -19,7 +19,7 @@ const AssignmentExecutionPage: React.FC = () => {
   const [examTakerError, setExamTakerError] = useState('');
 
   // Load assignment by ID from URL
-  const loadAssignmentById = async (assignmentId: string) => {
+  const loadAssignmentById = useCallback(async (assignmentId: string) => {
     setIsLoading(true);
     try {
       const response = await assignmentService.getAssignmentById(assignmentId);
@@ -37,7 +37,7 @@ const AssignmentExecutionPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     // Load assignment when component mounts or assignment ID changes
@@ -48,7 +48,7 @@ const AssignmentExecutionPage: React.FC = () => {
       // No assignment ID, redirect to my assignments
       navigate('/my-assignments');
     }
-  }, [params.assignmentId]);
+  }, [params.assignmentId, loadAssignmentById, navigate]);
 
   useEffect(() => {
     // Check if userId is provided in the route
