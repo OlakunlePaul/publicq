@@ -54,9 +54,17 @@ ServiceRegistration.AddApiServices(builder.Services, builder.Configuration);
 var app = builder.Build();
 
 // Let's seed the database with available User Roles
-using (var scope = app.Services.CreateScope())
+try
 {
-    await UserRoleSeeder.SeedRolesAndDataAsync(scope.ServiceProvider);
+    using (var scope = app.Services.CreateScope())
+    {
+        await UserRoleSeeder.SeedRolesAndDataAsync(scope.ServiceProvider);
+    }
+    Console.WriteLine("Database seeding completed successfully.");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[Warning] Database seeding failed: {ex.Message}. The app will still start, but roles may need to be seeded manually or on next restart.");
 }
 
 // Configure the HTTP request pipeline.
