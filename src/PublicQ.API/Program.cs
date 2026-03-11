@@ -24,6 +24,10 @@ var configContext = new ApplicationDbContext(configOptions);
 
 try
 {
+    var rawConnectionString = builder.Configuration.GetConnectionString(Constants.DbDefaultConnectionString) ?? "NULL";
+    var safeConnectionString = System.Text.RegularExpressions.Regex.Replace(rawConnectionString, @"Password=[^;]*", "Password=***");
+    Console.WriteLine($"[DEBUG] Resolved Database Connection String (Password Hidden): '{safeConnectionString}'");
+
     Console.WriteLine("Executing automatic database migration step...");
     configContext.Database.Migrate();
 }
