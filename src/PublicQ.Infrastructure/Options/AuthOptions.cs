@@ -11,5 +11,5 @@ public class AuthOptions
     /// JWT token settings
     /// </summary>
     [Required]
-    public JwtSettings JwtSettings { get; set; }
+    public required JwtSettings JwtSettings { get; set; }
 }

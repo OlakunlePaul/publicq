@@ -68,7 +68,7 @@ public class GroupEntity
     /// </summary>
     [Required]
     [MaxLength(200)]
-    public string CreatedByUser { get; set; }
+    public required string CreatedByUser { get; set; }
     
     /// <summary>
     /// Gets or sets the UTC timestamp when the group was created.

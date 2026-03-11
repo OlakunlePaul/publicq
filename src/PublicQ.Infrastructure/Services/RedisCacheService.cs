@@ -51,7 +51,7 @@ public class RedisCacheService : ICacheService
         {
             _logger.LogDebug("Redis cache is disabled in configuration");
             return Response<T, GenericOperationStatuses>.Success(
-                default,
+                default!,
                 GenericOperationStatuses.Completed,
                 "Redis caching is disabled.");
         }
@@ -66,7 +66,7 @@ public class RedisCacheService : ICacheService
             {
                 _logger.LogDebug("Cache miss for key: {Key}", key);
                 return Response<T, GenericOperationStatuses>.Success(
-                    default,
+                    default!,
                     GenericOperationStatuses.NotFound,
                     "Cache miss.");
             }
@@ -377,7 +377,7 @@ public class RedisCacheService : ICacheService
             {
                 // Dispose and nullify when disabled
                 _redis?.Dispose();
-                _redis = null;
+                _redis = null!;
             
                 _logger.LogInformation("Redis connection disposed (caching disabled)");
             }

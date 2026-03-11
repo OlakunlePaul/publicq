@@ -257,7 +257,7 @@ public class AssignmentEntity
     /// </summary>
     /// <param name="obj"><see cref="AssignmentEntity"/></param>
     /// <returns>Returns true if ID is the same.</returns>
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj is not AssignmentEntity assignment)
         {

@@ -10,7 +10,7 @@ public class UserAssignRoleRequest
     /// <summary>
     /// User identifier
     /// </summary>
-    public string UserId { get; set; }
+    public string UserId { get; set; } = null!;
  
     /// <summary>
     /// User role to assign

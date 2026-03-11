@@ -32,7 +32,7 @@ public class AIChatController(IAIChatService chatService) : ControllerBase
         var response = await chatService.SendMessageAsync(
             request.Message,
             request.AvailableTools,
-            request.ConversationHistory,
+            request.ConversationHistory ?? new List<ChatMessage>(),
             cancellationToken);
 
         return response.ToActionResult();

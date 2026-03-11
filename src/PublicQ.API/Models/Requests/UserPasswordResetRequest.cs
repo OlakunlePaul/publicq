@@ -8,10 +8,10 @@ public class UserPasswordResetRequest
     /// <summary>
     /// User email address.
     /// </summary>
-    public string Email { get; set; }
+    public string Email { get; set; } = null!;
     
     /// <summary>
     /// New password for the user.
     /// </summary>
-    public string Password { get; set; }
+    public string Password { get; set; } = null!;
 }

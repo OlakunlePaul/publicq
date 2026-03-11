@@ -25,7 +25,7 @@ public class GroupMemberEntity
     /// <summary>
     /// Navigation property to the group this member belongs to.
     /// </summary>
-    public GroupEntity Group { get; set; }
+    public GroupEntity Group { get; set; } = null!;
     
     /// <summary>
     /// Gets or sets the order number of the member within the group.
@@ -42,7 +42,7 @@ public class GroupMemberEntity
     /// Navigation property to the group this member belongs to.
     /// </summary>
     [Required]
-    public AssessmentModuleEntity AssessmentModule { get; set; }
+    public AssessmentModuleEntity AssessmentModule { get; set; } = null!;
 
     /// <summary>
     /// Helps convert the GroupMemberEntity to a GroupMemberDto.

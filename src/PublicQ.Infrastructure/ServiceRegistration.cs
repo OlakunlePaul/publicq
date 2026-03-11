@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -26,7 +27,9 @@ public static class ServiceRegistration
         public IServiceCollection AddInfrastructure(IConfiguration config)
         {
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite(config.GetConnectionString(Constants.DbDefaultConnectionString)));
+                options.UseSqlite(config.GetConnectionString("DefaultConnection"),
+                    b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName))
+                    .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

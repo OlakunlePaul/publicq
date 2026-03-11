@@ -29,11 +29,7 @@ var entityProvider = new EntityConfigurationProvider(configContext);
 builder.Services.AddSingleton(entityProvider);
 
 // Add the provider to the configuration system
-builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
-{
-    // Remove any previous instance if needed, then add the same instance
-    config.Add(new EntityConfigurationSource(entityProvider));
-});
+((IConfigurationBuilder)builder.Configuration).Add(new EntityConfigurationSource(entityProvider));
 
 #endregion
 

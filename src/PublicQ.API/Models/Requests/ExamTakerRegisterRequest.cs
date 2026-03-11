@@ -26,5 +26,5 @@ public class ExamTakerRegisterRequest
     /// <summary>
     /// Exam taker full name.
     /// </summary>
-    public string FullName { get; set; }
+    public string FullName { get; set; } = null!;
 }

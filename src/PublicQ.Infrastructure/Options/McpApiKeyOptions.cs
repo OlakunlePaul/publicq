@@ -24,12 +24,12 @@ public class ApiKey
     /// <summary>
     /// Key Name
     /// </summary>
-    public string Name { get; set; }
+    public required string Name { get; set; }
     
     /// <summary>
     /// Key Value
     /// </summary>
-    public string Key { get; set; }
+    public required string Key { get; set; }
     
     /// <summary>
     /// Created By

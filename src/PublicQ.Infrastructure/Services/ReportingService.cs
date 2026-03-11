@@ -16,7 +16,6 @@ namespace PublicQ.Infrastructure.Services;
 /// <inheritdoc cref="IReportingService"/>
 public class ReportingService(
     ApplicationDbContext dbContext, 
-    IUserService userService,
     IOptionsMonitor<ReportingServiceOptions> options,
     ILogger<ReportingService> logger) : IReportingService
 {
@@ -161,7 +160,7 @@ public class ReportingService(
             .Include(a => a.ExamTakerAssignments)
                 .ThenInclude(eta => eta.ModuleProgress)
                     .ThenInclude(mp => mp.QuestionResponses)
-            .Include(a => a.Group)
+            .Include(a => a.Group!)
                 .ThenInclude(g => g.GroupMemberEntities)
                     .ThenInclude(gm => gm.AssessmentModule)
                         .ThenInclude(am => am.Versions)
@@ -212,7 +211,7 @@ public class ReportingService(
 
         // Build module reports (grouped by module)
         // Get all modules in the assignment through Group -> GroupMembers -> AssessmentModules
-        var moduleReports = assignment.Group.GroupMemberEntities
+        var moduleReports = assignment.Group!.GroupMemberEntities
             .OrderBy(gm => gm.OrderNumber) // Maintain module order
             .Select(groupMember => 
             {

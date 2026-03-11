@@ -21,19 +21,19 @@ public class MessageTemplateEntity : ICloneable
     /// </summary>
     [Required]
     [MaxLength(100)]
-    public string Name { get; set; }
+    public required string Name { get; set; }
     
     /// <summary>
     /// Message subject
     /// </summary>
     [MaxLength(300)]
-    public string Subject { get; set; }
+    public required string Subject { get; set; }
     
     /// <summary>
     /// Message body
     /// </summary>
     [MaxLength(10000)]
-    public string Body { get; set; }
+    public required string Body { get; set; }
 
     /// <summary>
     /// Required to keep all templates separate

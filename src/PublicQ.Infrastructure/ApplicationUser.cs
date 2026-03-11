@@ -13,7 +13,7 @@ public class ApplicationUser : IdentityUser
     /// User full name.
     /// </summary>
     [MaxLength(100)]
-    public string FullName { get; set; }
+    public string FullName { get; set; } = null!;
     
     /// <summary>
     /// Created at timestamp.

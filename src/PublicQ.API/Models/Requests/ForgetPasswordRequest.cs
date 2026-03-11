@@ -8,5 +8,5 @@ public class ForgetPasswordRequest
     /// <summary>
     /// User's email address to send the password reset link to.
     /// </summary>
-    public string EmailAddress { get; set; }
+    public string EmailAddress { get; set; } = null!;
 }

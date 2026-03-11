@@ -10,5 +10,5 @@ public class InitialSetupOptions
     /// </summary>
     public bool IsInitialized { get; set; }
 
-    public string Test { get; set; }
+    public required string Test { get; set; }
 }

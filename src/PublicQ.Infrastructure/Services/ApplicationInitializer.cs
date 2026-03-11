@@ -46,7 +46,7 @@ public class ApplicationInitializer(
             Directory.CreateDirectory(folderPath);
         }
         
-        if (initialSetupOptions.CurrentValue.IsInitialized)
+        if (_initialSetupOptions.CurrentValue.IsInitialized)
         {
             _logger.LogWarning("Attempting to initialize the application, but it is already initialized.");
             return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Failed, "Already initialized, skipping...");

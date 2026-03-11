@@ -58,12 +58,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        // Suppress pending model changes warning during design-time operations (EF CLI)
-        if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.ConfigureWarnings(warnings => 
-                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-        }
+        // Suppress pending model changes warning as EF Core 10.0 treats it as an error by default
+        optionsBuilder.ConfigureWarnings(warnings => 
+            warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
     }
     
     /// <summary>

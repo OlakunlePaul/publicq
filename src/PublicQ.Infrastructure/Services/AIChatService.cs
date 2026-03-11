@@ -23,7 +23,7 @@ public class AIChatService(
     public async Task<Response<AIChatResponse, GenericOperationStatuses>> SendMessageAsync(
         string message, 
         List<McpTool> availableTools, 
-        List<ChatMessage> conversationHistory = null,
+        List<ChatMessage>? conversationHistory = null,
         CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Send message request received.");
@@ -48,7 +48,7 @@ public class AIChatService(
         return await handler.SendMessageAsync(
             message, 
             availableTools, 
-            conversationHistory, 
+            conversationHistory ?? new List<ChatMessage>(), 
             cancellationToken);
     }
 }

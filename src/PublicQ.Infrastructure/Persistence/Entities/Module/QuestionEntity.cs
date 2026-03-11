@@ -66,7 +66,7 @@ public class QuestionEntity
         return new QuestionDto
         {
             Id = Id,
-            Text = Text,
+            Text = Text ?? string.Empty,
             StaticFileUrls = AssociatedStaticFiles.Select(f => f.FileUrl).ToHashSet(),
             StaticFileIds = AssociatedStaticFiles.Select(f => f.Id).ToHashSet(),
             Type = Type,
@@ -83,7 +83,7 @@ public class QuestionEntity
         return new ExamTakerQuestionDto
         {
             Id = Id,
-            Text = Text,
+            Text = Text ?? string.Empty,
             StaticFileUrls = AssociatedStaticFiles.Select(f => f.FileUrl).ToHashSet(),
             StaticFileIds = AssociatedStaticFiles.Select(f => f.Id).ToHashSet(),
             Type = Type,

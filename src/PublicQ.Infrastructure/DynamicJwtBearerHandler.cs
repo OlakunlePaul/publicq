@@ -16,14 +16,13 @@ namespace PublicQ.Infrastructure;
 /// <param name="authOptions"><see cref="AuthOptions"/></param>
 /// <param name="logger">Logger</param>
 /// <param name="encoder">Url encoder</param>
-/// <param name="clock"><see cref="ISystemClock"/></param>
+/// <param name="timeProvider"><see cref="TimeProvider"/></param>
 public class DynamicJwtBearerHandler(
     IOptionsMonitor<JwtBearerOptions> jwtOptions,
     IOptionsMonitor<AuthOptions> authOptions,
     ILoggerFactory logger,
-    UrlEncoder encoder,
-    ISystemClock clock)
-    : JwtBearerHandler(jwtOptions, logger, encoder, clock)
+    UrlEncoder encoder)
+    : JwtBearerHandler(jwtOptions, logger, encoder)
 {
     
     /// <summary>

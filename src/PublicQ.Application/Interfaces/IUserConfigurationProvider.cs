@@ -30,5 +30,5 @@ public interface IUserConfigurationProvider
     Task<Response<GenericOperationStatuses>> SetConfigurationAsync<TConfig>(
         TConfig config, 
         CancellationToken cancellationToken) 
-        where TConfig : class?, IConfigurationModel?, new();
+        where TConfig : class, IConfigurationModel, new();
 }

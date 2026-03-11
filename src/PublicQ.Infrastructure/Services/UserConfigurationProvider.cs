@@ -82,7 +82,7 @@ public class UserConfigurationProvider(ApplicationDbContext context, ILogger<Use
         }
 
         await _context.UserConfigurations
-            .Where(c => c.Type == configResponse.Data.UserConfigType)
+            .Where(c => c.Type == configResponse.Data!.UserConfigType)
             .ExecuteUpdateAsync(
                 c => c.SetProperty(c => c.DataJson, jsonData),
                 cancellationToken);

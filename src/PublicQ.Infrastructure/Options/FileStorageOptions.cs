@@ -13,7 +13,7 @@ public class FileStorageOptions
     /// All files uploaded to the server will be stored in this directory.
     /// In case of a change, you will need to move existing files to the new path manually.
     /// </remarks>
-    public string StaticContentPath { get; set; }
+    public required string StaticContentPath { get; set; }
     
     /// <summary>
     /// Maximum size of uploaded files in megabytes.

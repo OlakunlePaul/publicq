@@ -530,7 +530,7 @@ public class AssessmentService(
         
         var validation= await CheckIfTitleExistsInLatestVersionsAsync(
             updateDto.Title, 
-            versionResponse.Data.AssessmentModuleId,
+            versionResponse.Data!.AssessmentModuleId,
             cancellationToken);
         if (validation.IsFailed)
         {

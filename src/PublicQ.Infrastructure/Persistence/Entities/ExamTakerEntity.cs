@@ -18,7 +18,7 @@ public class ExamTakerEntity
 {
     [Key]
     [MinLength(4)]
-    public string Id { get; set; }
+    public required string Id { get; set; }
     
     /// <summary>
     /// Email address of the user.

@@ -1,0 +1,13 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  PublicQ.Shared -> C:\Users\hp\publicq\src\PublicQ.Shared\bin\Debug\net10.0\PublicQ.Shared.dll
+  PublicQ.Domain -> C:\Users\hp\publicq\src\PublicQ.Domain\bin\Debug\net10.0\PublicQ.Domain.dll
+  PublicQ.Application -> C:\Users\hp\publicq\src\PublicQ.Application\bin\Debug\net10.0\PublicQ.Application.dll
+  PublicQ.Infrastructure -> C:\Users\hp\publicq\src\PublicQ.Infrastructure\bin\Debug\net10.0\PublicQ.Infrastructure.dll
+  PublicQ.API -> C:\Users\hp\publicq\src\PublicQ.API\bin\Debug\net10.0\PublicQ.API.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.68

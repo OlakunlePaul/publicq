@@ -8,10 +8,10 @@ public class CheckPasswordTokenRequest
     /// <summary>
     /// User's email address.
     /// </summary>
-    public string Email { get; set; }
+    public string Email { get; set; } = null!;
     
     /// <summary>
     /// User's password reset token.
     /// </summary>
-    public string Token { get; set; }
+    public string Token { get; set; } = null!;
 }
