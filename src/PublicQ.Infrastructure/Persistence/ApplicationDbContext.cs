@@ -22,29 +22,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
-        // If in design-time mode, skip migration
-        if (IsDesignTime())
-        {
-            return;
-        }
-        
-        Console.WriteLine("Starting database migration process...");
-        var dataSource = Database.GetDbConnection().DataSource;
-        if (!string.IsNullOrEmpty(dataSource))
-        {
-            var directory = Path.GetDirectoryName(dataSource);
-            if (!string.IsNullOrEmpty(directory))
-            {
-                Directory.CreateDirectory(directory); // make sure ./db exists
-            }
-        }
-
-        // When app crashes during migration, the lock might not be released
-        // This is a workaround to clear the lock before applying migrations
-        // Otherwise, the app might get stuck in a state where it cannot start
-        // due to the existing lock.
-        ClearStaleMigrationLocksAsync(Database);
-        Database.Migrate();
     }
     
     private static bool IsDesignTime()

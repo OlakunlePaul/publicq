@@ -17,11 +17,19 @@ public sealed class EntityConfigurationProvider(
     /// </summary>
     public override void Load()
     {
-        Data = dbContext.SystemSettings
-            .AsNoTracking()
-            .ToDictionary(
-                static c => c.Name,
-                static c => c.Value, StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            Data = dbContext.SystemSettings
+                .AsNoTracking()
+                .ToDictionary(
+                    static c => c.Name,
+                    static c => c.Value, StringComparer.OrdinalIgnoreCase);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Warning] Failed to load entity configuration: {ex.Message}. Relying on fallback default configurations.");
+            Data = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        }
     }
 
     /// <summary>

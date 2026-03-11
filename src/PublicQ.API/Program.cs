@@ -22,6 +22,16 @@ var configOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
 
 var configContext = new ApplicationDbContext(configOptions);
 
+try
+{
+    Console.WriteLine("Executing automatic database migration step...");
+    configContext.Database.Migrate();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Automatic migration failed: {ex.Message}. It usually resolves itself on retries or check your Connection String.");
+}
+
 // Create the provider instance
 var entityProvider = new EntityConfigurationProvider(configContext);
 
