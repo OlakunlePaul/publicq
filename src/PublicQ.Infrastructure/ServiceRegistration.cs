@@ -27,7 +27,7 @@ public static class ServiceRegistration
         public IServiceCollection AddInfrastructure(IConfiguration config)
         {
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite(config.GetConnectionString("DefaultConnection"),
+                options.UseNpgsql(config.GetConnectionString("DefaultConnection"),
                     b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName))
                     .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
 

@@ -17,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Temp context to read DB settings
 var configOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
-    .UseSqlite(builder.Configuration.GetConnectionString(Constants.DbDefaultConnectionString))
+    .UseNpgsql(builder.Configuration.GetConnectionString(Constants.DbDefaultConnectionString))
     .Options;
 
 var configContext = new ApplicationDbContext(configOptions);

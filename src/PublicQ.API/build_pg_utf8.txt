@@ -1,0 +1,18 @@
+﻿  Determining projects to restore...
+C:\Users\hp\publicq\src\PublicQ.API\PublicQ.API.csproj : warning NU1608: Detected package version outside of dependency constraint: Npgsql.EntityFrameworkCore.PostgreSQL 9.0.0 requires Microsoft.EntityFrameworkCore.Relational (>= 9.0.0 && < 10.0.0) but version Microsoft.EntityFrameworkCore.Relational 10.0.0 was resolved.
+C:\Users\hp\publicq\src\PublicQ.API\PublicQ.API.csproj : error NU1107: Version conflict detected for Microsoft.EntityFrameworkCore. Install/reference Microsoft.EntityFrameworkCore 10.0.0 directly to project PublicQ.API to resolve this issue. 
+C:\Users\hp\publicq\src\PublicQ.API\PublicQ.API.csproj : error NU1107:  PublicQ.API -> Microsoft.EntityFrameworkCore.Design 10.0.0 -> Microsoft.EntityFrameworkCore.Relational 10.0.0 -> Microsoft.EntityFrameworkCore (>= 10.0.0) 
+C:\Users\hp\publicq\src\PublicQ.API\PublicQ.API.csproj : error NU1107:  PublicQ.API -> Npgsql.EntityFrameworkCore.PostgreSQL 9.0.0 -> Microsoft.EntityFrameworkCore (>= 9.0.0 && < 10.0.0).
+  Failed to restore C:\Users\hp\publicq\src\PublicQ.API\PublicQ.API.csproj (in 949 ms).
+  4 of 5 projects are up-to-date for restore.
+
+Build FAILED.
+
+C:\Users\hp\publicq\src\PublicQ.API\PublicQ.API.csproj : warning NU1608: Detected package version outside of dependency constraint: Npgsql.EntityFrameworkCore.PostgreSQL 9.0.0 requires Microsoft.EntityFrameworkCore.Relational (>= 9.0.0 && < 10.0.0) but version Microsoft.EntityFrameworkCore.Relational 10.0.0 was resolved.
+C:\Users\hp\publicq\src\PublicQ.API\PublicQ.API.csproj : error NU1107: Version conflict detected for Microsoft.EntityFrameworkCore. Install/reference Microsoft.EntityFrameworkCore 10.0.0 directly to project PublicQ.API to resolve this issue. 
+C:\Users\hp\publicq\src\PublicQ.API\PublicQ.API.csproj : error NU1107:  PublicQ.API -> Microsoft.EntityFrameworkCore.Design 10.0.0 -> Microsoft.EntityFrameworkCore.Relational 10.0.0 -> Microsoft.EntityFrameworkCore (>= 10.0.0) 
+C:\Users\hp\publicq\src\PublicQ.API\PublicQ.API.csproj : error NU1107:  PublicQ.API -> Npgsql.EntityFrameworkCore.PostgreSQL 9.0.0 -> Microsoft.EntityFrameworkCore (>= 9.0.0 && < 10.0.0).
+    1 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:03.07
