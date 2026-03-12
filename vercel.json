@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm --prefix client install && npm --prefix client run build",
+  "outputDirectory": "client/build",
+  "rewrites": [
+    { "source": "/((?!static|api).*)", "destination": "/index.html" }
+  ]
+}
