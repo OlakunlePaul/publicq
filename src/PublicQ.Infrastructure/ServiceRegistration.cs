@@ -26,10 +26,23 @@ public static class ServiceRegistration
         /// </summary>
         public IServiceCollection AddInfrastructure(IConfiguration config)
         {
+            var connectionString = config.GetConnectionString("DefaultConnection");
+            var isSqlite = connectionString?.Contains("Data Source") == true || connectionString?.EndsWith(".db") == true;
+
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(config.GetConnectionString("DefaultConnection"),
-                    b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName))
-                    .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
+            {
+                if (isSqlite)
+                {
+                    options.UseSqlite(connectionString,
+                        b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
+                }
+                else
+                {
+                    options.UseNpgsql(connectionString,
+                        b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
+                }
+                options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+            });
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

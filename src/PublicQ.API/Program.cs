@@ -32,11 +32,20 @@ if (corsOrigins.Length > 0)
 #region add database custom provider
 
 // Temp context to read DB settings
-var configOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
-    .UseNpgsql(builder.Configuration.GetConnectionString(Constants.DbDefaultConnectionString))
-    .Options;
+var connectionString = builder.Configuration.GetConnectionString(Constants.DbDefaultConnectionString);
+var isSqlite = connectionString?.Contains("Data Source") == true || connectionString?.EndsWith(".db") == true;
 
-var configContext = new ApplicationDbContext(configOptions);
+var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+if (isSqlite)
+{
+    optionsBuilder.UseSqlite(connectionString);
+}
+else
+{
+    optionsBuilder.UseNpgsql(connectionString);
+}
+
+var configContext = new ApplicationDbContext(optionsBuilder.Options);
 
 try
 {
