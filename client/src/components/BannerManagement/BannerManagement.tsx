@@ -714,8 +714,7 @@ const BannerManagement: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.title} style={{display: 'flex', alignItems: 'center'}}><img src="/images/icons/megaphone.svg" alt="" style={{width: '28px', height: '28px', marginRight: '10px'}} />Banner Management</h2>
+        <div className={styles.header} style={{justifyContent: 'flex-end'}}>
         <button onClick={() => setIsCreateModalOpen(true)} className={styles.createButton}>
           Create Banner
         </button>

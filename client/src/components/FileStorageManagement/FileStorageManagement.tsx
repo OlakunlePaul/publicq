@@ -122,7 +122,7 @@ const FileStorageManagement: React.FC<FileStorageManagementProps> = ({
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.title} style={{display: 'flex', alignItems: 'center'}}><img src="/images/icons/filing-cabinet.svg" alt="" style={{width: '28px', height: '28px', marginRight: '10px'}} />File Storage Configuration</h2>
+      <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: '20px'}}></div>
       
       {/* Information Section */}
       <div className={styles.infoSection}>

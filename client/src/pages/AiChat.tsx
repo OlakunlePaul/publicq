@@ -83,7 +83,7 @@ const ToolModal: React.FC<ToolModalProps> = ({ tool, onClose }) => {
  * Demo page for the AI Chat component
  * Shows how to integrate with the AI Chat service and MCP tools
  */
-const AiChatDemo: React.FC<{ onNavigateToSettings?: () => void }> = ({ onNavigateToSettings }) => {
+const AiChatDemo: React.FC<{ onNavigateToSettings?: () => void, hideHeader?: boolean }> = ({ onNavigateToSettings, hideHeader = false }) => {
   const [availableTools, setAvailableTools] = useState<McpTool[]>([]);
   const [conversationHistory, setConversationHistory] = useState<UIChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -438,63 +438,65 @@ Do NOT repeat any tools that show SUCCESS status above.`}`;
   return (
     <div className={styles.demoPage}>
       <ToolModal tool={selectedTool} onClose={() => setSelectedTool(null)} />
-      <div className={styles.demoHeader}>
-        <h1>AI Monkey 🐵</h1>
-        <p>
-          Chat with AI Monkey to create questions, upload files, and manage your assessment modules.
-        </p>
-        
-        <div className={styles.statusBar}>
-          <div className={cn(
-            styles.statusIndicator,
-            mcpConnected ? styles['statusIndicator--connected'] : styles['statusIndicator--disconnected']
-          )}>
-            <span className={styles.statusDot}></span>
-            MCP Server: {mcpConnected ? 'Connected' : 'Disconnected'}
-          </div>
+      {!hideHeader && (
+        <div className={styles.demoHeader}>
+          <h1>AI Monkey 🐵</h1>
+          <p>
+            Chat with AI Monkey to create questions, upload files, and manage your assessment modules.
+          </p>
           
-          {executingTools && (
-            <div className={styles.statusIndicator}>
-              <span className={styles.statusSpinner}></span>
-              Executing tools...
+          <div className={styles.statusBar}>
+            <div className={cn(
+              styles.statusIndicator,
+              mcpConnected ? styles['statusIndicator--connected'] : styles['statusIndicator--disconnected']
+            )}>
+              <span className={styles.statusDot}></span>
+              MCP Server: {mcpConnected ? 'Connected' : 'Disconnected'}
             </div>
-          )}
-        </div>
-
-        {/* Available Tools - Expandable */}
-        <div className={styles.toolsSection}>
-          <button 
-            className={styles.toolsToggle}
-            onClick={() => setToolsExpanded(!toolsExpanded)}
-          >
-            <span className={styles.toolsToggleIcon}>{toolsExpanded ? '▼' : '▶'}</span>
-            <span>🔧 Available Tools ({availableTools.length})</span>
-          </button>
-          
-          {toolsExpanded && availableTools.length > 0 && (
-            <div className={styles.toolsContent}>
-              <div className={styles.toolBadges}>
-                {availableTools.map((tool, idx) => (
-                  <span 
-                    key={idx} 
-                    className={styles.toolBadge}
-                    data-description={tool.description || ''}
-                    onClick={() => setSelectedTool(tool)}
-                  >
-                    {formatToolName(tool.name)}
-                  </span>
-                ))}
+            
+            {executingTools && (
+              <div className={styles.statusIndicator}>
+                <span className={styles.statusSpinner}></span>
+                Executing tools...
               </div>
+            )}
+          </div>
+
+          {/* Available Tools - Expandable */}
+          <div className={styles.toolsSection}>
+            <button 
+              className={styles.toolsToggle}
+              onClick={() => setToolsExpanded(!toolsExpanded)}
+            >
+              <span className={styles.toolsToggleIcon}>{toolsExpanded ? '▼' : '▶'}</span>
+              <span>🔧 Available Tools ({availableTools.length})</span>
+            </button>
+            
+            {toolsExpanded && availableTools.length > 0 && (
+              <div className={styles.toolsContent}>
+                <div className={styles.toolBadges}>
+                  {availableTools.map((tool, idx) => (
+                    <span 
+                      key={idx} 
+                      className={styles.toolBadge}
+                      data-description={tool.description || ''}
+                      onClick={() => setSelectedTool(tool)}
+                    >
+                      {formatToolName(tool.name)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {error && (
+            <div className={styles.errorBanner}>
+              ⚠️ {error}
             </div>
           )}
         </div>
-        
-        {error && (
-          <div className={styles.errorBanner}>
-            ⚠️ {error}
-          </div>
-        )}
-      </div>
+      )}
 
       <div className={styles.demoContent}>
         <div className={styles.chatContainer}>

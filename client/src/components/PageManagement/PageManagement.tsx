@@ -140,7 +140,7 @@ const PageManagement: React.FC = () => {
   return (
     <div className={pageManagementStyles.container}>
       <div className={pageManagementStyles.header}>
-        <h2 className={pageManagementStyles.title} style={{display: 'flex', alignItems: 'center'}}><img src="/images/icons/clipboard.svg" alt="" style={{width: '28px', height: '28px', marginRight: '10px'}} />Page Management</h2>
+        <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: '20px'}}></div>
         <p className={pageManagementStyles.subtitle}>
           Manage static pages and content across the platform
         </p>

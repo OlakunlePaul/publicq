@@ -89,14 +89,14 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
   const [emailEnabled, setEmailEnabled] = useState<boolean | null>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
 
-  const checkEmailConfiguration = useCallback(async () => {
+  const checkEmailConfiguration = useCallback(async (currentPassword: string) => {
     try {
       const emailOptions = await configurationService.getEmailOptions();
       const isEmailEnabled = emailOptions.enabled || false;
       setEmailEnabled(isEmailEnabled);
       
       // If email is disabled and password is empty, generate a default password
-      if (!isEmailEnabled && !formData.password) {
+      if (!isEmailEnabled && !currentPassword) {
         const newPassword = generateDefaultPassword();
         setFormData(prev => ({
           ...prev,
@@ -107,7 +107,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
       setEmailEnabled(false);
       
       // If we can't check email config, assume it's disabled and generate password
-      if (!formData.password) {
+      if (!currentPassword) {
         const newPassword = generateDefaultPassword();
         setFormData(prev => ({
           ...prev,
@@ -115,7 +115,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
         }));
       }
     }
-  }, [formData.password]);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -130,7 +130,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
       setValidationError('');
       
       // Check email configuration when modal opens
-      checkEmailConfiguration();
+      checkEmailConfiguration('');
       
       // Auto-focus on email input when modal opens
       setTimeout(() => {
@@ -1626,9 +1626,6 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
         onCopyImportedUsers={copyImportedUsers}
       />
       <div className={userManagementStyles.container}>
-        <div className={userManagementStyles.header}>
-          <h2 className={userManagementStyles.title} style={{display: 'flex', alignItems: 'center'}}><img src="/images/icons/users.svg" alt="" style={{width: '28px', height: '28px', marginRight: '10px'}} />User Management</h2>
-        </div>
 
         <div className={userManagementStyles.infoSection}>
           <div className={userManagementStyles.infoHeader}>

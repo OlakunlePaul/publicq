@@ -1,291 +1,101 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Assignment } from '../../models/assignment';
+import { User } from '../../models/user';
 import { assignmentService } from '../../services/assignmentService';
 import { userService } from '../../services/userService';
-import { getTokenUserId, type CurrentUser } from '../../utils/tokenUtils';
-import { formatDateToLocal, isBeforeNow, isBetweenDates } from '../../utils/dateUtils';
-import { CONSTANTS } from '../../constants/contstants';
-import { ExamTakerState } from '../../models/exam-taker-state';
+import { formatDateToLocal } from '../../utils/dateUtils';
 
 interface AssignmentAccessProps {
-  // Optional callback for when user wants to login
-  onLoginRequest?: () => void;
-  // Callback for when user opens an assignment
   onAssignmentOpen?: (assignment: Assignment) => void;
-  // Current user information passed from parent
-  currentUser?: CurrentUser | null;
-  // Callback for when user information is updated (exam taker login)
-  onUserUpdate?: () => void;
+  onLoginRequest?: () => void;
+  currentUser?: any; // To match AssignmentDashboard usage
+  onUserUpdate?: () => void; // To match AssignmentDashboard usage
 }
 
 const AssignmentAccess: React.FC<AssignmentAccessProps> = ({ 
-  onLoginRequest,
   onAssignmentOpen,
+  onLoginRequest,
+  currentUser,
   onUserUpdate
 }) => {
+  const [examTakerId, setExamTakerId] = useState('');
+  const [examTakerInfo, setExamTakerInfo] = useState<User | null>(null);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(false);
-  const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState('');
-  const [userId, setUserId] = useState('');
-  const [examTakerId, setExamTakerId] = useState('');
   const [userIdError, setUserIdError] = useState('');
-  const [mode, setMode] = useState<'guest' | 'authenticated'>('guest');
-  const [examTakerInfo, setExamTakerInfo] = useState<ExamTakerState | null>(null);
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
-  const [serverTime, setServerTime] = useState<Date | null>(null);
-  const loadingRef = useRef<boolean>(false);
-  const requestCounterRef = useRef<number>(0);
 
-  // Helper function to safely clear exam taker data from localStorage
-  const clearExamTakerData = () => {
-    try {
-      localStorage.removeItem(CONSTANTS.EXAM_TAKER);
-      setExamTakerInfo(null);
-      setExamTakerId('');
-      setAssignments([]);
-      setError('');
-    } catch (error) {
+  // Determine mode based on props
+  const mode = currentUser ? 'authenticated' : 'guest';
+
+  // Load guest data if exists
+  useEffect(() => {
+    if (mode === 'guest') {
+      const savedInfo = localStorage.getItem('exam_taker_info');
+      if (savedInfo) {
+        const parsed = JSON.parse(savedInfo);
+        setExamTakerInfo(parsed);
+        fetchAssignments(parsed.id);
+      }
+    } else if (currentUser) {
+      setExamTakerInfo(currentUser);
+      fetchAssignments(currentUser.id);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, currentUser]);
 
-  // Helper function to determine assignment status based on dates
-  const getAssignmentStatus = (assignment: Assignment) => {
-    // Use server time if available to prevent clock manipulation
-    const timeToUse = serverTime || currentTime;
+  const fetchAssignments = async (userId?: string) => {
+    if (!userId && mode === 'authenticated') return; // Wait for user
     
-    if (isBeforeNow(assignment.startDateUtc, timeToUse)) {
-      return 'scheduled';
-    } else if (isBetweenDates(assignment.startDateUtc, assignment.endDateUtc, timeToUse)) {
-      return 'active';
-    } else {
-      return 'ended';
-    }
-  };
-
-  // Helper function to get badge style and text for assignment status
-  const getStatusBadge = (assignment: Assignment) => {
-    const status = getAssignmentStatus(assignment);
-    
-    switch (status) {
-      case 'scheduled':
-        return {
-          style: styles.scheduledBadge,
-          text: 'Scheduled'
-        };
-      case 'active':
-        return {
-          style: styles.activeBadge,
-          text: 'Active'
-        };
-      case 'ended':
-        return {
-          style: styles.endedBadge,
-          text: 'Ended'
-        };
-      default:
-        return {
-          style: styles.draftBadge,
-          text: 'Draft'
-        };
-    }
-  };
-
-  // Increment request counter to track this specific request
-  const loadAssignments = useCallback(async (userId: string) => {
-    // Prevent multiple simultaneous calls
-    if (loadingRef.current) {
-      return;
-    }
-    
-    // Increment request counter to track this specific request
-    const currentRequestId = ++requestCounterRef.current;
-    loadingRef.current = true;
     setLoading(true);
     setError('');
-    
     try {
-      const response = await assignmentService.getAvailableAssignments(userId);
-      
-      // Only update state if this is still the latest request
-      if (currentRequestId === requestCounterRef.current) {
-        // Only update state if we got valid data
-        if (response && response.data) {
-          const assignmentsData = response.data || [];
-          setAssignments(assignmentsData);
-          
-          // Store server time from the first assignment if available
-          if (assignmentsData.length > 0 && assignmentsData[0].serverUtcNow) {
-            setServerTime(new Date(assignmentsData[0].serverUtcNow));
-          }
-        } else {
-          setError('Invalid response received from server');
-        }
+      // Use the actual service method name
+      const response = await assignmentService.getAvailableAssignments(userId || '');
+      if (response.isSuccess && response.data) {
+        setAssignments(response.data);
       } else {
+        setError(response.message || 'Failed to load assignments.');
       }
-    } catch (err: any) {
-      // Only set error if this is still the latest request
-      if (currentRequestId === requestCounterRef.current) {
-        setError('Failed to load assignments: ' + (err.response?.data?.message || err.message));
-      }
+    } catch (err) {
+      setError('An error occurred while fetching assignments.');
     } finally {
-      // Only update loading state if this is still the latest request
-      if (currentRequestId === requestCounterRef.current) {
-        loadingRef.current = false;
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    const userId = getTokenUserId();
-    // Handle authenticated user
-    if (userId) {
-      setUserId(userId);
-      setMode('authenticated');
-      setInitializing(false);
-      loadAssignments(userId);
-      return;
-    }
-    // Handle exam taker data from local storage with proper error handling
-    const validateAndLoadExamTaker = async () => {
-      // Early return if no stored data
-      const examTakerFromStorageJson = localStorage.getItem(CONSTANTS.EXAM_TAKER);
-      if (!examTakerFromStorageJson) {
-        setInitializing(false);
-        return;
-      }
-
-      // Parse stored exam taker data
-      let examTakerFromStorage: ExamTakerState;
-      try {
-        examTakerFromStorage = JSON.parse(examTakerFromStorageJson);
-      } catch (parseError) {
-        clearExamTakerData();
-        setError('Invalid exam taker data found. Please log in again.');
-        setInitializing(false);
-        return;
-      }
-
-      // Validate parsed data has required fields
-      if (!examTakerFromStorage?.id) {
-        clearExamTakerData();
-        setInitializing(false);
-        return;
-      }
-
-      // Validate that the user still exists in the system
-      try {
-        const userResponse = await userService.getExamTaker(examTakerFromStorage.id);
-        
-        if (!userResponse.data) {
-          clearExamTakerData();
-          setError('Your exam taker account may have been removed. Please enter your exam taker ID again.');
-          setInitializing(false);
-          return;
-        }
-        
-        // User exists, proceed with loading
-        setExamTakerId(examTakerFromStorage.id);
-        setExamTakerInfo(examTakerFromStorage);
-        setMode('guest');
-        setInitializing(false);
-        loadAssignments(examTakerFromStorage.id);
-      } catch (validationError: any) {
-        // User deleted (404) - clear data and ask for re-entry
-        if (validationError.response?.status === 404) {
-          clearExamTakerData();
-          setError('Your exam taker account may have been removed. Please enter your exam taker ID again.');
-          setInitializing(false);
-          return;
-        }
-        
-        // Network or other errors - proceed anyway (graceful degradation)
-        setExamTakerId(examTakerFromStorage.id);
-        setExamTakerInfo(examTakerFromStorage);
-        setMode('guest');
-        setInitializing(false);
-        loadAssignments(examTakerFromStorage.id);
-      }
-    };
-    
-    // Only validate exam taker if we're not already an authenticated user
-    if (!userId) {
-      validateAndLoadExamTaker();
-    }
-  }, [userId, loadAssignments]);
-
-  // Update current time every minute to refresh assignment statuses
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    // Read ref value once into a local variable for consistent use in cleanup
-    const currentRef = requestCounterRef;
-    return () => {
-      // Cancel any pending requests
-      currentRef.current++;
-      loadingRef.current = false;
-    };
-  }, []);
-
-
+  };
 
   const handleGuestAccess = async () => {
     if (!examTakerId.trim()) {
-      setUserIdError('Please enter your exam taker ID');
+      setUserIdError('Please enter an ID');
       return;
     }
 
-    setUserIdError('');
     setLoading(true);
-    
+    setUserIdError('');
     try {
-      // Convert examTakerId to uppercase since it's stored in uppercase in the database
-      const trimmedUserId = examTakerId.trim();
-      
-      // Validate if the user exists and is an exam taker
-      const usersResponse = await userService.getExamTaker(trimmedUserId);
-      const user = usersResponse.data;
-      if (!user) {
-        setUserIdError('Exam taker ID not found');
-        setLoading(false);
-        return;
+      // Use userService instead of assignmentService for exam taker info
+      const response = await userService.getExamTaker(examTakerId);
+      if (response.isSuccess && response.data) {
+        setExamTakerInfo(response.data);
+        localStorage.setItem('exam_taker_info', JSON.stringify(response.data));
+        fetchAssignments(response.data.id);
+        if (onUserUpdate) onUserUpdate();
+      } else {
+        setUserIdError('Invalid Exam Taker ID. Please check and try again.');
       }
-
-      // Check if user has credentials (regular user vs exam taker)
-      // Exam takers don't have credentials and can access exams assigned to them
-      if (user.hasCredential) {
-        setUserIdError('This ID belongs to a regular user. Please use the login button.');
-        setLoading(false);
-        return;
-      }
-
-      // Store exam taker information in local storage with error handling
-      try {
-        localStorage.setItem(CONSTANTS.EXAM_TAKER, JSON.stringify(user));
-        setExamTakerInfo(user as ExamTakerState);
-        
-        // Notify parent component that user info has been updated
-        if (onUserUpdate) {
-          onUserUpdate();
-        }
-      } catch (storageError) {
-        // Continue without storing - user can still access assignments this session
-        setError('Warning: Unable to save login information. You may need to re-enter your ID if you refresh the page.');
-      }
-
-      await loadAssignments(trimmedUserId);
-    } catch (err: any) {
-      setUserIdError('We couldn\'t find your Exam Taker ID in our system. Please verify your ID or contact your administrator to get the correct ID.');
+    } catch (err) {
+      setUserIdError('Failed to verify ID. Please try again later.');
+    } finally {
       setLoading(false);
     }
+  };
+
+  const clearExamTakerData = () => {
+    localStorage.removeItem('exam_taker_info');
+    setExamTakerInfo(null);
+    setExamTakerId('');
+    setAssignments([]);
+    if (onUserUpdate) onUserUpdate();
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -294,32 +104,44 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
     }
   };
 
-  // Show loading during initialization
-  if (initializing) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.loadingContainer}>
-          <div style={styles.spinner}></div>
-          <p style={styles.loadingText}>Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  const getAssignmentStatus = (assignment: Assignment) => {
+    const now = new Date();
+    const start = new Date(assignment.startDateUtc);
+    const end = new Date(assignment.endDateUtc);
+
+    if (now < start) return 'scheduled';
+    if (now > end) return 'ended';
+    return 'active';
+  };
+
+  const getStatusBadge = (assignment: Assignment) => {
+    const status = getAssignmentStatus(assignment);
+    switch (status) {
+      case 'active':
+        return { text: 'Active Now', style: styles.activeBadge };
+      case 'scheduled':
+        return { text: 'Scheduled', style: styles.scheduledBadge };
+      case 'ended':
+        return { text: 'Exam Ended', style: styles.endedBadge };
+      default:
+        return { text: 'Unknown', style: styles.endedBadge };
+    }
+  };
 
   return (
     <div style={styles.container}>
       {mode === 'guest' && !examTakerInfo ? (
         <div style={styles.guestAccess}>
-          <h2 style={styles.title}>Access Your Assignments</h2>
+          <h2 style={styles.title}>Access Your Subject Exams</h2>
           <p style={styles.introText}>
-            Choose how you want to access your assignments:
+            Select your preferred method to access your assignments today.
           </p>
           
           <div style={styles.accessOptions}>
             {/* Exam Taker Access */}
             <div style={styles.examTakerSection}>
               <div style={styles.optionHeader}>
-                <span style={styles.optionIcon}>🆔</span>
+                <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="" style={{width: '32px', height: '32px'}} />
                 <h3 style={styles.sectionTitle}>Quick Access with Exam Taker ID</h3>
               </div>
               <p style={styles.sectionDescription}>
@@ -338,11 +160,11 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
                   onKeyPress={handleKeyPress}
                   style={userIdError ? styles.inputError : styles.input}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor = '#3b82f6';
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                    e.currentTarget.style.borderColor = '#4f46e5';
+                    e.currentTarget.style.boxShadow = '0 0 0 4px rgba(79, 70, 229, 0.1)';
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.borderColor = userIdError ? '#dc2626' : '#d1d5db';
+                    e.currentTarget.style.borderColor = userIdError ? '#dc2626' : '#e2e8f0';
                     e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
@@ -350,18 +172,8 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
                   onClick={handleGuestAccess}
                   style={styles.accessButton}
                   disabled={loading}
-                  onMouseEnter={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.backgroundColor = '#2563eb';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.backgroundColor = '#3b82f6';
-                    }
-                  }}
                 >
-                  {loading ? 'Checking...' : 'Access Assignments'}
+                  {loading ? 'Checking...' : 'Access My Exams'}
                 </button>
               </div>
               
@@ -374,7 +186,7 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
             {onLoginRequest && (
               <div style={styles.loginSection}>
                 <div style={styles.optionHeader}>
-                  <span style={styles.optionIcon}>🔐</span>
+                  <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="" style={{width: '32px', height: '32px'}} />
                   <h3 style={styles.sectionTitle}>Full Account Access</h3>
                 </div>
                 <p style={styles.sectionDescription}>
@@ -383,14 +195,6 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
                 <button 
                   onClick={onLoginRequest}
                   style={styles.loginButton}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#059669';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#10b981';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
                 >
                   Login to Your Account
                 </button>
@@ -401,7 +205,7 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
       ) : examTakerInfo ? (
         <div style={styles.examTakerWelcome}>
           <div style={styles.welcomeHeader}>
-            <span style={styles.welcomeIcon}>👋</span>
+            <img src="https://cdn-icons-png.flaticon.com/512/9371/9371842.png" alt="" style={{width: '48px', height: '48px'}} />
             <div style={styles.welcomeContent}>
               <h2 style={styles.welcomeTitle}>
                 Welcome back{`${examTakerInfo.fullName ? `, ${examTakerInfo.fullName}` : ''}`}
@@ -410,28 +214,20 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
                 <p style={styles.examTakerEmail}>{examTakerInfo.email}</p>
               )}
             </div>
+            {mode === 'guest' && (
+              <button 
+                onClick={clearExamTakerData}
+                style={styles.switchUserButton}
+              >
+                Switch User
+              </button>
+            )}
           </div>
-          <button 
-            onClick={clearExamTakerData}
-            style={styles.switchUserButton}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f3f4f6';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#ffffff';
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)';
-            }}
-          >
-            Switch User
-          </button>
         </div>
       ) : mode === 'authenticated' ? (
         <div style={styles.authenticatedAccess}>
           <h2 style={styles.title}>
-            Welcome to Your Assignment Dashboard
+            Your Assignment Dashboard
           </h2>
         </div>
       ) : null}
@@ -441,23 +237,23 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
         <>
           <div style={styles.demoInfoBox}>
             <div style={styles.demoInfoHeader}>
-              <img src="/images/icons/rocket.svg" alt="" style={styles.demoInfoIcon} />
+              <img src="https://cdn-icons-png.flaticon.com/512/1067/1067555.png" alt="" style={styles.demoInfoIcon} />
               <h3 style={styles.demoInfoTitle}>New to the platform?</h3>
             </div>
             <p style={styles.demoInfoText}>
               Before launching a module, you can use <strong>Demo Mode</strong> to familiarize yourself with the exam experience. 
-              Try it out to understand how questions work, navigation, and submission process without affecting your actual assignments.
+              Try it out to understand how questions work, navigation, and submission process.
             </p>
             <a href="/demo" style={styles.demoInfoLink}>
               Try Demo Mode →
             </a>
           </div>
-          <h3 style={styles.assignmentsHeader}>Your Available Assignments</h3>
+          <h3 style={styles.assignmentsHeader}>Your Available Exams</h3>
         </>
       )}
 
-      {/* Assignment List - shown for both modes after ID validation */}
-      {(mode === 'authenticated' || assignments.length > 0 || (mode === 'guest' && examTakerId && loading)) && (
+      {/* Assignment List */}
+      {(mode === 'authenticated' || (mode === 'guest' && examTakerInfo)) && (
         <div style={styles.assignmentList}>
           {loading ? (
             <div style={styles.loadingContainer}>
@@ -472,61 +268,59 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
               <p style={styles.emptyMessage}>No assignments available at this time.</p>
             </div>
           ) : (
-            assignments.map(assignment => {
-              const statusBadge = getStatusBadge(assignment);
-              const status = getAssignmentStatus(assignment);
-              const isAccessible = assignment.isPublished && (status === 'active' || status === 'ended');
-              
-              return (
-                <div key={assignment.id} style={styles.assignmentCard}>
-                  <div style={styles.assignmentHeader}>
-                    <h4 style={styles.assignmentTitle}>{assignment.title}</h4>
-                    <div style={styles.badgeContainer}>
-                      {!assignment.isPublished && (
-                        <span style={styles.draftBadge}>Draft</span>
-                      )}
-                      {assignment.isPublished && (
-                        <span style={statusBadge.style}>{statusBadge.text}</span>
-                      )}
+            <div style={styles.cardsGrid}>
+              {assignments.map(assignment => {
+                const statusBadge = getStatusBadge(assignment);
+                const status = getAssignmentStatus(assignment);
+                const isAccessible = assignment.isPublished && (status === 'active' || status === 'ended');
+                
+                return (
+                  <div key={assignment.id} style={styles.assignmentCard}>
+                    <div style={styles.assignmentHeader}>
+                      <h4 style={styles.assignmentTitle}>{assignment.title}</h4>
+                      <div style={styles.badgeContainer}>
+                        {!assignment.isPublished && (
+                          <span style={styles.draftBadge}>Draft</span>
+                        )}
+                        {assignment.isPublished && (
+                          <span style={statusBadge.style}>{statusBadge.text}</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <p 
-                    style={styles.assignmentDescription}
-                    title={assignment.description || 'No description available'}
-                  >
-                    {assignment.description 
-                      ? assignment.description.length > 150 
-                        ? `${assignment.description.substring(0, 150).split(' ').slice(0, -1).join(' ')}...` 
-                        : assignment.description
-                      : 'No description available'
-                    }
-                  </p>
-                  <div style={styles.assignmentMeta}>
-                    <div style={styles.dateInfo}>
-                      <span style={styles.metaLabel}>Start:</span>
-                      <span>{formatDateToLocal(assignment.startDateUtc)}</span>
-                    </div>
-                    <div style={styles.dateInfo}>
-                      <span style={styles.metaLabel}>End:</span>
-                      <span>{formatDateToLocal(assignment.endDateUtc)}</span>
-                    </div>
-                  </div>
-                  {isAccessible && (
-                    <button 
-                      style={styles.startButton}
-                      onClick={() => onAssignmentOpen && onAssignmentOpen(assignment)}
+                    <p 
+                      style={styles.assignmentDescription}
+                      title={assignment.description || 'No description available'}
                     >
-                      {status === 'ended' ? 'View Results' : 'Open Assignment'}
-                    </button>
-                  )}
-                  {assignment.isPublished && status === 'scheduled' && (
-                    <button style={styles.disabledButton} disabled>
-                      Not Yet Available
-                    </button>
-                  )}
-                </div>
-              );
-            })
+                      {assignment.description 
+                        ? assignment.description.length > 120 
+                          ? `${assignment.description.substring(0, 120)}...` 
+                          : assignment.description
+                        : 'No description available'
+                      }
+                    </p>
+                    <div style={styles.assignmentMeta}>
+                      <div style={styles.dateInfo}>
+                        <span style={styles.metaLabel}>Start:</span>
+                        <span>{formatDateToLocal(assignment.startDateUtc)}</span>
+                      </div>
+                    </div>
+                    {isAccessible && (
+                      <button 
+                        style={styles.startButton}
+                        onClick={() => onAssignmentOpen && onAssignmentOpen(assignment)}
+                      >
+                        {status === 'ended' ? 'View Results' : 'Open Assignment'}
+                      </button>
+                    )}
+                    {assignment.isPublished && status === 'scheduled' && (
+                      <button style={styles.disabledButton} disabled>
+                        Not Yet Available
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       )}
@@ -536,48 +330,39 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    maxWidth: '800px',
+    maxWidth: '1000px',
     margin: '0 auto',
-    padding: '20px',
-    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    padding: '40px 20px',
+    fontFamily: "'Inter', system-ui, sans-serif",
   },
   title: {
-    fontSize: '28px',
-    fontWeight: 'bold',
-    marginBottom: '12px',
+    fontSize: '32px',
+    fontWeight: '800',
+    marginBottom: '16px',
     textAlign: 'center',
-    color: '#1f2937',
+    color: '#1e293b',
+    letterSpacing: '-0.025em',
   },
   introText: {
     fontSize: '16px',
-    color: '#6b7280',
+    color: '#64748b',
     textAlign: 'center',
-    marginBottom: '32px',
-    lineHeight: '1.5',
-  },
-  subtitle: {
-    fontSize: '20px',
-    fontWeight: '600',
-    marginBottom: '20px',
-    color: '#374151',
+    marginBottom: '40px',
+    lineHeight: '1.6',
   },
   assignmentsHeader: {
-    fontSize: '22px',
-    fontWeight: '600',
+    fontSize: '24px',
+    fontWeight: '800',
     marginBottom: '24px',
-    marginTop: '32px',
-    color: '#374151',
-    borderBottom: '2px solid #e5e7eb',
-    paddingBottom: '8px',
+    marginTop: '40px',
+    color: '#1e293b',
   },
   demoInfoBox: {
-    marginTop: '32px',
-    marginBottom: '24px',
-    padding: '20px 24px',
-    backgroundColor: '#f0f9ff',
-    border: '1px solid #bae6fd',
-    borderRadius: '12px',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+    padding: '24px',
+    backgroundColor: '#eff6ff',
+    border: '1px solid #dbeafe',
+    borderRadius: '16px',
+    marginBottom: '32px',
   },
   demoInfoHeader: {
     display: 'flex',
@@ -586,325 +371,284 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '12px',
   },
   demoInfoIcon: {
-    width: '24px',
-    height: '24px',
+    width: '28px',
+    height: '28px',
   },
   demoInfoTitle: {
     fontSize: '18px',
-    fontWeight: '600',
+    fontWeight: '700',
     margin: '0',
-    color: '#0c4a6e',
+    color: '#1e40af',
   },
   demoInfoText: {
-    fontSize: '14px',
-    color: '#0c4a6e',
+    fontSize: '15px',
+    color: '#1e40af',
     lineHeight: '1.6',
-    marginBottom: '12px',
+    marginBottom: '16px',
   },
   demoInfoLink: {
     display: 'inline-flex',
     alignItems: 'center',
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#0284c7',
+    fontSize: '15px',
+    fontWeight: '700',
+    color: '#2563eb',
     textDecoration: 'none',
-    transition: 'all 0.2s ease-in-out',
-  } as React.CSSProperties,
+  },
   guestAccess: {
-    marginBottom: '30px',
+    marginBottom: '40px',
   },
   accessOptions: {
     display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
     gap: '24px',
-    marginTop: '20px',
   },
   optionHeader: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    marginBottom: '12px',
-  },
-  optionIcon: {
-    fontSize: '24px',
+    gap: '16px',
+    marginBottom: '16px',
   },
   examTakerSection: {
-    padding: '24px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
-    backgroundColor: '#f9fafb',
+    padding: '32px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '20px',
+    backgroundColor: 'white',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.04)',
   },
   loginSection: {
-    padding: '24px',
-    border: '1px solid #bfdbfe',
-    borderRadius: '12px',
-    backgroundColor: '#eff6ff',
+    padding: '32px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '20px',
+    backgroundColor: 'white',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.04)',
   },
   sectionTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
+    fontSize: '20px',
+    fontWeight: '700',
     margin: '0',
-    color: '#1f2937',
   },
   sectionDescription: {
-    fontSize: '14px',
-    color: '#6b7280',
-    marginBottom: '16px',
-    lineHeight: '1.5',
+    fontSize: '15px',
+    color: '#64748b',
+    marginBottom: '24px',
+    lineHeight: '1.6',
   },
   inputGroup: {
     display: 'flex',
+    flexDirection: 'column',
     gap: '12px',
-    marginTop: '16px',
   },
   input: {
-    flex: 1,
-    padding: '12px 16px',
-    border: '1px solid #d1d5db',
-    borderRadius: '8px',
-    fontSize: '14px',
-    transition: 'all 0.2s ease-in-out',
-    outline: 'none',
+    padding: '14px 16px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    fontSize: '15px',
+    backgroundColor: '#f8fafc',
   },
   inputError: {
-    flex: 1,
-    padding: '12px 16px',
+    padding: '14px 16px',
     border: '1px solid #dc2626',
-    borderRadius: '8px',
-    fontSize: '14px',
+    borderRadius: '12px',
+    fontSize: '15px',
     backgroundColor: '#fef2f2',
-    transition: 'all 0.2s ease-in-out',
-    outline: 'none',
   },
   accessButton: {
-    padding: '12px 24px',
-    backgroundColor: '#3b82f6',
+    padding: '14px 24px',
+    backgroundColor: '#4f46e5',
     color: 'white',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '12px',
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500',
-    transition: 'all 0.2s ease-in-out',
+    fontSize: '15px',
+    fontWeight: '700',
   },
   loginButton: {
-    padding: '12px 24px',
+    width: '100%',
+    padding: '14px 24px',
     backgroundColor: '#10b981',
     color: 'white',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '12px',
     cursor: 'pointer',
-    fontSize: '16px',
-    fontWeight: '500',
-    marginTop: '12px',
-    transition: 'all 0.2s ease-in-out',
-  },
-  authenticatedAccess: {
-    marginBottom: '20px',
+    fontSize: '15px',
+    fontWeight: '700',
   },
   examTakerWelcome: {
-    marginBottom: '30px',
+    marginBottom: '40px',
     padding: '32px',
-    backgroundColor: '#ffffff',
-    borderRadius: '16px',
-    border: '1px solid #e5e7eb',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    backgroundColor: 'white',
+    borderRadius: '24px',
+    border: '1px solid #e2e8f0',
   },
   welcomeHeader: {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
-    marginBottom: '24px',
-  },
-  welcomeIcon: {
-    fontSize: '32px',
-    flexShrink: 0,
+    gap: '20px',
   },
   welcomeContent: {
     flex: 1,
-    textAlign: 'left',
   },
   welcomeTitle: {
-    fontSize: '24px',
-    fontWeight: '600',
-    margin: '0 0 8px 0',
-    color: '#1f2937',
-    lineHeight: '1.2',
+    fontSize: '26px',
+    fontWeight: '800',
+    margin: '0',
   },
   examTakerEmail: {
-    fontSize: '14px',
-    color: '#6b7280',
+    fontSize: '15px',
+    color: '#64748b',
     margin: '0',
-    fontWeight: '400',
   },
   switchUserButton: {
-    padding: '12px 24px',
-    backgroundColor: '#ffffff',
-    color: '#374151',
-    border: '1px solid #d1d5db',
-    borderRadius: '8px',
+    padding: '10px 20px',
+    backgroundColor: 'white',
+    color: '#475569',
+    border: '1px solid #e2e8f0',
+    borderRadius: '10px',
     cursor: 'pointer',
     fontSize: '14px',
-    fontWeight: '500',
-    transition: 'all 0.2s ease-in-out',
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '8px',
+    fontWeight: '600',
   },
-  assignmentList: {
-    marginTop: '20px',
+  cardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gap: '24px',
   },
   assignmentCard: {
-    padding: '20px',
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
-    marginBottom: '16px',
+    padding: '28px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '24px',
     backgroundColor: 'white',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    transition: 'all 0.2s ease-in-out',
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100%',
   },
   assignmentHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: '12px',
+    marginBottom: '16px',
   },
   assignmentTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
+    fontSize: '20px',
+    fontWeight: '800',
     margin: '0',
-    color: '#1f2937',
-    flex: 1,
+    lineHeight: '1.3',
+  },
+  badgeContainer: {
+    marginLeft: '12px',
   },
   assignmentDescription: {
     fontSize: '14px',
-    color: '#6b7280',
-    marginBottom: '16px',
-    lineHeight: '1.5',
-    whiteSpace: 'pre-wrap',
+    color: '#64748b',
+    marginBottom: '24px',
+    lineHeight: '1.6',
+    flex: 1,
   },
   assignmentMeta: {
-    display: 'flex',
-    gap: '24px',
-    marginBottom: '16px',
+    marginBottom: '24px',
+    paddingTop: '16px',
+    borderTop: '1px solid #f1f5f9',
   },
   dateInfo: {
     display: 'flex',
-    gap: '6px',
+    alignItems: 'center',
+    gap: '8px',
     fontSize: '13px',
+    color: '#64748b',
   },
   metaLabel: {
-    fontWeight: '500',
-    color: '#374151',
-  },
-  publishedBadge: {
-    padding: '4px 12px',
-    backgroundColor: '#dcfce7',
-    color: '#166534',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '500',
+    fontWeight: '700',
+    color: '#475569',
     textTransform: 'uppercase',
+    fontSize: '11px',
     letterSpacing: '0.05em',
   },
-  draftBadge: {
+  startButton: {
+    padding: '14px',
+    backgroundColor: '#4f46e5',
+    color: 'white',
+    border: 'none',
+    borderRadius: '14px',
+    cursor: 'pointer',
+    fontSize: '15px',
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  disabledButton: {
+    padding: '14px',
+    backgroundColor: '#e2e8f0',
+    color: '#94a3b8',
+    border: 'none',
+    borderRadius: '14px',
+    cursor: 'not-allowed',
+    fontSize: '15px',
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  activeBadge: {
     padding: '4px 12px',
-    backgroundColor: '#fef3c7',
-    color: '#92400e',
-    borderRadius: '6px',
+    backgroundColor: '#d1fae5',
+    color: '#065f46',
+    borderRadius: '20px',
     fontSize: '12px',
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
+    fontWeight: '700',
   },
   scheduledBadge: {
     padding: '4px 12px',
     backgroundColor: '#fef3c7',
     color: '#92400e',
-    borderRadius: '6px',
+    borderRadius: '20px',
     fontSize: '12px',
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-  },
-  activeBadge: {
-    padding: '4px 12px',
-    backgroundColor: '#dcfce7',
-    color: '#166534',
-    borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
+    fontWeight: '700',
   },
   endedBadge: {
     padding: '4px 12px',
     backgroundColor: '#f3f4f6',
-    color: '#4b5563',
-    borderRadius: '6px',
+    color: '#374151',
+    borderRadius: '20px',
     fontSize: '12px',
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
+    fontWeight: '700',
   },
-  badgeContainer: {
-    display: 'flex',
-    gap: '8px',
-    alignItems: 'center',
-  },
-  startButton: {
-    padding: '10px 20px',
-    backgroundColor: '#3b82f6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '500',
-    transition: 'all 0.2s ease-in-out',
-  },
-  disabledButton: {
-    padding: '10px 20px',
-    backgroundColor: '#9ca3af',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'not-allowed',
-    fontSize: '14px',
-    fontWeight: '500',
-    opacity: 0.7,
+  draftBadge: {
+    padding: '4px 12px',
+    backgroundColor: '#fef2f2',
+    color: '#991b1b',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '700',
   },
   loadingContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '100px',
+    textAlign: 'center',
+    padding: '40px',
   },
   loadingText: {
+    color: '#4f46e5',
+    fontSize: '16px',
+    fontWeight: '600',
+  },
+  emptyContainer: {
     textAlign: 'center',
-    color: '#6b7280',
+    padding: '60px 20px',
+    backgroundColor: '#f8fafc',
+    borderRadius: '24px',
+    border: '2px dashed #e2e8f0',
+  },
+  emptyMessage: {
+    color: '#94a3b8',
     fontSize: '16px',
     fontStyle: 'italic',
   },
   errorContainer: {
-    padding: '20px',
+    padding: '16px',
     backgroundColor: '#fef2f2',
-    borderRadius: '8px',
-    border: '1px solid #fecaca',
+    borderRadius: '12px',
+    border: '1px solid #fee2e2',
+    marginBottom: '24px',
   },
   errorText: {
     color: '#dc2626',
     fontSize: '14px',
-    margin: '0',
-  },
-  emptyContainer: {
-    padding: '40px 20px',
-    textAlign: 'center',
-  },
-  emptyMessage: {
-    color: '#9ca3af',
-    fontStyle: 'italic',
-    fontSize: '16px',
+    fontWeight: '500',
     margin: '0',
   },
 };

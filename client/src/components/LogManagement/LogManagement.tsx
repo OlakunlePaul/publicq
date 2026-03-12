@@ -6,7 +6,6 @@ import { LogFilter, defaultLogFilter, LogLevels } from '../../models/log-filter'
 import { LogConfiguration, LogLevel, getLogLevels, defaultLogConfiguration } from '../../models/log-configuration';
 import { GenericOperationStatuses } from '../../models/GenericOperationStatuses';
 import { formatDateToLocal, parseUtcDate } from '../../utils/dateUtils';
-import cssStyles from './LogManagement.module.css';
 
 interface LogManagementProps {
   logConfig: LogConfiguration & { dataLoaded: boolean };
@@ -397,7 +396,7 @@ const LogManagement: React.FC<LogManagementProps> = ({ logConfig, setLogConfig }
 
   return (
     <div style={styles.container}>
-      <h2 className={cssStyles.title} style={{...styles.title, display: 'flex', alignItems: 'center'}}><img src="/images/icons/clipboard.svg" alt="" style={{width: '28px', height: '28px', marginRight: '10px'}} />Log Management</h2>
+      <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: '20px'}}></div>
       
       {/* Tab Navigation */}
       <div style={styles.tabNavigation}>

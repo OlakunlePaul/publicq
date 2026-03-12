@@ -1226,8 +1226,7 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
         onCancel={cancelExamTakerManagement}
       />
       <div className={cssStyles.container}>
-        <div className={cssStyles.header}>
-          <h2 className={cssStyles.title}><img src="/images/icons/clipboard.svg" alt="" style={{width: '28px', height: '28px', marginRight: '10px'}} />Assignment Management</h2>
+        <div className={cssStyles.header} style={{justifyContent: 'flex-end'}}>
           <button 
             onClick={handleCreateAssignment}
             className={cn(cssStyles.createButton, "assignment-management-create-button")}

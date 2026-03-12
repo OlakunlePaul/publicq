@@ -237,7 +237,7 @@ const TokenManagement: React.FC<TokenManagementProps> = ({ tokenConfig, setToken
     <>
       <ConfirmationModal />
     <div className={cssStyles.container}>
-      <h2 className={cssStyles.title} style={{display: 'flex', alignItems: 'center'}}><img src="/images/icons/shield.svg" alt="" style={{width: '28px', height: '28px', marginRight: '10px'}} />JWT Token Configuration</h2>
+      <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: '20px'}}></div>
 
       {success && (
         <div className={cssStyles.success}>

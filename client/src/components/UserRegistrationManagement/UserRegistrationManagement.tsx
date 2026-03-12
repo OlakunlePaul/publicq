@@ -189,7 +189,7 @@ const UserRegistrationManagement: React.FC<UserRegistrationManagementProps> = ({
 
   return (
     <div style={styles.container}>
-      <h2 style={{...styles.title, display: 'flex', alignItems: 'center'}}><img src="/images/icons/person.svg" alt="" style={{width: '28px', height: '28px', marginRight: '10px'}} />User Registration Settings</h2>
+      <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: '20px'}}></div>
       
       <div style={{ position: 'relative' }}>
         <div style={styles.card}>

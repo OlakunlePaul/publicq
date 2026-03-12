@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { AssessmentModuleDto } from '../../models/assessment-module';
 import { assessmentService } from '../../services/assessmentService';
 import { formatDateToLocal } from '../../utils/dateUtils';
-import cssStyles from './ModuleManagement.module.css';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -461,7 +460,7 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
       />
       <div style={styles.container}>
         <div style={styles.header} className="module-management-header">
-          <h2 className={cssStyles.title} style={{...styles.title, display: 'flex', alignItems: 'center'}}><img src="/images/icons/books.svg" alt="" style={{width: '28px', height: '28px', marginRight: '10px'}} />Module Management</h2>
+          <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: '20px'}}></div>
           <div style={styles.headerActions}>
             <div style={styles.headerInfo}>
               <span style={styles.moduleCount}>
