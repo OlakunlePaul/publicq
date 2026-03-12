@@ -205,12 +205,13 @@ const AdmissionNumberManagement: React.FC<AdmissionNumberManagementProps> = ({
               value={admissionConfig.format}
               onChange={(e) => setAdmissionConfig({ ...admissionConfig, format: e.target.value })}
               style={styles.input}
-              placeholder="EN-{YYYY}-{0000}"
+              placeholder="e.g., DISC-{YYYY}-{0000}"
               disabled={loading}
             />
             <div style={styles.helpText}>
-              Define the format for auto-generated student admission numbers. 
-              <br/>
+              You have <strong>total control</strong> over the admission number format. 
+              You can use any prefix (e.g., <strong>DISC</strong>, <strong>ADM</strong>, <strong>PQ</strong>) and arrange the placeholders as needed.
+              <br/><br/>
               Available placeholders: 
               <strong>{'{YYYY}'}</strong> (Current Year), 
               <strong>{'{0000}'}</strong> (Sequential Number - e.g., 0001)

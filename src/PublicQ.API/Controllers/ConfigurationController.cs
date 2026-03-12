@@ -676,7 +676,7 @@ public class ConfigurationController(
     /// </summary>
     /// <returns>Returns <see cref="AdmissionNumberConfiguration"/></returns>
     [HttpGet("admission-number", Name = nameof(GetAdmissionNumberConfiguration))]
-    [Authorize(Constants.AdminsPolicy)]
+    [Authorize(Constants.ManagersPolicy)]
     public async Task<IActionResult> GetAdmissionNumberConfiguration(CancellationToken cancellationToken)
     {
         var result = await userConfigurationProvider.GetConfigurationAsync<AdmissionNumberConfiguration>(
@@ -699,7 +699,7 @@ public class ConfigurationController(
     /// <param name="options"><see cref="AdmissionNumberConfiguration"/></param>
     /// <returns>Returns <see cref="Response{TStatus}"/></returns>
     [HttpPost("admission-number")]
-    [Authorize(Constants.AdminsPolicy)]
+    [Authorize(Constants.ManagersPolicy)]
     public async Task<IActionResult> SetAdmissionNumberConfiguration(
         [FromBody] AdmissionNumberConfiguration options,
         CancellationToken cancellationToken)
