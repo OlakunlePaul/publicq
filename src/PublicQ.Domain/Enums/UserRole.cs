@@ -6,6 +6,11 @@ namespace PublicQ.Domain.Enums;
 public enum UserRole
 {
     /// <summary>
+    /// Parent role, for users who can view their children's exam results and progress.
+    /// </summary>
+    Parent,
+
+    /// <summary>
     /// The least privileged role, typically for regular users.
     /// </summary>
     ExamTaker,
