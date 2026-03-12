@@ -40,7 +40,7 @@ public static class Constants
     /// <summary>
     /// Default email for the admin user.
     /// </summary>
-    public const string DefaultAdminEmail = "admin@publicq.local";
+    public const string DefaultAdminEmail = "admin@examnova.local";
     
     /// <summary>
     /// Default welcome message template ID.

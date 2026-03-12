@@ -24,6 +24,11 @@ public class User
     /// Optional: Date of birth of the user.
     /// </summary>
     public DateTime? DateOfBirth { get; set; }
+
+    /// <summary>
+    /// Optional: Student admission number.
+    /// </summary>
+    public string? AdmissionNumber { get; set; }
     
     /// <summary>
     /// Indicates if the user has credentials set (password or external login).

@@ -543,7 +543,7 @@ const LogManagement: React.FC<LogManagementProps> = ({ logConfig, setLogConfig }
               type="text"
               value={filter.category || ''}
               onChange={(e) => handleFilterChange('category', e.target.value || null)}
-              placeholder="e.g., Examina.API.Controllers"
+              placeholder="e.g., ExamNova.API.Controllers"
               style={styles.input}
             />
           </div>

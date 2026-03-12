@@ -24,6 +24,11 @@ public class ApplicationUser : IdentityUser
     /// Optional: Date of birth of the user.
     /// </summary>
     public DateTime? DateOfBirth { get; set; }
+
+    /// <summary>
+    /// Student admission number.
+    /// </summary>
+    public string? AdmissionNumber { get; set; }
     
     /// <summary>
     /// Converts ApplicationUser to User model.
@@ -36,6 +41,8 @@ public class ApplicationUser : IdentityUser
             Id = Id,
             Email = Email,
             FullName = FullName,
+            DateOfBirth = DateOfBirth,
+            AdmissionNumber = AdmissionNumber,
             HasCredential = true
         };
     }

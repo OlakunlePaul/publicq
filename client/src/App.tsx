@@ -76,7 +76,7 @@ function HomePage() {
       <section className={homeStyles.audienceSection}>
         <h2 className={homeStyles.sectionTitle}>Built for Every Level of Education</h2>
         <p className={homeStyles.sectionSubtitle}>
-          Whether you're running a primary school quiz or a university-level final exam, Examina scales to your needs.
+          Whether you're running a primary school quiz or a university-level final exam, ExamNova scales to your needs.
         </p>
         <div className={homeStyles.audienceCards}>
           <div className={homeStyles.audienceCard}>
@@ -161,7 +161,7 @@ function HomePage() {
       {/* CTA Section */}
       <section className={homeStyles.ctaSection}>
         <h2 className={homeStyles.ctaTitle}>Ready to Transform Your Exams?</h2>
-        <p className={homeStyles.ctaSubtitle}>Join academic institutions using Examina to streamline their assessment process.</p>
+        <p className={homeStyles.ctaSubtitle}>Join academic institutions using ExamNova to streamline their assessment process.</p>
         <div className={homeStyles.ctaActions}>
           <Link to={ROUTES.REGISTER} className={homeStyles.btnPrimary}>
             Get Started Free
@@ -175,7 +175,7 @@ function HomePage() {
       {/* Footer */}
       <footer className={homeStyles.footer}>
         <p className={homeStyles.footerText}>
-          © 2026 Examina. Smart examination platform for academic institutions.
+          © 2026 ExamNova. Smart examination platform for academic institutions.
         </p>
       </footer>
     </div>

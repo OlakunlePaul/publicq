@@ -16,7 +16,7 @@ import styles from './DemoExam.module.css';
  * - Shows demo banner and results
  */
 
-const DEMO_STORAGE_KEY = 'Examina_demo_state';
+const DEMO_STORAGE_KEY = 'ExamNova_demo_state';
 
 interface DemoState {
   isComplete: boolean;

@@ -43,6 +43,12 @@ public class ExamTakerEntity
     /// </summary>
     [MaxLength(100)]
     public string? FullName { get; init; }
+
+    /// <summary>
+    /// Optional: Student admission number.
+    /// </summary>
+    [MaxLength(50)]
+    public string? AdmissionNumber { get; set; }
     
     /// <summary>
     /// Created at timestamp.
@@ -60,6 +66,7 @@ public class ExamTakerEntity
             Id = Id,
             Email = Email,
             FullName = FullName,
+            AdmissionNumber = AdmissionNumber,
             HasCredential = false
         };
     }

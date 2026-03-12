@@ -1711,9 +1711,9 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
           currentUserRoles={currentUserRoles}
           onUserAction={(action, user) => {
             if (action === 'resetPassword') {
-              handleResetPassword(user.email);
+              handleResetPassword(user.email || '');
             } else if (action === 'delete') {
-              handleDeleteUser(user.email, user.id);
+              handleDeleteUser(user.email || '', user.id);
             } else if (action === 'manageRoles') {
               handleManageRoles(user);
             }

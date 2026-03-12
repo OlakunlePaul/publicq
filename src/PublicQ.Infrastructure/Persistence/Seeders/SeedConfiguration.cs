@@ -75,7 +75,7 @@ public static class SeedConfiguration
         modelBuilder.Entity<SystemSettings>().HasData(
             new SystemSettings($"{nameof(RedisOptions)}:{nameof(RedisOptions.Enabled)}", "false"),
             new SystemSettings($"{nameof(RedisOptions)}:{nameof(RedisOptions.ConnectionString)}", "redis:6379"),
-            new SystemSettings($"{nameof(RedisOptions)}:{nameof(RedisOptions.KeyPrefix)}", "PublicQ:"),
+            new SystemSettings($"{nameof(RedisOptions)}:{nameof(RedisOptions.KeyPrefix)}", "ExamNova:"),
             new SystemSettings($"{nameof(RedisOptions)}:{nameof(RedisOptions.DefaultDurationInMinutes)}", "60"),
             new SystemSettings($"{nameof(RedisOptions)}:{nameof(RedisOptions.ServiceDurationsInMinutes)}:{nameof(IReportingService)}", "60"),
             new SystemSettings($"{nameof(RedisOptions)}:{nameof(RedisOptions.AbortOnConnectFail)}", "false"));
@@ -83,7 +83,7 @@ public static class SeedConfiguration
         modelBuilder.Entity<SystemSettings>().HasData(
             new SystemSettings($"{nameof(EmailOptions)}:{nameof(EmailOptions.MessageProvider)}",
                 nameof(MessageProvider.Sendgrid)),
-            new SystemSettings($"{nameof(EmailOptions)}:{nameof(EmailOptions.SendFrom)}", "change-me@publiq.local"));
+            new SystemSettings($"{nameof(EmailOptions)}:{nameof(EmailOptions.SendFrom)}", "no-reply@examnova.local"));
         
         modelBuilder.Entity<SystemSettings>().HasData(
             new SystemSettings($"{nameof(PasswordPolicyOptions)}:{nameof(PasswordPolicyOptions.RequiredLength)}", "8"),
@@ -94,9 +94,9 @@ public static class SeedConfiguration
         
         modelBuilder.Entity<SystemSettings>().HasData(
             new SystemSettings($"{nameof(AuthOptions)}:{nameof(AuthOptions.JwtSettings)}:{nameof(AuthOptions.JwtSettings.Audience)}",
-                "PublicQClient"),
+                "ExamNovaClient"),
             new SystemSettings($"{nameof(AuthOptions)}:{nameof(AuthOptions.JwtSettings)}:{nameof(AuthOptions.JwtSettings.Issuer)}",
-                "PublicQServer"),
+                "ExamNovaServer"),
             new SystemSettings($"{nameof(AuthOptions)}:{nameof(AuthOptions.JwtSettings)}:{nameof(AuthOptions.JwtSettings.Secret)}",
                 Constants.DefaultJwtSecret),
             new SystemSettings($"{nameof(AuthOptions)}:{nameof(AuthOptions.JwtSettings)}:{nameof(AuthOptions.JwtSettings.TokenExpiryMinutes)}", 
@@ -107,13 +107,13 @@ public static class SeedConfiguration
             {
                 Id = Constants.DefaultWelcomeMessageTemplateId,
                 Name = "Default Welcome Email",
-                Subject = "Dear {{User}}, welcome to PublicQ!",
+                Subject = "Dear {{User}}, welcome to ExamNova!",
                 Body = MessageTemplateHtmlContent.WelcomeEmailBody
             },
             new MessageTemplateEntity {
                 Id = Constants.DefaultWelcomeMessageWithCreatePasswordTemplateId,
                 Name = "Default Welcome Email with Create Password Link",
-                Subject = "Dear {{User}}, welcome to PublicQ!",
+                Subject = "Dear {{User}}, welcome to ExamNova!",
                 Body = MessageTemplateHtmlContent.WelcomeEmailBodyWithResetLink
             },
             new MessageTemplateEntity

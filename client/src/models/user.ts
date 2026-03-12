@@ -6,19 +6,11 @@ export interface User {
 
   /**
    * Email address of the user.
-   * @maxLength 254 characters (aligned with backend constraint)
    */
-  email: string;
-
-  /**
-   * Indicates if the user has valid credentials.
-   * Exam takers don't have credentials and can access exams assigned to them.
-   */
-  hasCredential: boolean;
+  email?: string;
 
   /**
    * Optional: Full name of the user.
-   * @maxLength 100 characters (aligned with backend constraint)
    */
   fullName?: string;
 
@@ -26,4 +18,19 @@ export interface User {
    * Optional: Date of birth of the user.
    */
   dateOfBirth?: string; // ISO date string
+
+  /**
+   * Optional: Student admission number.
+   */
+  admissionNumber?: string;
+
+  /**
+   * Indicates if the user has valid credentials.
+   */
+  hasCredential: boolean;
+
+  /**
+   * Roles assigned to the user.
+   */
+  roles?: string[];
 }

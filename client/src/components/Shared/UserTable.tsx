@@ -405,6 +405,7 @@ const UserTable: React.FC<UserTableProps> = ({
                 <th className={userTableStyles.th}>ID</th>
                 <th className={userTableStyles.th}>Email</th>
                 <th className={userTableStyles.th}>Full Name</th>
+                <th className={userTableStyles.th}>Admission No</th>
                 <th className={userTableStyles.th}>Date of Birth</th>
                 <th className={userTableStyles.th}>User Type</th>
                 {showActions && <th className={userTableStyles.th}>Actions</th>}
@@ -437,6 +438,22 @@ const UserTable: React.FC<UserTableProps> = ({
                     </td>
                     <td className={userTableStyles.td}>
                       <div className={userTableStyles.userName}>{user.fullName || '-'}</div>
+                    </td>
+                    <td className={userTableStyles.td}>
+                      <div className={userTableStyles.admissionNumber}>
+                        {user.admissionNumber ? (
+                          <span style={{ 
+                            padding: '2px 6px', 
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)', 
+                            color: '#3b82f6', 
+                            borderRadius: '4px',
+                            fontSize: '0.85rem',
+                            fontWeight: 500
+                          }}>
+                            {user.admissionNumber}
+                          </span>
+                        ) : '-'}
+                      </div>
                     </td>
                     <td className={userTableStyles.td}>
                       <div className={userTableStyles.dateOfBirth}>

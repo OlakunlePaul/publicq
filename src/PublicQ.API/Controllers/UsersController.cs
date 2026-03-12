@@ -170,6 +170,7 @@ public class UsersController(IUserService userService) : ControllerBase
             dto.FullName,
             dto.Password,
             dto.DateOfBirth,
+            dto.AdmissionNumber,
             cancellationToken);
 
         return result.ToActionResult();
@@ -203,6 +204,7 @@ public class UsersController(IUserService userService) : ControllerBase
             dto.FullName,
             dto.Password,
             dto.DateOfBirth,
+            dto.AdmissionNumber,
             url,
             cancellationToken);
 
@@ -239,6 +241,7 @@ public class UsersController(IUserService userService) : ControllerBase
             dto.Id,
             dto.DateOfBirth,
             dto.FullName,
+            dto.AdmissionNumber,
             cancellationToken);
 
         return result.ToActionResult();

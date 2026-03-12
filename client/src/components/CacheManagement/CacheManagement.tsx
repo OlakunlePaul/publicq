@@ -304,7 +304,7 @@ const CacheManagement: React.FC<CacheManagementProps> = ({ cacheConfig, setCache
               ...cacheConfig,
               keyPrefix: e.target.value
             })}
-            placeholder="Enter cache key prefix (e.g., Examina)"
+            placeholder="Enter cache key prefix (e.g., ExamNova)"
             className={styles.input}
             style={{
               opacity: cacheConfig.enable ? 1 : 0.6,

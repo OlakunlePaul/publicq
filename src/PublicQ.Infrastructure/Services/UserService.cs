@@ -100,6 +100,7 @@ public class UserService(
         string fullName,
         string password,
         DateTime? dateOfBirth,
+        string? admissionNumber,
         CancellationToken cancellationToken)
     {
         if (!userServiceOptions.CurrentValue.SelfServiceRegistrationEnabled)
@@ -119,6 +120,7 @@ public class UserService(
             fullName, 
             password, 
             dateOfBirth,
+            admissionNumber,
             baseUrl: default, // Not needed as user registers themselves with a password
             cancellationToken);
 
@@ -166,6 +168,7 @@ public class UserService(
         string fullName, 
         string? password,
         DateTime? dateOfBirth,
+        string? admissionNumber,
         string? baseUrl,
         CancellationToken cancellationToken)
     {
@@ -186,6 +189,7 @@ public class UserService(
             fullName, 
             password, 
             dateOfBirth, 
+            admissionNumber,
             baseUrl, 
             cancellationToken);
     }
@@ -196,6 +200,7 @@ public class UserService(
         string fullName, 
         string? password, 
         DateTime? dateOfBirth,
+        string? admissionNumber,
         string? baseUrl,
         CancellationToken cancellationToken)
     {
@@ -207,6 +212,7 @@ public class UserService(
             fullName, 
             password, 
             dateOfBirth, 
+            admissionNumber,
             baseUrl,
             cancellationToken);
     }
@@ -226,6 +232,7 @@ public class UserService(
         string fullName, 
         string? password, 
         DateTime? dateOfBirth,
+        string? admissionNumber,
         string? baseUrl, 
         CancellationToken cancellationToken)
     {
@@ -259,6 +266,7 @@ public class UserService(
             NormalizedEmail = emailAddressUpper,
             NormalizedUserName = emailAddressUpper,
             DateOfBirth = dateOfBirth,
+            AdmissionNumber = admissionNumber,
             CreatedAtUtc = DateTime.UtcNow,
         };
 
@@ -355,6 +363,7 @@ public class UserService(
         string? id,
         DateTime? dateOfBirth,
         string fullName,
+        string? admissionNumber,
         CancellationToken cancellationToken)
     {
         logger.LogDebug("Request to register exam taker received.");
@@ -416,6 +425,7 @@ public class UserService(
             NormalizedEmail = email?.Address.ToUpperInvariant(),
             FullName = fullName,
             DateOfBirth = dateOfBirth,
+            AdmissionNumber = admissionNumber,
             CreatedAtUtc = DateTime.UtcNow
         };
         
@@ -1039,6 +1049,7 @@ public class UserService(
                 examTaker.Id,
                 examTaker.DateOfBirth,
                 examTaker.Name, 
+                examTaker.AdmissionNumber,
                 cancellationToken);
 
             if (userResponse.IsSuccess)

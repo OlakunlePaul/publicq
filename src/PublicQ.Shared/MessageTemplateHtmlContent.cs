@@ -18,7 +18,7 @@ public static class MessageTemplateHtmlContent
                                              <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no" />
                                              <meta name="color-scheme" content="light dark" />
                                              <meta name="supported-color-schemes" content="light dark" />
-                                             <title>Welcome to PublicQ</title>
+                                             <title>Welcome to ExamNova</title>
                                              <style>
                                                body {
                                                  margin:0;
@@ -78,15 +78,15 @@ public static class MessageTemplateHtmlContent
                                            <body>
                                              <div class="container">
                                                <div class="card">
-                                                 <h1>Welcome to PublicQ</h1>
+                                                 <h1>Welcome to ExamNova</h1>
                                                  <p>Hello <strong>{{User}}</strong>,</p>
                                                  <p>
-                                                   Thank you for joining <span style="color:#0b5fff;font-weight:600;">PublicQ</span>!  
+                                                   Thank you for joining <span style="color:#0b5fff;font-weight:600;">ExamNova</span>!  
                                                    We are excited to have you on board.
                                                  </p>
-                                                 <p>Best regards,<br/>PublicQ Team</p>
+                                                 <p>Best regards,<br/>ExamNova Team</p>
                                                  <div class="footer">
-                                                   If you did not create a PublicQ account, you can safely ignore this message.
+                                                   If you did not create a ExamNova account, you can safely ignore this message.
                                                  </div>
                                                </div>
                                              </div>
@@ -107,7 +107,7 @@ public static class MessageTemplateHtmlContent
                                                           <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no" />
                                                           <meta name="color-scheme" content="light dark" />
                                                           <meta name="supported-color-schemes" content="light dark" />
-                                                          <title>Welcome to PublicQ</title>
+                                                          <title>Welcome to ExamNova</title>
                                                           <style>
                                                             body {
                                                               margin:0;
@@ -190,10 +190,10 @@ public static class MessageTemplateHtmlContent
                                                         <body>
                                                           <div class="container">
                                                             <div class="card">
-                                                              <h1>Welcome to PublicQ</h1>
+                                                              <h1>Welcome to ExamNova</h1>
                                                               <p>Hello <strong>{{User}}</strong>,</p>
                                                               <p>
-                                                                Your account on <a href="{{BaseUrl}}" target="_blank" rel="noopener" style="color:#0b5fff;font-weight:600;text-decoration:none;">PublicQ</a> has been created successfully.  
+                                                                Your account on <a href="{{BaseUrl}}" target="_blank" rel="noopener" style="color:#0b5fff;font-weight:600;text-decoration:none;">ExamNova</a> has been created successfully.  
                                                                 We’re glad to welcome you to the platform.
                                                               </p>
                                                       
@@ -205,8 +205,8 @@ public static class MessageTemplateHtmlContent
                                                                 {{CreatePasswordUrl}}
                                                               </div>
                                                       
-                                                              <p style="margin-top:16px;">If you didn’t sign up for a PublicQ account, you can safely ignore this email.</p>
-                                                              <p>Best regards,<br/>PublicQ Team</p>
+                                                              <p style="margin-top:16px;">If you didn’t sign up for a ExamNova account, you can safely ignore this email.</p>
+                                                              <p>Best regards,<br/>ExamNova Team</p>
                                                       
                                                               <div class="footer">
                                                                 Your account is ready — let’s get started!
@@ -325,7 +325,7 @@ public static class MessageTemplateHtmlContent
                                                         </div>
                                                 
                                                         <p style="margin-top:16px;">If you didn’t request a password reset, you can safely ignore this email.</p>
-                                                        <p>Best regards,<br/>PublicQ Team</p>
+                                                        <p>Best regards,<br/>ExamNova Team</p>
                                                 
                                                         <div class="footer">
                                                           This link will expire after a short period for security reasons.
@@ -430,7 +430,7 @@ public static class MessageTemplateHtmlContent
                                                        <div class="password-box">
                                                          {{Password}}
                                                        </div>
-                                                       <p>Best regards,<br/>PublicQ Team</p>
+                                                       <p>Best regards,<br/>ExamNova Team</p>
                                                        <div class="footer">
                                                          If you did not expect this reset, please contact support immediately.
                                                        </div>

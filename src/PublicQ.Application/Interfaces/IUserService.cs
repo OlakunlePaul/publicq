@@ -37,6 +37,7 @@ public interface IUserService
         string fullName,
         string password,
         DateTime? dateOfBirth,
+        string? admissionNumber,
         CancellationToken cancellationToken);
 
     /// <summary>
@@ -60,6 +61,7 @@ public interface IUserService
         string fullName,
         string? password,
         DateTime? dateOfBirth,
+        string? admissionNumber,
         string? baseUrl,
         CancellationToken cancellationToken);
 
@@ -78,6 +80,7 @@ public interface IUserService
         string fullName,
         string? password,
         DateTime? dateOfBirth,
+        string? admissionNumber,
         string? baseUrl,
         CancellationToken cancellationToken);
 
@@ -95,6 +98,7 @@ public interface IUserService
         string? id,
         DateTime? dateOfBirth,
         string fullName,
+        string? admissionNumber,
         CancellationToken cancellationToken);
     
     /// <summary>

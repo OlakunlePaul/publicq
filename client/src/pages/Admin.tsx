@@ -915,7 +915,7 @@ const DashboardContent = ({
         </div>
       </div>
       <div className={cssStyles.welcomeMessage}>
-        <p>Welcome to the Examina Admin Panel. Use the navigation menu on the left to manage different aspects of the system.</p>
+        <p>Welcome to the ExamNova Admin Panel. Use the navigation menu on the left to manage different aspects of the system.</p>
         <div className={cssStyles.statisticsNote}>
           <p className={cssStyles.statisticsNoteText}>
             <img src="/images/icons/information.svg" alt="Info" className={cssStyles.infoIcon} style={{width: '16px', height: '16px'}} />
