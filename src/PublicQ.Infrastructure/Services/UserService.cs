@@ -101,7 +101,7 @@ public class UserService(
         MailAddress email,
         string fullName,
         string password,
-        DateTime dateOfBirth,
+        DateTime? dateOfBirth,
         string? admissionNumber,
         CancellationToken cancellationToken)
     {
@@ -201,7 +201,7 @@ public class UserService(
         MailAddress email, 
         string fullName, 
         string? password, 
-        DateTime dateOfBirth,
+        DateTime? dateOfBirth,
         string? admissionNumber,
         string? baseUrl,
         CancellationToken cancellationToken)
@@ -233,7 +233,7 @@ public class UserService(
         MailAddress email, 
         string fullName, 
         string? password, 
-        DateTime dateOfBirth,
+        DateTime? dateOfBirth,
         string? admissionNumber,
         string? baseUrl, 
         CancellationToken cancellationToken)
@@ -368,13 +368,21 @@ public class UserService(
     public async Task<Response<User, GenericOperationStatuses>> RegisterExamTakerAsync(
         MailAddress? email,
         string? id,
-        DateTime dateOfBirth,
+        DateTime? dateOfBirth,
         string fullName,
         string? admissionNumber,
         CancellationToken cancellationToken)
     {
         logger.LogDebug("Request to register exam taker received.");
         Guard.AgainstNullOrWhiteSpace(fullName, nameof(fullName));
+
+        if (dateOfBirth == null)
+        {
+            logger.LogWarning("Date of birth is required for exam takers.");
+            return Response<User, GenericOperationStatuses>.Failure(
+                GenericOperationStatuses.BadRequest,
+                "Date of birth is required for students.");
+        }
 
         if (string.IsNullOrWhiteSpace(admissionNumber))
         {

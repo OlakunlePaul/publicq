@@ -29,7 +29,7 @@ public class ExamTakerEntity
     /// <summary>
     /// Date of birth of the user.
     /// </summary>
-    public DateTime DateOfBirth { get; set; }
+    public DateTime? DateOfBirth { get; set; }
 
     /// <summary>
     /// Normalized email address of the user.
@@ -66,6 +66,7 @@ public class ExamTakerEntity
             Id = Id,
             Email = Email,
             FullName = FullName,
+            DateOfBirth = DateOfBirth,
             AdmissionNumber = AdmissionNumber,
             HasCredential = false
         };

@@ -23,7 +23,7 @@ public class UserRegisterRequest
     /// <summary>
     /// Date of birth of the user.
     /// </summary>
-    public DateTime DateOfBirth { get; set; }
+    public DateTime? DateOfBirth { get; set; }
 
     /// <summary>
     /// Optional: Student admission number.

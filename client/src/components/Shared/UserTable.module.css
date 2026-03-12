@@ -228,6 +228,15 @@
   font-weight: var(--font-weight-normal);
 }
 
+.admissionNumberBadge {
+  padding: 2px 6px; 
+  background-color: rgba(59, 130, 246, 0.1); 
+  color: #3b82f6; 
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
 .dateOfBirth {
   font-size: var(--font-size-sm);
   color: var(--color-gray-700);
@@ -514,5 +523,90 @@
   .actionButtonDanger {
     font-size: var(--font-size-xs);
     padding: var(--spacing-xs) var(--spacing-sm);
+  }
+}
+
+.printHeader {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 1cm;
+    size: auto;
+  }
+
+  :global(body) {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  .noPrint {
+    display: none !important;
+  }
+
+  .printHeader {
+    display: block !important;
+    margin-bottom: 20px !important;
+    text-align: center !important;
+  }
+
+  .printTitle {
+    font-size: 24px !important;
+    margin-bottom: 5px !important;
+    color: black !important;
+  }
+
+  .printSubtitle {
+    font-size: 14px !important;
+    color: #666 !important;
+  }
+
+  .tableContainer {
+    overflow: visible !important;
+    max-height: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border: 1px solid #000 !important;
+  }
+
+  .th, .td {
+    border: 1px solid #000 !important;
+    padding: 8px 12px !important;
+    color: black !important;
+    background-color: transparent !important;
+    font-size: 12pt !important;
+  }
+
+  .th {
+    background-color: #f0f0f0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .admissionNumberBadge {
+    background-color: transparent !important;
+    color: black !important;
+    padding: 0 !important;
+  }
+
+  /* Hide common layout elements */
+  :global(header), 
+  :global(nav), 
+  :global(aside), 
+  :global(footer), 
+  :global(button),
+  :global(.searchContainer),
+  :global(.pagination),
+  :global(.user-management-header-buttons),
+  :global(.infoSection) {
+    display: none !important;
   }
 }

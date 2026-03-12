@@ -593,13 +593,41 @@ public class AssignmentService(
         string examTakerId, 
         CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("Get assignments by exam taker ID request received.");
+        logger.LogDebug("Get assignments by exam taker ID request received for {ExamTakerId}", examTakerId);
         Guard.AgainstNullOrWhiteSpace(examTakerId, nameof(examTakerId));
+
+        // First, resolve the examTakerId to the actual internal Id if it's an admission number
+        var resolvedId = examTakerId;
+        
+        // Check if the provided ID directly matches any ExamTaker or User
+        var existsAsId = await dbContext.ExamTakers.AnyAsync(e => e.Id == examTakerId, cancellationToken)
+                         || await dbContext.Users.AnyAsync(u => u.Id == examTakerId, cancellationToken);
+        
+        if (!existsAsId)
+        {
+            // If not found as ID, check if it's an AdmissionNumber
+            var userWithAdmissionNumber = await dbContext.ExamTakers
+                .AsNoTracking()
+                .Where(e => e.AdmissionNumber == examTakerId)
+                .Select(e => e.Id)
+                .FirstOrDefaultAsync(cancellationToken)
+                ?? await dbContext.Users
+                .AsNoTracking()
+                .Where(u => u.AdmissionNumber == examTakerId)
+                .Select(u => u.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+                
+            if (userWithAdmissionNumber != null)
+            {
+                resolvedId = userWithAdmissionNumber;
+                logger.LogInformation("Resolved Admission Number {AdmissionNumber} to ExamTakerId {ExamTakerId}", examTakerId, resolvedId);
+            }
+        }
 
         var query = dbContext.Assignments
             .AsNoTracking()
             .Where(a => a.IsPublished
-                        && a.ExamTakerAssignments.Any(eta => eta.ExamTakerId == examTakerId));
+                        && a.ExamTakerAssignments.Any(eta => eta.ExamTakerId == resolvedId));
         
         var totalCount = await query.LongCountAsync(cancellationToken);
         

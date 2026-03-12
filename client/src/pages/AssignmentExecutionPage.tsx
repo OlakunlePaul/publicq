@@ -126,14 +126,14 @@ const AssignmentExecutionPage: React.FC = () => {
       <div className={styles.container}>
         <div className={styles.content}>
           <div className={styles.promptCard}>
-            <h2 className={styles.promptTitle}>Enter Your Exam Taker ID</h2>
+            <h2 className={styles.promptTitle}>Enter Your Admission Number / ID</h2>
             <p className={styles.promptText}>
-              Please enter your exam taker ID to access this assignment.
+              Please enter your admission number or exam taker ID to access this assignment.
             </p>
             <div className={styles.inputGroup}>
               <input
                 type="text"
-                placeholder="Enter your ID"
+                placeholder="Enter Admission Number or ID"
                 value={examTakerId}
                 onChange={(e) => setExamTakerId(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleExamTakerSubmit()}

@@ -1398,6 +1398,10 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
     setRoleManagementModal({ isOpen: false, user: null });
   };
 
+  const handlePrintStudentList = () => {
+    window.print();
+  };
+
   // CSV parsing and upload handlers
   const parseCsvFile = (file: File): Promise<ExamTakerImport[]> => {
     return new Promise((resolve, reject) => {
@@ -1678,6 +1682,13 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
                 title="Import exam takers from CSV file"
               >
                 Import CSV
+              </button>
+              <button 
+                onClick={handlePrintStudentList}
+                className={cn(userManagementStyles.printButton, "user-management-button")}
+                title="Print student list (Names & Admission Numbers)"
+              >
+                Print Student List
               </button>
               <button 
                 onClick={handleCreateUser}

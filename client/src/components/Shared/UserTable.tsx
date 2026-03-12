@@ -369,6 +369,11 @@ const UserTable: React.FC<UserTableProps> = ({
 
       {error && <p className={userTableStyles.error}>{error}</p>}
 
+      <div className={userTableStyles.printHeader}>
+        <h2 className={userTableStyles.printTitle}>Student Admission List</h2>
+        <p className={userTableStyles.printSubtitle}>Date: {new Date().toLocaleDateString()}</p>
+      </div>
+
       <div className={userTableStyles.tableContainer} style={{maxHeight}}>
         {loading ? (
           <div className={userTableStyles.loadingContainer}>
@@ -383,7 +388,7 @@ const UserTable: React.FC<UserTableProps> = ({
             <thead className={userTableStyles.tableHead}>
               <tr>
                 {selectionMode !== 'none' && (
-                  <th className={userTableStyles.th}>
+                  <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>
                     {selectionMode === 'multiple' && displayUsers.length > 0 ? (
                       <div className={userTableStyles.selectAllHeader}>
                         <input
@@ -402,13 +407,13 @@ const UserTable: React.FC<UserTableProps> = ({
                     )}
                   </th>
                 )}
-                <th className={userTableStyles.th}>ID</th>
-                <th className={userTableStyles.th}>Email</th>
+                <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>ID</th>
+                <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>Email</th>
                 <th className={userTableStyles.th}>Full Name</th>
                 <th className={userTableStyles.th}>Admission No</th>
-                <th className={userTableStyles.th}>Date of Birth</th>
-                <th className={userTableStyles.th}>User Type</th>
-                {showActions && <th className={userTableStyles.th}>Actions</th>}
+                <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>Date of Birth</th>
+                <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>User Type</th>
+                {showActions && <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -421,7 +426,7 @@ const UserTable: React.FC<UserTableProps> = ({
                     onClick={() => handleUserClick(user)}
                   >
                     {selectionMode !== 'none' && (
-                      <td className={userTableStyles.td}>
+                      <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`}>
                         <input
                           type={selectionMode === 'single' ? 'radio' : 'checkbox'}
                           checked={isSelected}
@@ -430,10 +435,10 @@ const UserTable: React.FC<UserTableProps> = ({
                         />
                       </td>
                     )}
-                    <td className={userTableStyles.td}>
+                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`}>
                       <span className={userTableStyles.idCell}>{user.id}</span>
                     </td>
-                    <td className={userTableStyles.td}>
+                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`}>
                       <div className={userTableStyles.userEmail}>{user.email || 'N/A'}</div>
                     </td>
                     <td className={userTableStyles.td}>
@@ -442,20 +447,13 @@ const UserTable: React.FC<UserTableProps> = ({
                     <td className={userTableStyles.td}>
                       <div className={userTableStyles.admissionNumber}>
                         {user.admissionNumber ? (
-                          <span style={{ 
-                            padding: '2px 6px', 
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)', 
-                            color: '#3b82f6', 
-                            borderRadius: '4px',
-                            fontSize: '0.85rem',
-                            fontWeight: 500
-                          }}>
+                          <span className={userTableStyles.admissionNumberBadge}>
                             {user.admissionNumber}
                           </span>
                         ) : '-'}
                       </div>
                     </td>
-                    <td className={userTableStyles.td}>
+                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`}>
                       <div className={userTableStyles.dateOfBirth}>
                         {user.dateOfBirth 
                           ? new Date(user.dateOfBirth).toLocaleDateString('en-US', {
@@ -467,7 +465,7 @@ const UserTable: React.FC<UserTableProps> = ({
                         }
                       </div>
                     </td>
-                    <td className={userTableStyles.td}>
+                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`}>
                       <div className={userTableStyles.userTypeContainer}>
                         {user.hasCredential ? (
                           <span className={userTableStyles.userBadge}>User</span>
@@ -477,7 +475,7 @@ const UserTable: React.FC<UserTableProps> = ({
                       </div>
                     </td>
                     {showActions && (
-                      <td className={userTableStyles.td}>
+                      <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`}>
                         <div className={userTableStyles.actionContainer}>
                           {user.hasCredential && (
                             <button 

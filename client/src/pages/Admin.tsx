@@ -28,7 +28,7 @@ import { UserPolicies } from '../models/user-policy';
 import { cn } from '../utils/cn';
 import cssStyles from './Admin.module.css';
 
-type AdminSection = 'dashboard' | 'users' | 'groups' | 'assignments' | 'assessments' | 'reports' | 'email' | 'banners' | 'pages' | 'ai' | 'ai-chat' | 'security' | 'cache' | 'storage' | 'logs';
+type AdminSection = 'dashboard' | 'users' | 'groups' | 'assignments' | 'assessments' | 'reports' | 'email' | 'banners' | 'pages' | 'ai' | 'ai-chat' | 'security' | 'cache' | 'storage' | 'logs' | 'admissions';
 
 // Animated Counter Component
 const AnimatedCounter = ({ target, duration = 1000, delay = 0 }: { target: number; duration?: number; delay?: number }) => {
@@ -224,6 +224,7 @@ const Admin = () => {
       cache: { title: 'Cache Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/2874/2874802.png" alt="Cache" style={{width: '24px', height: '24px'}} />, description: 'Manage application cache' },
       storage: { title: 'File Storage', icon: <img src="https://cdn-icons-png.flaticon.com/512/2965/2965312.png" alt="Storage" style={{width: '24px', height: '24px'}} />, description: 'Configure file storage settings' },
       logs: { title: 'Log Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/1069/1069159.png" alt="Logs" style={{width: '24px', height: '24px'}} />, description: 'View and manage system logs' },
+      admissions: { title: 'Admission Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Admissions" style={{width: '24px', height: '24px'}} />, description: 'Configure student admission number format' },
     };
     return sectionMap[section] || sectionMap.dashboard;
   };
@@ -290,10 +291,10 @@ const Admin = () => {
       case 'pages': return <PageManagement />;
       case 'ai': return <AiConfiguration />;
       case 'ai-chat': return <AiChatDemo onNavigateToSettings={() => navigateToSection('ai')} hideHeader={true} />;
+      case 'admissions': return <AdmissionNumberManagement admissionConfig={admissionNumberOptions} setAdmissionConfig={setAdmissionNumberOptions} />;
       case 'security': return (
         <div>
           <UserRegistrationManagement userRegistrationConfig={userRegistrationOptions} setUserRegistrationConfig={setUserRegistrationOptions} />
-          <AdmissionNumberManagement admissionConfig={admissionNumberOptions} setAdmissionConfig={setAdmissionNumberOptions} />
           <TokenManagement tokenConfig={tokenOptions} setTokenConfig={setTokenOptions} />
           <PasswordManagement passwordConfig={passwordOptions} setPasswordConfig={setPasswordOptions} />
           <IpRateLimiting />
@@ -385,6 +386,11 @@ const Admin = () => {
               <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Users
             </button>
           )}
+          {UserPolicies.hasManagerAccess(userRoles) && (
+            <button onClick={() => navigateToSection('admissions')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'admissions' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Admissions
+            </button>
+          )}
         </nav>
       </div>
       
@@ -407,7 +413,7 @@ const Admin = () => {
             </button>
             {isDropdownOpen && (
               <div style={{ position: 'absolute', top: '100%', right: 0, background: 'white', border: '1px solid rgba(226, 232, 240, 0.8)', borderRadius: '16px', marginTop: '12px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', zIndex: 1000, overflow: 'hidden', padding: '8px', minWidth: '220px' }}>
-                {['dashboard', 'users', 'groups', 'assignments', 'assessments', 'reports', 'email', 'banners', 'ai', 'ai-chat', 'security', 'logs'].map(section => (
+                {['dashboard', 'users', 'admissions', 'groups', 'assignments', 'assessments', 'reports', 'email', 'banners', 'ai', 'ai-chat', 'security', 'logs'].map(section => (
                   <button key={section} onClick={() => { navigateToSection(section as AdminSection); setIsDropdownOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', width: '100%', border: 'none', background: 'transparent', borderRadius: '8px', cursor: 'pointer', textAlign: 'left', fontWeight: activeSection === section ? 600 : 400, color: activeSection === section ? '#4f46e5' : '#475569' }}>
                     {getSectionInfo(section as AdminSection).icon}
                     <span>{getSectionInfo(section as AdminSection).title}</span>

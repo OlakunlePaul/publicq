@@ -37,7 +37,7 @@ public interface IUserService
         MailAddress email,
         string fullName,
         string password,
-        DateTime dateOfBirth,
+        DateTime? dateOfBirth,
         string? admissionNumber,
         CancellationToken cancellationToken);
 
@@ -82,7 +82,7 @@ public interface IUserService
         MailAddress email,
         string fullName,
         string? password,
-        DateTime dateOfBirth,
+        DateTime? dateOfBirth,
         string? admissionNumber,
         string? baseUrl,
         CancellationToken cancellationToken);
@@ -100,7 +100,7 @@ public interface IUserService
     Task<Response<User, GenericOperationStatuses>> RegisterExamTakerAsync(
         MailAddress? email,
         string? id,
-        DateTime dateOfBirth,
+        DateTime? dateOfBirth,
         string fullName,
         string? admissionNumber,
         CancellationToken cancellationToken);

@@ -23,7 +23,7 @@ public class ApplicationUser : IdentityUser
     /// <summary>
     /// Date of birth of the user.
     /// </summary>
-    public DateTime DateOfBirth { get; set; }
+    public DateTime? DateOfBirth { get; set; }
 
     /// <summary>
     /// Student admission number.
