@@ -115,7 +115,7 @@ const Register = () => {
         break;
     }
     return null;
-  }, [username, fullName, password, confirmPassword, passwordPolicy, touched, admissionNumber]);
+  }, [username, fullName, password, confirmPassword, passwordPolicy, touched]);
 
   const validateForm = useCallback(() => {
     // Check if any field has validation errors by using the existing getFieldError function
