@@ -83,17 +83,23 @@ function HomePage() {
         </p>
         <div className={homeStyles.audienceCards}>
           <div className={homeStyles.audienceCard}>
-            <div className={homeStyles.audienceIcon}>🏫</div>
+            <div className={homeStyles.audienceIcon}>
+              <img src="https://cdn-icons-png.flaticon.com/512/167/167707.png" alt="Primary" className={homeStyles.audienceIconImg} />
+            </div>
             <h3 className={homeStyles.audienceCardTitle}>Primary Schools</h3>
             <p className={homeStyles.audienceCardDesc}>Simple quizzes with auto-grading. Teachers save hours on marking with instant results.</p>
           </div>
           <div className={homeStyles.audienceCard}>
-            <div className={homeStyles.audienceIcon}>🎒</div>
+            <div className={homeStyles.audienceIcon}>
+              <img src="https://cdn-icons-png.flaticon.com/512/2906/2906496.png" alt="Secondary" className={homeStyles.audienceIconImg} />
+            </div>
             <h3 className={homeStyles.audienceCardTitle}>Secondary Schools</h3>
             <p className={homeStyles.audienceCardDesc}>Manage class groups, assignments, and track student progress across terms and subjects.</p>
           </div>
           <div className={homeStyles.audienceCard}>
-            <div className={homeStyles.audienceIcon}>🎓</div>
+            <div className={homeStyles.audienceIcon}>
+              <img src="https://cdn-icons-png.flaticon.com/512/2490/2490421.png" alt="Universities" className={homeStyles.audienceIconImg} />
+            </div>
             <h3 className={homeStyles.audienceCardTitle}>Universities</h3>
             <p className={homeStyles.audienceCardDesc}>Large-scale exams with multiple versions, timed sessions, randomized questions, and detailed analytics.</p>
           </div>
@@ -105,32 +111,44 @@ function HomePage() {
         <h2 className={homeStyles.sectionTitle}>Everything You Need to Run Exams</h2>
         <div className={homeStyles.featuresGrid}>
           <div className={homeStyles.featureCard}>
-            <div className={homeStyles.featureCardIcon}>✏️</div>
+            <div className={homeStyles.featureCardIcon}>
+              <img src="https://cdn-icons-png.flaticon.com/512/2541/2541991.png" alt="Builder" className={homeStyles.featureCardIconImg} />
+            </div>
             <h3 className={homeStyles.featureCardTitle}>Easy Question Builder</h3>
             <p className={homeStyles.featureCardDesc}>Multiple choice, multi-select, and free-text questions with file attachments.</p>
           </div>
           <div className={homeStyles.featureCard}>
-            <div className={homeStyles.featureCardIcon}>⚡</div>
+            <div className={homeStyles.featureCardIcon}>
+              <img src="https://cdn-icons-png.flaticon.com/512/9513/9513110.png" alt="Auto-Grading" className={homeStyles.featureCardIconImg} />
+            </div>
             <h3 className={homeStyles.featureCardTitle}>Auto-Grading</h3>
             <p className={homeStyles.featureCardDesc}>Objective questions are graded instantly. Students get results the moment they finish.</p>
           </div>
           <div className={homeStyles.featureCard}>
-            <div className={homeStyles.featureCardIcon}>👥</div>
+            <div className={homeStyles.featureCardIcon}>
+              <img src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" alt="Class" className={homeStyles.featureCardIconImg} />
+            </div>
             <h3 className={homeStyles.featureCardTitle}>Class Management</h3>
             <p className={homeStyles.featureCardDesc}>Organize students into groups, assign exams to specific classes, and track completion.</p>
           </div>
           <div className={homeStyles.featureCard}>
-            <div className={homeStyles.featureCardIcon}>📈</div>
+            <div className={homeStyles.featureCardIcon}>
+              <img src="https://cdn-icons-png.flaticon.com/512/2311/2311545.png" alt="Reports" className={homeStyles.featureCardIconImg} />
+            </div>
             <h3 className={homeStyles.featureCardTitle}>Detailed Reports</h3>
             <p className={homeStyles.featureCardDesc}>Per-student scores, question-level analysis, and exportable class performance data.</p>
           </div>
           <div className={homeStyles.featureCard}>
-            <div className={homeStyles.featureCardIcon}>🔀</div>
+            <div className={homeStyles.featureCardIcon}>
+              <img src="https://cdn-icons-png.flaticon.com/512/467/467262.png" alt="Anti-Cheating" className={homeStyles.featureCardIconImg} />
+            </div>
             <h3 className={homeStyles.featureCardTitle}>Anti-Cheating</h3>
             <p className={homeStyles.featureCardDesc}>Randomize question order and answer options. Timed sessions prevent sharing.</p>
           </div>
           <div className={homeStyles.featureCard}>
-            <div className={homeStyles.featureCardIcon}>🌐</div>
+            <div className={homeStyles.featureCardIcon}>
+              <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Access" className={homeStyles.featureCardIconImg} />
+            </div>
             <h3 className={homeStyles.featureCardTitle}>Access Anywhere</h3>
             <p className={homeStyles.featureCardDesc}>Students take exams from any device — phone, tablet, or computer. No app install needed.</p>
           </div>
