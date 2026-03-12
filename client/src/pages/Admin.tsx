@@ -293,6 +293,7 @@ const Admin = () => {
       case 'security': return (
         <div>
           <UserRegistrationManagement userRegistrationConfig={userRegistrationOptions} setUserRegistrationConfig={setUserRegistrationOptions} />
+          <AdmissionNumberManagement admissionConfig={admissionNumberOptions} setAdmissionConfig={setAdmissionNumberOptions} />
           <TokenManagement tokenConfig={tokenOptions} setTokenConfig={setTokenOptions} />
           <PasswordManagement passwordConfig={passwordOptions} setPasswordConfig={setPasswordOptions} />
           <IpRateLimiting />
