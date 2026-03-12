@@ -5,6 +5,7 @@ using PublicQ.Infrastructure.Entities;
 using PublicQ.Infrastructure.Options;
 using PublicQ.Infrastructure.Persistence.Entities;
 using PublicQ.Shared;
+using PublicQ.Shared.Enums;
 
 namespace PublicQ.Infrastructure.Persistence.Seeders;
 
@@ -129,6 +130,15 @@ public static class SeedConfiguration
                 Name = "Default Forget Password",
                 Subject = "Dear {{User}}, here is your password reset link",
                 Body = MessageTemplateHtmlContent.ForgetPasswordEmailBody
+            }
+        );
+
+        modelBuilder.Entity<ConfigurationEntity>().HasData(
+            new ConfigurationEntity
+            {
+                Id = 1,
+                Type = UserConfigTypes.AdmissionNumber,
+                DataJson = "{\n  \"Format\": \"EN-{YYYY}-{0000}\",\n  \"LastSequenceNumber\": 0\n}"
             }
         );
     }

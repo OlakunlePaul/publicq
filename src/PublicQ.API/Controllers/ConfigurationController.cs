@@ -9,6 +9,7 @@ using PublicQ.Application.Interfaces;
 using PublicQ.Application.Models;
 using PublicQ.Infrastructure.Options;
 using PublicQ.Shared;
+using PublicQ.Shared.Enums;
 using Constants = PublicQ.Shared.Constants;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -53,7 +54,8 @@ public class ConfigurationController(
     IOptionsMonitor<AuthOptions> authOptions,
     IOptionsMonitor<LlmIntegrationOptions> llmOptions,
     IOptionsMonitor<McpApiKeyOptions> mcpApiKeyOptions,
-    IOptionsMonitor<OpenAIOptions> openAIOptions) : ControllerBase
+    IOptionsMonitor<OpenAIOptions> openAIOptions,
+    IUserConfigurationProvider userConfigurationProvider) : ControllerBase
 {
     /// <summary>
     /// Gets requested configuration.
@@ -667,5 +669,49 @@ public class ConfigurationController(
 
         var response = await configUpdateService.Replace(options, cancellationToken);
         return response.ToActionResult(nameof(GetOpenAIConfiguration));
+    }
+
+    /// <summary>
+    /// Gets Admission Number configuration
+    /// </summary>
+    /// <returns>Returns <see cref="AdmissionNumberConfiguration"/></returns>
+    [HttpGet("admission-number", Name = nameof(GetAdmissionNumberConfiguration))]
+    [Authorize(Constants.AdminsPolicy)]
+    public async Task<IActionResult> GetAdmissionNumberConfiguration(CancellationToken cancellationToken)
+    {
+        var result = await userConfigurationProvider.GetConfigurationAsync<AdmissionNumberConfiguration>(
+            UserConfigTypes.AdmissionNumber, cancellationToken);
+            
+        if (!result.IsSuccess && result.Status == GenericOperationStatuses.NotFound)
+        {
+            var defaultFallback = new AdmissionNumberConfiguration { Format = "EN-{YYYY}-{0000}", LastSequenceNumber = 0 };
+            return Response<AdmissionNumberConfiguration, GenericOperationStatuses>
+                .Success(defaultFallback, GenericOperationStatuses.Completed, "Successfully generated default configuration.")
+                .ToActionResult();
+        }
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>
+    /// Sets Admission Number configuration
+    /// </summary>
+    /// <param name="options"><see cref="AdmissionNumberConfiguration"/></param>
+    /// <returns>Returns <see cref="Response{TStatus}"/></returns>
+    [HttpPost("admission-number")]
+    [Authorize(Constants.AdminsPolicy)]
+    public async Task<IActionResult> SetAdmissionNumberConfiguration(
+        [FromBody] AdmissionNumberConfiguration options,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(options.Format))
+        {
+            return Response<AdmissionNumberConfiguration, GenericOperationStatuses>
+                .Failure(GenericOperationStatuses.BadRequest, "Format cannot be empty.")
+                .ToActionResult();
+        }
+
+        var result = await userConfigurationProvider.SetConfigurationAsync(options, cancellationToken);
+        return result.ToActionResult(nameof(GetAdmissionNumberConfiguration));
     }
 }

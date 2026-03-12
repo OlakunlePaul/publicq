@@ -27,9 +27,9 @@ public class ExamTakerEntity
     public string? Email { get; init; }
     
     /// <summary>
-    /// Optional: Date of birth of the user.
+    /// Date of birth of the user.
     /// </summary>
-    public DateTime? DateOfBirth { get; set; }
+    public DateTime DateOfBirth { get; set; }
 
     /// <summary>
     /// Normalized email address of the user.

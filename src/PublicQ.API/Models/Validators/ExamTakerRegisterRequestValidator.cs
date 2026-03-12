@@ -27,5 +27,8 @@ public class ExamTakerRegisterRequestValidator : AbstractValidator<ExamTakerRegi
             .NotEmpty().WithMessage("FullName is required.")
             .MinimumLength(2).WithMessage("FullName must be at least 2 characters long.")
             .MaximumLength(200).WithMessage("FullName must not exceed 200 characters.");
+            
+        RuleFor(x => x.DateOfBirth)
+            .NotEmpty().WithMessage("Date of Birth is required.");
     }
-}
+}

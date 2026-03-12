@@ -21,9 +21,9 @@ public class UserRegisterRequest
     public string Password { get; set; } = default!;
     
     /// <summary>
-    /// Optional: Date of birth of the user.
+    /// Date of birth of the user.
     /// </summary>
-    public DateTime? DateOfBirth { get; set; }
+    public DateTime DateOfBirth { get; set; }
 
     /// <summary>
     /// Optional: Student admission number.

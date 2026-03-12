@@ -15,7 +15,6 @@ const Register = () => {
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
-  const [admissionNumber, setAdmissionNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
@@ -143,7 +142,6 @@ const Register = () => {
       email: true,
       fullName: true,
       dateOfBirth: true,
-      admissionNumber: true,
       password: true,
       confirmPassword: true,
     });
@@ -163,7 +161,6 @@ const Register = () => {
       fullName: fullName,
       password: password,
       ...(dateOfBirth && { dateOfBirth }),
-      ...(admissionNumber && { admissionNumber }),
     };
 
     try {
@@ -185,7 +182,7 @@ const Register = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [username, fullName, dateOfBirth, admissionNumber, password, isSubmitting, navigate, saveToken, validateForm]);
+  }, [username, fullName, dateOfBirth, password, isSubmitting, navigate, saveToken, validateForm]);
 
   // Handle Ctrl+Enter keyboard shortcut
   useEffect(() => {
@@ -306,24 +303,6 @@ const Register = () => {
                   }}
                 />
                 <div className={registerStyles.optionalFieldHint}>Date of Birth (optional)</div>
-              </div>
-
-              <div className={registerStyles.inputGroup}>
-                <input
-                  type="text"
-                  placeholder="Admission Number (optional)"
-                  value={admissionNumber}
-                  onChange={e => setAdmissionNumber(e.target.value)}
-                  className={registerStyles.input}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = '#3b82f6';
-                  }}
-                  onBlur={(e) => {
-                    handleFieldTouch('admissionNumber');
-                    e.currentTarget.style.borderColor = '#d1d5db';
-                  }}
-                />
-                <div className={registerStyles.optionalFieldHint}>Admission Number (optional)</div>
               </div>
 
               <div className={registerStyles.inputGroup}>

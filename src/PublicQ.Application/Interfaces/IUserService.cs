@@ -29,14 +29,15 @@ public interface IUserService
     /// <param name="email">User email address.</param>
     /// <param name="fullName">Full Name</param>
     /// <param name="password">Password.</param>
-    /// <param name="dateOfBirth">Date of birthF</param>
+    /// <param name="dateOfBirth">Date of birth</param>
+    /// <param name="admissionNumber">Admission number</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns a response with the token and the status <seealso cref="Response{TStatus}"/></returns>
     Task<Response<Token, GenericOperationStatuses>> SelfServiceUserRegistartionReturnTokenAsync(
         MailAddress email,
         string fullName,
         string password,
-        DateTime? dateOfBirth,
+        DateTime dateOfBirth,
         string? admissionNumber,
         CancellationToken cancellationToken);
 
@@ -52,7 +53,8 @@ public interface IUserService
     /// Optional: Password. If not set the only way to gain
     /// access is to open the link and set the new password
     /// </param>
-    /// <param name="dateOfBirth">Optional: Date of birth</param>
+    /// <param name="dateOfBirth">Date of birth</param>
+    /// <param name="admissionNumber">Admission number</param>
     /// <param name="baseUrl">Create password URL</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns a response with the status <seealso cref="Response{TStatus}"/></returns>
@@ -60,7 +62,7 @@ public interface IUserService
         MailAddress email,
         string fullName,
         string? password,
-        DateTime? dateOfBirth,
+        DateTime dateOfBirth,
         string? admissionNumber,
         string? baseUrl,
         CancellationToken cancellationToken);
@@ -71,7 +73,8 @@ public interface IUserService
     /// <param name="email">Email</param>
     /// <param name="fullName">Full name</param>
     /// <param name="password">Optional: Password</param>
-    /// <param name="dateOfBirth">Optional: Date of birth</param>
+    /// <param name="dateOfBirth">Date of birth</param>
+    /// <param name="admissionNumber">Admission number</param>
     /// <param name="baseUrl">Optional: Base URL</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns a response with the status <seealso cref="Response{TStatus}"/></returns>
@@ -79,7 +82,7 @@ public interface IUserService
         MailAddress email,
         string fullName,
         string? password,
-        DateTime? dateOfBirth,
+        DateTime dateOfBirth,
         string? admissionNumber,
         string? baseUrl,
         CancellationToken cancellationToken);
@@ -91,12 +94,13 @@ public interface IUserService
     /// <param name="id">Optional: Exam taker Identifier</param>
     /// <param name="dateOfBirth">Date of birth</param>
     /// <param name="fullName">Full Name</param>
+    /// <param name="admissionNumber">Admission number</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns <see cref="User"/> wrapped in <see cref="Response{TData, TStatus}"/></returns>
     Task<Response<User, GenericOperationStatuses>> RegisterExamTakerAsync(
         MailAddress? email,
         string? id,
-        DateTime? dateOfBirth,
+        DateTime dateOfBirth,
         string fullName,
         string? admissionNumber,
         CancellationToken cancellationToken);

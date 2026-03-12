@@ -5,4 +5,5 @@ namespace PublicQ.Shared.Enums;
 /// </summary>
 public enum UserConfigTypes
 {
+    AdmissionNumber = 1
 }

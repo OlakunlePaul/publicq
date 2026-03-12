@@ -21,9 +21,9 @@ public class ApplicationUser : IdentityUser
     public DateTime CreatedAtUtc { get; set; }
     
     /// <summary>
-    /// Optional: Date of birth of the user.
+    /// Date of birth of the user.
     /// </summary>
-    public DateTime? DateOfBirth { get; set; }
+    public DateTime DateOfBirth { get; set; }
 
     /// <summary>
     /// Student admission number.

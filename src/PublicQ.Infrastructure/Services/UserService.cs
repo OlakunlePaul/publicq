@@ -10,6 +10,7 @@ using PublicQ.Infrastructure.Options;
 using PublicQ.Infrastructure.Persistence;
 using PublicQ.Infrastructure.Persistence.Entities;
 using PublicQ.Shared;
+using PublicQ.Shared.Enums;
 
 namespace PublicQ.Infrastructure.Services;
 
@@ -27,7 +28,8 @@ public class UserService(
     IEmailSender<ApplicationUser> identityEmailSender,
     IOptionsMonitor<UserServiceOptions> userServiceOptions,
     IOptionsMonitor<PasswordPolicyOptions> passwordPolicyOptions,
-    ILogger<UserService> logger) : IUserService
+    ILogger<UserService> logger,
+    IUserConfigurationProvider userConfigurationProvider) : IUserService
 {
     /// <summary>
     /// Default user role for new users.
@@ -99,7 +101,7 @@ public class UserService(
         MailAddress email,
         string fullName,
         string password,
-        DateTime? dateOfBirth,
+        DateTime dateOfBirth,
         string? admissionNumber,
         CancellationToken cancellationToken)
     {
@@ -167,7 +169,7 @@ public class UserService(
         MailAddress email, 
         string fullName, 
         string? password,
-        DateTime? dateOfBirth,
+        DateTime dateOfBirth,
         string? admissionNumber,
         string? baseUrl,
         CancellationToken cancellationToken)
@@ -199,7 +201,7 @@ public class UserService(
         MailAddress email, 
         string fullName, 
         string? password, 
-        DateTime? dateOfBirth,
+        DateTime dateOfBirth,
         string? admissionNumber,
         string? baseUrl,
         CancellationToken cancellationToken)
@@ -231,7 +233,7 @@ public class UserService(
         MailAddress email, 
         string fullName, 
         string? password, 
-        DateTime? dateOfBirth,
+        DateTime dateOfBirth,
         string? admissionNumber,
         string? baseUrl, 
         CancellationToken cancellationToken)
@@ -242,6 +244,11 @@ public class UserService(
             return Response<GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.BadRequest,
                 "Either password or createPasswordUrl must be provided.");
+        }
+        
+        if (string.IsNullOrWhiteSpace(admissionNumber))
+        {
+            admissionNumber = await GenerateAdmissionNumberAsync(cancellationToken);
         }
         
         var emailAddressUpper = email.Address.ToUpper();
@@ -361,13 +368,18 @@ public class UserService(
     public async Task<Response<User, GenericOperationStatuses>> RegisterExamTakerAsync(
         MailAddress? email,
         string? id,
-        DateTime? dateOfBirth,
+        DateTime dateOfBirth,
         string fullName,
         string? admissionNumber,
         CancellationToken cancellationToken)
     {
         logger.LogDebug("Request to register exam taker received.");
         Guard.AgainstNullOrWhiteSpace(fullName, nameof(fullName));
+
+        if (string.IsNullOrWhiteSpace(admissionNumber))
+        {
+            admissionNumber = await GenerateAdmissionNumberAsync(cancellationToken);
+        }
 
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -1460,5 +1472,36 @@ public class UserService(
         
         var resetLink = $"{url}?email={encodedEmail}&token={encodedToken}";
         return resetLink;
+    }
+
+    /// <summary>
+    /// Auto-generates an admission number based on system configuration.
+    /// </summary>
+    private async Task<string> GenerateAdmissionNumberAsync(CancellationToken cancellationToken)
+    {
+        var configResult = await userConfigurationProvider.GetConfigurationAsync<AdmissionNumberConfiguration>(
+            UserConfigTypes.AdmissionNumber, cancellationToken);
+            
+        var format = "EN-{YYYY}-{0000}";
+        var sequence = 0;
+            
+        if (configResult.IsSuccess && configResult.Data != null)
+        {
+            format = configResult.Data.Format;
+            sequence = configResult.Data.LastSequenceNumber;
+        }
+        
+        sequence++;
+        
+        if (configResult.IsSuccess && configResult.Data != null)
+        {
+            configResult.Data.LastSequenceNumber = sequence;
+            await userConfigurationProvider.SetConfigurationAsync(configResult.Data, cancellationToken);
+        }
+
+        var year = DateTime.UtcNow.Year.ToString();
+        var numStr = sequence.ToString("D4"); 
+        
+        return format.Replace("{YYYY}", year).Replace("{0000}", numStr);
     }
 }

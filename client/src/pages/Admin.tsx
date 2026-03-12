@@ -10,6 +10,7 @@ import AiChatDemo from './AiChat';
 import TokenManagement from '../components/TokenManagement/TokenManagement';
 import PasswordManagement from '../components/PasswordManagement/PasswordManagement';
 import UserRegistrationManagement from '../components/UserRegistrationManagement/UserRegistrationManagement';
+import AdmissionNumberManagement from '../components/AdmissionNumberManagement/AdmissionNumberManagement';
 import CacheManagement from '../components/CacheManagement/CacheManagement';
 import FileStorageManagement from '../components/FileStorageManagement/FileStorageManagement';
 import LogManagement from '../components/LogManagement/LogManagement';
@@ -152,6 +153,13 @@ const Admin = () => {
   // User registration configuration
   const [userRegistrationOptions, setUserRegistrationOptions] = useState({
     enabled: false,
+    dataLoaded: false,
+  });
+
+  // Admission Number configuration
+  const [admissionNumberOptions, setAdmissionNumberOptions] = useState({
+    format: 'EN-{YYYY}-{0000}',
+    lastSequenceNumber: 0,
     dataLoaded: false,
   });
 

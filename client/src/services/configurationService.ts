@@ -14,6 +14,7 @@ import { IpRateLimitUpdateRequest } from '../models/ip-rate-limit-update-request
 import { IpRateLimitOptions } from '../models/ip-rate-limit-options';
 import { LlmIntegrationOptions, OpenAIOptions } from '../models/llm-integration-options';
 import { McpApiKeyOptions } from '../models/mcp-api-key-options';
+import { AdmissionNumberConfiguration } from '../models/admission-number-configuration';
 
 export const configurationService = {
   getEmailOptions: async (): Promise<EmailOption> => {
@@ -150,6 +151,16 @@ export const configurationService = {
 
   checkLlmIntegrationEnabled: async (): Promise<ResponseWithData<boolean, GenericOperationStatuses>> => {
     const response = await axios.get<ResponseWithData<boolean, GenericOperationStatuses>>('configuration/llm-integration/enabled');
+    return response.data;
+  },
+
+  getAdmissionNumberConfiguration: async (): Promise<ResponseWithData<AdmissionNumberConfiguration, GenericOperationStatuses>> => {
+    const response = await axios.get<ResponseWithData<AdmissionNumberConfiguration, GenericOperationStatuses>>('configuration/admission-number');
+    return response.data;
+  },
+
+  setAdmissionNumberConfiguration: async (options: AdmissionNumberConfiguration): Promise<Response<GenericOperationStatuses>> => {
+    const response = await axios.post<Response<GenericOperationStatuses>>('configuration/admission-number', options);
     return response.data;
   }
 };

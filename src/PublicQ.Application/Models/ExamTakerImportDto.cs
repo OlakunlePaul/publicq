@@ -25,9 +25,9 @@ public class ExamTakerImportDto
     public string? Email { get; set; }
     
     /// <summary>
-    /// Optional: Date of birth of the user.
+    /// Date of birth of the user.
     /// </summary>
-    public DateTime? DateOfBirth { get; set; }
+    public DateTime DateOfBirth { get; set; }
 
     /// <summary>
     /// Optional: Student admission number.
