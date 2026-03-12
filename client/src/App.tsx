@@ -30,7 +30,10 @@ function HomePage() {
       {/* Hero Section */}
       <section className={homeStyles.hero}>
         <div className={homeStyles.heroContent}>
-          <div className={homeStyles.heroBadge}>🎓 Trusted by Academic Institutions</div>
+          <div className={homeStyles.heroBadge}>
+            <img src="https://cdn-icons-png.flaticon.com/512/8074/8074800.png" alt="Trusted" className={homeStyles.heroBadgeIcon} />
+            Trusted by Academic Institutions
+          </div>
           <h1 className={homeStyles.heroTitle}>
             The Smart Examination Platform for <span className={homeStyles.heroHighlight}>Modern Education</span>
           </h1>
@@ -55,17 +58,17 @@ function HomePage() {
           </div>
           <div className={homeStyles.heroStats}>
             <div className={homeStyles.heroStat}>
-              <span className={homeStyles.heroStatNumber}>📝</span>
+              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991108.png" alt="Auto-Graded" className={homeStyles.heroStatIcon} />
               <span className={homeStyles.heroStatLabel}>Auto-Graded Exams</span>
             </div>
             <div className={homeStyles.heroStatDivider}></div>
             <div className={homeStyles.heroStat}>
-              <span className={homeStyles.heroStatNumber}>📊</span>
+              <img src="https://cdn-icons-png.flaticon.com/512/3589/3589030.png" alt="Analytics" className={homeStyles.heroStatIcon} />
               <span className={homeStyles.heroStatLabel}>Instant Analytics</span>
             </div>
             <div className={homeStyles.heroStatDivider}></div>
             <div className={homeStyles.heroStat}>
-              <span className={homeStyles.heroStatNumber}>🔒</span>
+              <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="Secure" className={homeStyles.heroStatIcon} />
               <span className={homeStyles.heroStatLabel}>Secure & Reliable</span>
             </div>
           </div>
