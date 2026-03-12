@@ -7,22 +7,22 @@ import axios from "../api/axios";
 
 export const questionService = {
     createQuestion: async (question: QuestionCreateDto): Promise<ResponseWithData<QuestionDto, GenericOperationStatuses>> => {
-        const response = await axios.post<ResponseWithData<QuestionDto, GenericOperationStatuses>>('/assessmentQuestions', question);
+        const response = await axios.post<ResponseWithData<QuestionDto, GenericOperationStatuses>>('assessmentQuestions', question);
         return response.data;
     },
 
     updateQuestion: async (question: QuestionUpdateDto): Promise<ResponseWithData<QuestionDto, GenericOperationStatuses>> => {
-        const response = await axios.put<ResponseWithData<QuestionDto, GenericOperationStatuses>>(`/assessmentQuestions`, question);
+        const response = await axios.put<ResponseWithData<QuestionDto, GenericOperationStatuses>>(`assessmentQuestions`, question);
         return response.data;
     },
 
     deleteQuestion: async (questionId: string): Promise<Response> => {
-        const response = await axios.delete<Response>(`/assessmentQuestions/${questionId}`);
+        const response = await axios.delete<Response>(`assessmentQuestions/${questionId}`);
         return response.data;
     },
 
   getTotalQuestions: async (): Promise<number> => {
-    var response = await axios.get<ResponseWithData<number, GenericOperationStatuses>>('/assessmentQuestions/total');
+    var response = await axios.get<ResponseWithData<number, GenericOperationStatuses>>('assessmentQuestions/total');
     return response.data.data;
   }
 };

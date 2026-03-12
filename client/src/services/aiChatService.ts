@@ -58,7 +58,7 @@ export const aiChatService = {
     };
 
     const response = await axios.post<ResponseWithData<AiChatResponse, GenericOperationStatuses>>(
-      '/ai-chat/message',
+      'ai-chat/message',
       request
     );
 

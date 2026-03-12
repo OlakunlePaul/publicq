@@ -16,7 +16,7 @@ import { UserCreateByAdminRequest } from '../models/userCreateByAdminRequest';
 
 export const userService = {
   fetchUsers: async (pageNumber: number, pageSize: number): Promise<ResponseWithData<PaginatedResponse<User>>> => {
-    const r = await axios.get<ResponseWithData<PaginatedResponse<User>>>('/users', {
+    const r = await axios.get<ResponseWithData<PaginatedResponse<User>>>('users', {
       params: { pageNumber, pageSize },
     });
     return r.data;
@@ -29,30 +29,30 @@ export const userService = {
       pageNumber,
       pageSize,
     };
-    const r = await axios.get<ResponseWithData<PaginatedResponse<User>>>('/users/search', {
+    const r = await axios.get<ResponseWithData<PaginatedResponse<User>>>('users/search', {
       params,
     });
     return r.data;
   },
 
   getExamTaker: async (userId: string): Promise<ResponseWithData<User, GenericOperationStatuses>> => {
-    const r = await axios.get<ResponseWithData<User, GenericOperationStatuses>>(`/users/exam-taker/${userId}`);
+    const r = await axios.get<ResponseWithData<User, GenericOperationStatuses>>(`users/exam-taker/${userId}`);
     return r.data;
   },
 
   createUser: async (request: UserCreateRequest): Promise<AccessToken> => {
-    const r = await axios.post<ResponseWithData<AccessToken, GenericOperationStatuses>>('/users/register', request);
+    const r = await axios.post<ResponseWithData<AccessToken, GenericOperationStatuses>>('users/register', request);
     return r.data.data;
   },
 
   // This method doesn't return access token in the response
   createUserByAdmin: async (request: UserCreateByAdminRequest): Promise<Response<GenericOperationStatuses>> => {
-    const r = await axios.post<Response<GenericOperationStatuses>>('/users/register-by-admin', request);
+    const r = await axios.post<Response<GenericOperationStatuses>>('users/register-by-admin', request);
     return r.data;
   },
 
   createExamTakerByAdmin: async (request: ExamTakerCreateRequest): Promise<ResponseWithData<User, GenericOperationStatuses>> => {
-    const r = await axios.post<ResponseWithData<User, GenericOperationStatuses>>('/users/exam-taker/register-by-admin', request);
+    const r = await axios.post<ResponseWithData<User, GenericOperationStatuses>>('users/exam-taker/register-by-admin', request);
     return r.data;
   },
 
@@ -61,53 +61,53 @@ export const userService = {
       email: email,
       password: password
     }
-    const r = await axios.patch<Response>('/users/reset-password-by-admin', request);
+    const r = await axios.patch<Response>('users/reset-password-by-admin', request);
     return r.data;
   },
 
   deleteUser: async (userId: string): Promise<Response> => {
-    const r = await axios.delete<Response>(`/users/${userId}`);
+    const r = await axios.delete<Response>(`users/${userId}`);
     return r.data;
   },
   
   getTotalUsers: async (): Promise<ResponseWithData<number>> => {
-    const r = await axios.get<ResponseWithData<number>>('/users/total');
+    const r = await axios.get<ResponseWithData<number>>('users/total');
     return r.data;
   },
 
   getUserRoles: async (userId: string): Promise<ResponseWithData<UserRole[], GenericOperationStatuses>> => {
-    const r = await axios.get<ResponseWithData<UserRole[], GenericOperationStatuses>>(`/users/${userId}/roles`);
+    const r = await axios.get<ResponseWithData<UserRole[], GenericOperationStatuses>>(`users/${userId}/roles`);
     return r.data;
   },
 
   assignUserRole: async (request: UserRoleAssignmentRequest): Promise<Response<GenericOperationStatuses>> => {
-    const r = await axios.post<Response<GenericOperationStatuses>>('/users/roles', request);
+    const r = await axios.post<Response<GenericOperationStatuses>>('users/roles', request);
     return r.data;
   },
 
   unassignUserRole: async (request: UserRoleAssignmentRequest): Promise<Response<GenericOperationStatuses>> => {
-    const r = await axios.delete<Response<GenericOperationStatuses>>('/users/roles', { data: request });
+    const r = await axios.delete<Response<GenericOperationStatuses>>('users/roles', { data: request });
     return r.data;
   },
 
   importExamTakers: async (examTakers: ExamTakerImport[]): Promise<ResponseWithData<User[], GenericOperationStatuses>> => {
-    const r = await axios.post<ResponseWithData<User[], GenericOperationStatuses>>('/users/exam-taker/import', examTakers);
+    const r = await axios.post<ResponseWithData<User[], GenericOperationStatuses>>('users/exam-taker/import', examTakers);
     return r.data;
   },
 
   forgetPassword: async (email: string): Promise<Response<GenericOperationStatuses>> => {
     const request = { emailAddress: email };
-    const r = await axios.post<Response<GenericOperationStatuses>>('/users/password/forget', request);
+    const r = await axios.post<Response<GenericOperationStatuses>>('users/password/forget', request);
     return r.data;
   },
 
   resetPassword: async (request: ResetPasswordRequest): Promise<ResponseWithData<string, GenericOperationStatuses>> => {
-    const r = await axios.post<ResponseWithData<string, GenericOperationStatuses>>('/users/password/reset', request);
+    const r = await axios.post<ResponseWithData<string, GenericOperationStatuses>>('users/password/reset', request);
     return r.data;
   },
 
   checkResetToken: async (request: CheckPasswordTokenRequest): Promise<Response<GenericOperationStatuses>> => {
-    const r = await axios.post<Response<GenericOperationStatuses>>('/users/password/reset/token/validate', request);
+    const r = await axios.post<Response<GenericOperationStatuses>>('users/password/reset/token/validate', request);
     return r.data;  
   },
 

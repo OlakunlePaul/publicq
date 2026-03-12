@@ -6,8 +6,8 @@ import { UserCreateRequest } from '../models/userCreateRequest';
 import { ResponseWithData } from '../models/responseWithData';
 
 export const authService = {
-  login: (credentials: LoginRequest) => axios.post<ResponseWithData<string, GenericOperationStatuses>>('/users/login', credentials)
+  login: (credentials: LoginRequest) => axios.post<ResponseWithData<string, GenericOperationStatuses>>('users/login', credentials)
     .then(r => r.data.data),
-  register: (request: UserCreateRequest) => axios.post<ResponseWithData<AccessToken, GenericOperationStatuses>>('/users/register', request)
+  register: (request: UserCreateRequest) => axios.post<ResponseWithData<AccessToken, GenericOperationStatuses>>('users/register', request)
     .then(r => r.data.data)
 };

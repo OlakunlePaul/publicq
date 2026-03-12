@@ -7,17 +7,17 @@ import { ResponseWithData } from "../models/responseWithData";
 
 const reportingService = {
   getExamTakerReport: async (examTakerId: string) : Promise<ResponseWithData<ExamTakerReport, GenericOperationStatuses>> => {
-    const response = await axios.get<ResponseWithData<ExamTakerReport, GenericOperationStatuses>>(`/reports/exam-takers/${examTakerId}`);
+    const response = await axios.get<ResponseWithData<ExamTakerReport, GenericOperationStatuses>>(`reports/exam-takers/${examTakerId}`);
     return response.data;
   },
 
   getExamTakerReportByAssignment: async (examTakerId: string, assignmentId: string) : Promise<ResponseWithData<ExamTakerReport, GenericOperationStatuses>> => {
-    const response = await axios.get<ResponseWithData<ExamTakerReport, GenericOperationStatuses>>(`/reports/exam-takers/${examTakerId}/assignments/${assignmentId}`);
+    const response = await axios.get<ResponseWithData<ExamTakerReport, GenericOperationStatuses>>(`reports/exam-takers/${examTakerId}/assignments/${assignmentId}`);
     return response.data;
   },
 
   getExamTakerReports: async (examTakerIds: string[], assignmentId?: string) : Promise<ResponseWithData<ExamTakerReport[], GenericOperationStatuses>> => {
-    const response = await axios.post<ResponseWithData<ExamTakerReport[], GenericOperationStatuses>>(`/reports/exam-takers`, {
+    const response = await axios.post<ResponseWithData<ExamTakerReport[], GenericOperationStatuses>>(`reports/exam-takers`, {
       examTakerIds,
       assignmentId
     });
@@ -25,7 +25,7 @@ const reportingService = {
   },
 
   getAllAssignmentsReport: async (pageNumber: number, pageSize: number) : Promise<ResponseWithData<PaginatedResponse<AssignmentSummaryReport>, GenericOperationStatuses>> => {
-    const response = await axios.get<ResponseWithData<PaginatedResponse<AssignmentSummaryReport>, GenericOperationStatuses>>(`/reports/assignments`, {
+    const response = await axios.get<ResponseWithData<PaginatedResponse<AssignmentSummaryReport>, GenericOperationStatuses>>(`reports/assignments`, {
       params: {
         pageNumber,
         pageSize
@@ -35,7 +35,7 @@ const reportingService = {
   },
 
   getAllExamTakerReports: async (pageNumber: number, pageSize: number, idFilter?: string, nameFilter?: string) : Promise<ResponseWithData<PaginatedResponse<IndividualUserReport>, GenericOperationStatuses>> => {
-    const response = await axios.get<ResponseWithData<PaginatedResponse<IndividualUserReport>, GenericOperationStatuses>>(`/reports/exam-takers`, {
+    const response = await axios.get<ResponseWithData<PaginatedResponse<IndividualUserReport>, GenericOperationStatuses>>(`reports/exam-takers`, {
       params: {
         idFilter,
         nameFilter,
@@ -47,12 +47,12 @@ const reportingService = {
   },
 
   getAssignmentSummaryReport: async (assignmentId: string) : Promise<ResponseWithData<AssignmentSummaryReport, GenericOperationStatuses>> => {
-    const response = await axios.get<ResponseWithData<AssignmentSummaryReport, GenericOperationStatuses>>(`/reports/assignments/${assignmentId}/summary`);
+    const response = await axios.get<ResponseWithData<AssignmentSummaryReport, GenericOperationStatuses>>(`reports/assignments/${assignmentId}/summary`);
     return response.data;
   },
 
   getAssignmentReport: async (assignmentId: string) : Promise<ResponseWithData<AssignmentReport, GenericOperationStatuses>> => {
-    const response = await axios.get<ResponseWithData<AssignmentReport, GenericOperationStatuses>>(`/reports/assignments/${assignmentId}`);
+    const response = await axios.get<ResponseWithData<AssignmentReport, GenericOperationStatuses>>(`reports/assignments/${assignmentId}`);
     return response.data;
   }
 };
