@@ -24,8 +24,11 @@
   right: 0;
   bottom: 0;
   /* Reliable SVG Educational Pattern */
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 4.877L33.891 25.613c-.156.156-.409.156-.565 0L12.59 4.877c-.156-.156-.156-.409 0-.565L33.326.576c.156-.156.409-.156.565 0l20.736 20.736c.156.156.156.409 0 .565zM10.5 30.5c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm40 0c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm-20 20c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm0-40c2.485 0 4.5-2.015 4.5-4.5S28.985 1.5 26.5 1.5s-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm20 20c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm-40 0c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
-  opacity: 1;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 4.877L33.891 25.613c-.156.156-.409.156-.565 0L12.59 4.877c-.156-.156-.156-.409 0-.565L33.326.576c.156-.156.409-.156.565 0l20.736 20.736c.156.156.156.409 0 .565zM10.5 30.5c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm40 0c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm-20 20c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm0-40c2.485 0 4.5-2.015 4.5-4.5S28.985 1.5 26.5 1.5s-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm20 20c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm-40 0c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-size: 300px; /* Scale up to reduce tiling visibility */
+  opacity: 0.6;
+  mask-image: radial-gradient(circle at center, black 0%, transparent 80%);
+  -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 80%);
   pointer-events: none;
   z-index: 0;
 }
@@ -405,8 +408,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 4.877L33.891 25.613c-.156.156-.409.156-.565 0L12.59 4.877c-.156-.156-.156-.409 0-.565L33.326.576c.156-.156.409-.156.565 0l20.736 20.736c.156.156.156.409 0 .565z' fill='%23ffffff' fill-opacity='0.04' fill-rule='evenodd'/%3E%3C/svg%3E");
-  opacity: 1;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 4.877L33.891 25.613c-.156.156-.409.156-.565 0L12.59 4.877c-.156-.156-.156-.409 0-.565L33.326.576c.156-.156.409-.156.565 0l20.736 20.736c.156.156.156.409 0 .565z' fill='%23ffffff' fill-opacity='0.08' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-size: 250px;
+  opacity: 0.5;
+  mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
