@@ -115,7 +115,7 @@ const Register = () => {
         break;
     }
     return null;
-  }, [username, fullName, password, confirmPassword, passwordPolicy, touched]);
+  }, [username, fullName, password, confirmPassword, passwordPolicy, touched, admissionNumber]);
 
   const validateForm = useCallback(() => {
     // Check if any field has validation errors by using the existing getFieldError function
@@ -185,7 +185,7 @@ const Register = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [username, fullName, dateOfBirth, password, isSubmitting, navigate, saveToken, validateForm]);
+  }, [username, fullName, dateOfBirth, admissionNumber, password, isSubmitting, navigate, saveToken, validateForm]);
 
   // Handle Ctrl+Enter keyboard shortcut
   useEffect(() => {
