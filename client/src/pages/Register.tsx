@@ -203,7 +203,7 @@ const Register = () => {
         {registrationLoading ? (
           <div className={registerStyles.header}>
             <h1 className={registerStyles.title}>Create an Account</h1>
-            <p className={registerStyles.subtitle}>Join PublicQ to create and manage assessment modules</p>
+            <p className={registerStyles.subtitle}>Join Examina to create and manage assessment modules</p>
           </div>
         ) : registrationEnabled === false ? (
           <div className={registerStyles.header}>
@@ -216,7 +216,7 @@ const Register = () => {
         ) : (
           <div className={registerStyles.header}>
             <h2 className={registerStyles.title}>Create Your Account</h2>
-            <p className={registerStyles.subtitle}>Join PublicQ to create and manage assessment modules</p>
+            <p className={registerStyles.subtitle}>Join Examina to create and manage assessment modules</p>
           </div>
         )}
 

@@ -27,80 +27,157 @@ function HomePage() {
 
   return (
     <div className={homeStyles.homePage}>
-      <div className={homeStyles.container}>
-        <div className={homeStyles.hero}>
-          <h1 className={homeStyles.title}>
-            Welcome to <span className={homeStyles.brandName}>PublicQ</span>
+      {/* Hero Section */}
+      <section className={homeStyles.hero}>
+        <div className={homeStyles.heroContent}>
+          <div className={homeStyles.heroBadge}>🎓 Trusted by Academic Institutions</div>
+          <h1 className={homeStyles.heroTitle}>
+            The Smart Examination Platform for <span className={homeStyles.heroHighlight}>Modern Education</span>
           </h1>
-          <p className={homeStyles.subtitle}>
-            Create, manage, and deploy assessment modules with ease.
-            Build comprehensive quizzes and exams for educational and professional purposes.
+          <p className={homeStyles.heroSubtitle}>
+            Create, deliver, and grade assessments seamlessly across primary schools, secondary schools, and universities.
+            Empower educators with powerful tools to manage exams efficiently.
           </p>
-
-          <div className={homeStyles.features}>
-            <div className={homeStyles.feature}>
-              <div className={homeStyles.featureIcon}><img src="/images/icons/notepad.svg" alt="Create" style={{width: '48px', height: '48px'}} /></div>
-              <h3 className={homeStyles.featureTitle}>Create Assessments</h3>
-              <p className={homeStyles.featureDesc}>Design custom assessment modules with multiple question types</p>
-            </div>
-            <div className={homeStyles.feature}>
-              <div className={homeStyles.featureIcon}><img src="/images/icons/chart.svg" alt="Track" style={{width: '48px', height: '48px'}} /></div>
-              <h3 className={homeStyles.featureTitle}>Track Progress</h3>
-              <p className={homeStyles.featureDesc}>Monitor performance and analyze results in real-time</p>
-            </div>
-            <div className={homeStyles.feature}>
-              <div className={homeStyles.featureIcon}><img src="/images/icons/rocket.svg" alt="Deploy" style={{width: '48px', height: '48px'}} /></div>
-              <h3 className={homeStyles.featureTitle}>Deploy Instantly</h3>
-              <p className={homeStyles.featureDesc}>Publish your assessments and share them with your audience</p>
-            </div>
-          </div>
-
-          {/* Take Exam Call-to-Action */}
-          <Link
-            to={ROUTES.MY_ASSIGNMENTS}
-            className={homeStyles.examCTA}
-          >
-            <div className={homeStyles.examCTAContent}>
-              <h2 className={homeStyles.examCTATitle}>Ready to Take Your Exam?</h2>
-              <p className={homeStyles.examCTADescription}>
-                If you have an assignment or exam to complete, access your personalized dashboard to get started.
-              </p>
-              <div className={homeStyles.examCTAHint}>Click here to continue →</div>
-            </div>
-          </Link>
-
-          <div className={homeStyles.actions}>
-            <Link
-              to={ROUTES.DEMO}
-              className={homeStyles.secondaryButton}
-            >
-              Try Demo
+          <div className={homeStyles.heroActions}>
+            <Link to={ROUTES.MY_ASSIGNMENTS} className={homeStyles.btnPrimary}>
+              Take an Exam →
             </Link>
-            {!isExamTaker && (
-              <Link
-                to={ROUTES.MODULE_CREATE}
-                className={homeStyles.primaryButton}
-              >
-                Create Assessment Module
-              </Link>
-            )}
             {!isAuthenticated && (
-              <Link
-                to={ROUTES.LOGIN}
-                className={homeStyles.secondaryButton}
-              >
+              <Link to={ROUTES.LOGIN} className={homeStyles.btnSecondary}>
                 Sign In
               </Link>
             )}
+            {!isExamTaker && isAuthenticated && (
+              <Link to={ROUTES.MODULE_CREATE} className={homeStyles.btnSecondary}>
+                Create Assessment
+              </Link>
+            )}
           </div>
-
-          <div className={homeStyles.footer}>
-            <p className={homeStyles.footerText}>
-              Powered by <a href="https://publicq.app" target="_blank" rel="noopener noreferrer" className={homeStyles.footerLink}>PublicQ</a>
-            </p>
+          <div className={homeStyles.heroStats}>
+            <div className={homeStyles.heroStat}>
+              <span className={homeStyles.heroStatNumber}>📝</span>
+              <span className={homeStyles.heroStatLabel}>Auto-Graded Exams</span>
+            </div>
+            <div className={homeStyles.heroStatDivider}></div>
+            <div className={homeStyles.heroStat}>
+              <span className={homeStyles.heroStatNumber}>📊</span>
+              <span className={homeStyles.heroStatLabel}>Instant Analytics</span>
+            </div>
+            <div className={homeStyles.heroStatDivider}></div>
+            <div className={homeStyles.heroStat}>
+              <span className={homeStyles.heroStatNumber}>🔒</span>
+              <span className={homeStyles.heroStatLabel}>Secure & Reliable</span>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Who It's For Section */}
+      <section className={homeStyles.audienceSection}>
+        <h2 className={homeStyles.sectionTitle}>Built for Every Level of Education</h2>
+        <p className={homeStyles.sectionSubtitle}>
+          Whether you're running a primary school quiz or a university-level final exam, Examina scales to your needs.
+        </p>
+        <div className={homeStyles.audienceCards}>
+          <div className={homeStyles.audienceCard}>
+            <div className={homeStyles.audienceIcon}>🏫</div>
+            <h3 className={homeStyles.audienceCardTitle}>Primary Schools</h3>
+            <p className={homeStyles.audienceCardDesc}>Simple quizzes with auto-grading. Teachers save hours on marking with instant results.</p>
+          </div>
+          <div className={homeStyles.audienceCard}>
+            <div className={homeStyles.audienceIcon}>🎒</div>
+            <h3 className={homeStyles.audienceCardTitle}>Secondary Schools</h3>
+            <p className={homeStyles.audienceCardDesc}>Manage class groups, assignments, and track student progress across terms and subjects.</p>
+          </div>
+          <div className={homeStyles.audienceCard}>
+            <div className={homeStyles.audienceIcon}>🎓</div>
+            <h3 className={homeStyles.audienceCardTitle}>Universities</h3>
+            <p className={homeStyles.audienceCardDesc}>Large-scale exams with multiple versions, timed sessions, randomized questions, and detailed analytics.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className={homeStyles.featuresSection}>
+        <h2 className={homeStyles.sectionTitle}>Everything You Need to Run Exams</h2>
+        <div className={homeStyles.featuresGrid}>
+          <div className={homeStyles.featureCard}>
+            <div className={homeStyles.featureCardIcon}>✏️</div>
+            <h3 className={homeStyles.featureCardTitle}>Easy Question Builder</h3>
+            <p className={homeStyles.featureCardDesc}>Multiple choice, multi-select, and free-text questions with file attachments.</p>
+          </div>
+          <div className={homeStyles.featureCard}>
+            <div className={homeStyles.featureCardIcon}>⚡</div>
+            <h3 className={homeStyles.featureCardTitle}>Auto-Grading</h3>
+            <p className={homeStyles.featureCardDesc}>Objective questions are graded instantly. Students get results the moment they finish.</p>
+          </div>
+          <div className={homeStyles.featureCard}>
+            <div className={homeStyles.featureCardIcon}>👥</div>
+            <h3 className={homeStyles.featureCardTitle}>Class Management</h3>
+            <p className={homeStyles.featureCardDesc}>Organize students into groups, assign exams to specific classes, and track completion.</p>
+          </div>
+          <div className={homeStyles.featureCard}>
+            <div className={homeStyles.featureCardIcon}>📈</div>
+            <h3 className={homeStyles.featureCardTitle}>Detailed Reports</h3>
+            <p className={homeStyles.featureCardDesc}>Per-student scores, question-level analysis, and exportable class performance data.</p>
+          </div>
+          <div className={homeStyles.featureCard}>
+            <div className={homeStyles.featureCardIcon}>🔀</div>
+            <h3 className={homeStyles.featureCardTitle}>Anti-Cheating</h3>
+            <p className={homeStyles.featureCardDesc}>Randomize question order and answer options. Timed sessions prevent sharing.</p>
+          </div>
+          <div className={homeStyles.featureCard}>
+            <div className={homeStyles.featureCardIcon}>🌐</div>
+            <h3 className={homeStyles.featureCardTitle}>Access Anywhere</h3>
+            <p className={homeStyles.featureCardDesc}>Students take exams from any device — phone, tablet, or computer. No app install needed.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className={homeStyles.howItWorks}>
+        <h2 className={homeStyles.sectionTitle}>How It Works</h2>
+        <div className={homeStyles.steps}>
+          <div className={homeStyles.step}>
+            <div className={homeStyles.stepNumber}>1</div>
+            <h3 className={homeStyles.stepTitle}>Create</h3>
+            <p className={homeStyles.stepDesc}>Build your exam with our intuitive question builder. Add questions, set passing scores, and configure time limits.</p>
+          </div>
+          <div className={homeStyles.stepConnector}></div>
+          <div className={homeStyles.step}>
+            <div className={homeStyles.stepNumber}>2</div>
+            <h3 className={homeStyles.stepTitle}>Assign</h3>
+            <p className={homeStyles.stepDesc}>Create assignments, set exam windows, and add your students. They'll receive their access automatically.</p>
+          </div>
+          <div className={homeStyles.stepConnector}></div>
+          <div className={homeStyles.step}>
+            <div className={homeStyles.stepNumber}>3</div>
+            <h3 className={homeStyles.stepTitle}>Grade</h3>
+            <p className={homeStyles.stepDesc}>Objective questions are graded instantly. Review analytics and export results for your records.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className={homeStyles.ctaSection}>
+        <h2 className={homeStyles.ctaTitle}>Ready to Transform Your Exams?</h2>
+        <p className={homeStyles.ctaSubtitle}>Join academic institutions using Examina to streamline their assessment process.</p>
+        <div className={homeStyles.ctaActions}>
+          <Link to={ROUTES.REGISTER} className={homeStyles.btnPrimary}>
+            Get Started Free
+          </Link>
+          <Link to={ROUTES.DEMO} className={homeStyles.btnOutline}>
+            Try a Demo Exam
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className={homeStyles.footer}>
+        <p className={homeStyles.footerText}>
+          © 2026 Examina. Smart examination platform for academic institutions.
+        </p>
+      </footer>
     </div>
   );
 }

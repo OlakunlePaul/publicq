@@ -1,6 +1,6 @@
 {
-  "short_name": "PublicQ",
-  "name": "PublicQ - Assessment Management Platform",
+  "short_name": "Examina",
+  "name": "Examina - Smart Examination Platform",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +20,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#1e3a5f",
   "background_color": "#ffffff"
 }

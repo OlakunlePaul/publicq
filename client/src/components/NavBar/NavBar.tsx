@@ -44,7 +44,7 @@ const NavBar = () => {
     <nav className={navStyles.navbar}>
       <h1 className={navStyles.logo}>
         <NavLink to="/" className={navStyles.logoLink}>
-          PublicQ
+          Examina
         </NavLink>
       </h1>
       

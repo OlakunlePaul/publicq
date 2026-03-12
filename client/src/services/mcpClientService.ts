@@ -44,7 +44,7 @@ class McpClientService {
       // Create MCP client
       this.client = new Client(
         {
-          name: 'publicq-web-client',
+          name: 'Examina-web-client',
           version: '1.0.0'
         },
         {

@@ -223,7 +223,7 @@ const PageManagement: React.FC = () => {
                 type="email"
                 value={contactParts.email}
                 onChange={(e) => handleContactFieldChange('email', e.target.value)}
-                placeholder="contact@publicq.com"
+                placeholder="contact@Examina.com"
                 className={pageManagementStyles.input}
               />
             </div>

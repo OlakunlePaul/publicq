@@ -18,7 +18,7 @@ export interface LogFilter {
   level?: string | null;
 
   /**
-   * Filter by logger category (e.g., "PublicQ.API.Controllers.UserController")
+   * Filter by logger category (e.g., "Examina.API.Controllers.UserController")
    */
   category?: string | null;
 
