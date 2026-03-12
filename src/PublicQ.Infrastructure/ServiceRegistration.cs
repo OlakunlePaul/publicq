@@ -148,6 +148,7 @@ public static class ServiceRegistration
                 .AddPolicy(Constants.ManagersPolicy, policy => 
                     policy.RequireRole(nameof(UserRole.Manager), nameof(UserRole.Administrator)));
         
+            services.AddScoped<IUserConfigurationProvider, UserConfigurationProvider>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ITokenService, JwtTokenService>();
         
