@@ -13,6 +13,22 @@ using ServiceRegistration = PublicQ.API.ServiceRegistration;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure CORS for split deployment (e.g. Vercel frontend + Railway backend)
+var corsOrigins = builder.Configuration["CORS_ORIGINS"]?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [];
+if (corsOrigins.Length > 0)
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddDefaultPolicy(policy =>
+        {
+            policy.WithOrigins(corsOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+    });
+}
+
 #region add database custom provider
 
 // Temp context to read DB settings
@@ -75,6 +91,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Enable CORS if configured
+if (corsOrigins.Length > 0)
+{
+    app.UseCors();
+}
 
 // Configure static files serving for React app
 app.UseDefaultFiles(); // This will serve index.html for requests to "/"
