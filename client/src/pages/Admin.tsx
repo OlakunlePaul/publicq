@@ -217,7 +217,7 @@ const Admin = () => {
       users: { title: 'User Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="Users" style={{width: '24px', height: '24px'}} />, description: 'Manage users and permissions' },
       groups: { title: 'Group Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/615/615075.png" alt="Groups" style={{width: '24px', height: '24px'}} />, description: 'Organize users into groups' },
       assignments: { title: 'Assignment Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Assignments" style={{width: '24px', height: '24px'}} />, description: 'Create and manage assignments' },
-      assessments: { title: 'Module Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/3429/3429153.png" alt="Modules" style={{width: '24px', height: '24px'}} />, description: 'Manage assessment modules' },
+      assessments: { title: 'Exam Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/3429/3429153.png" alt="Exams" style={{width: '24px', height: '24px'}} />, description: 'Create and manage exams' },
       reports: { title: 'Reports & Analytics', icon: <img src="https://cdn-icons-png.flaticon.com/512/423/423794.png" alt="Reports" style={{width: '24px', height: '24px'}} />, description: 'View reports and analytics' },
       email: { title: 'Email Configuration', icon: <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" alt="Email" style={{width: '24px', height: '24px'}} />, description: 'Configure email settings' },
       banners: { title: 'Banner Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/1997/1997842.png" alt="Banners" style={{width: '24px', height: '24px'}} />, description: 'Manage site-wide banners' },
@@ -380,7 +380,7 @@ const Admin = () => {
           )}
           {UserPolicies.hasContributorAccess(userRoles) && (
             <button onClick={() => navigateToSection('assessments')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'assessments' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/3429/3429153.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Modules
+              <img src="https://cdn-icons-png.flaticon.com/512/3429/3429153.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Exams
             </button>
           )}
           {UserPolicies.hasManagerAccess(userRoles) && (
@@ -493,7 +493,7 @@ const DashboardContent = ({ userCount, groupCount, moduleCount, assignmentCount,
           <p className={cssStyles.statNumber}><AnimatedCounter target={assignmentCount} delay={500} /></p>
         </div>
         <div className={cssStyles.statCard} style={{ animationDelay: '0.4s' }}>
-          <h3>Modules</h3>
+          <h3>Exams</h3>
           <p className={cssStyles.statNumber}><AnimatedCounter target={moduleCount} delay={700} /></p>
         </div>
         <div className={cssStyles.statCard} style={{ animationDelay: '0.5s' }}>
@@ -517,7 +517,7 @@ const DashboardContent = ({ userCount, groupCount, moduleCount, assignmentCount,
             <div className={cssStyles.shortcutItem}><span className={cssStyles.shortcutLabel}>Dashboard</span><span className={cssStyles.shortcutKeys}>Ctrl+Shift+D</span></div>
             {UserPolicies.hasManagerAccess(userRoles) && <div className={cssStyles.shortcutItem}><span className={cssStyles.shortcutLabel}>Users</span><span className={cssStyles.shortcutKeys}>Ctrl+Shift+U</span></div>}
             {UserPolicies.hasManagerAccess(userRoles) && <div className={cssStyles.shortcutItem}><span className={cssStyles.shortcutLabel}>Assignments</span><span className={cssStyles.shortcutKeys}>Ctrl+Shift+A</span></div>}
-            {UserPolicies.hasContributorAccess(userRoles) && <div className={cssStyles.shortcutItem}><span className={cssStyles.shortcutLabel}>Modules</span><span className={cssStyles.shortcutKeys}>Ctrl+Shift+M</span></div>}
+            {UserPolicies.hasContributorAccess(userRoles) && <div className={cssStyles.shortcutItem}><span className={cssStyles.shortcutLabel}>Exams</span><span className={cssStyles.shortcutKeys}>Ctrl+Shift+M</span></div>}
           </div>
         </div>
       </div>

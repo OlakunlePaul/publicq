@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import commonStyles from '../Admin/AdminCommon.module.css';
+import commonStyles from '../components/Admin/AdminCommon.module.css';
 import { resultService, StudentAssessment } from '../services/resultService';
 import { ValidationMessage } from '../components/Shared/ValidationComponents';
 import ReportCardView from '../components/ResultManagement/ReportCardView';

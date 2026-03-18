@@ -13,6 +13,7 @@ using PublicQ.Infrastructure.Handlers;
 using PublicQ.Infrastructure.Options;
 using PublicQ.Infrastructure.Persistence;
 using PublicQ.Infrastructure.Services;
+using PublicQ.Infrastructure.Authorization;
 using PublicQ.Shared;
 using StackExchange.Redis;
 

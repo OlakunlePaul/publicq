@@ -7,6 +7,7 @@ using PublicQ.API.Middleware;
 using PublicQ.Infrastructure;
 using PublicQ.Infrastructure.Options;
 using PublicQ.Infrastructure.Persistence;
+using PublicQ.Application.Interfaces;
 using PublicQ.Infrastructure.Persistence.Seeders;
 using PublicQ.Shared;
 using ServiceRegistration = PublicQ.API.ServiceRegistration;

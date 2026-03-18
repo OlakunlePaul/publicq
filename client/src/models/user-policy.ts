@@ -5,7 +5,7 @@ export const UserPolicies = {
   Managers: [UserRole.MANAGER, UserRole.ADMINISTRATOR],
   Moderators: [UserRole.MODERATOR, UserRole.MANAGER, UserRole.ADMINISTRATOR],
   Analysts: [UserRole.ANALYST, UserRole.ADMINISTRATOR],
-  Contributors: [UserRole.CONTRIBUTOR, UserRole.MODERATOR, UserRole.MANAGER, UserRole.ADMINISTRATOR],
+  Contributors: [UserRole.CONTRIBUTOR, UserRole.MODERATOR, UserRole.MANAGER, UserRole.ADMINISTRATOR, UserRole.TEACHER],
 
   // Helper functions
   hasAnalystAccess: (userRoles: UserRole[]): boolean => {

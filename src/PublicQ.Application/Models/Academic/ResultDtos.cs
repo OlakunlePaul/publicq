@@ -22,7 +22,9 @@ public record StudentAssessmentDto(
     int? TimesAbsent,
     string? ClassTeacherComment,
     string? HeadTeacherComment,
-    List<SubjectScoreDto> SubjectScores);
+    List<SubjectScoreDto> SubjectScores,
+    DateTime? PublishedAt = null,
+    bool IsLockedForParents = false);
 
 public record SubjectScoreDto(
     Guid Id,

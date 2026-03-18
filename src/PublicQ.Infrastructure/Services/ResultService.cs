@@ -1,16 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 using PublicQ.Application.Interfaces;
+using PublicQ.Application.Models;
 using PublicQ.Application.Models.Academic;
 using PublicQ.Domain.Enums;
 using PublicQ.Infrastructure.Persistence;
 using PublicQ.Infrastructure.Persistence.Entities.Academic;
+using PublicQ.Shared;
 using System.Globalization;
 
 namespace PublicQ.Infrastructure.Services;
 
 public class ResultService(ApplicationDbContext dbContext) : IResultService
 {
-    public async Task<ResultUploadResponse> UploadResultCsvAsync(Stream fileStream, Guid sessionId, Guid termId, Guid classLevelId)
+    public async Task<Response<ResultUploadResponse, GenericOperationStatuses>> UploadResultCsvAsync(Stream fileStream, Guid sessionId, Guid termId, Guid classLevelId, CancellationToken cancellationToken)
     {
         var errors = new List<string>();
         int successCount = 0;
@@ -23,22 +25,21 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             lines.Add(await reader.ReadLineAsync() ?? "");
         }
 
-        if (lines.Count < 50)
+        if (lines.Count < 30)
         {
-            return new ResultUploadResponse(0, 0, 1, ["Invalid CSV format. Expected Mercy's Gate Report Card format (approx 52 lines)."]);
+            return Response<ResultUploadResponse, GenericOperationStatuses>.Failure(GenericOperationStatuses.BadRequest, "Invalid CSV format. Expected Mercy's Gate Report Card format.");
         }
 
         try
         {
-            // Parsing Logic based on the provided CSV structure
             // Row 8: Student’s/Pupil’s Name,STUDENT 1,,,,,,Class,SSS1
             var row8 = lines[7].Split(',');
             string studentName = row8[1].Trim();
             
             // Row 33-35: Attendance
-            var row33 = lines[32].Split(','); // School Days,120
-            var row34 = lines[33].Split(','); // Days Attended,108
-            var row35 = lines[34].Split(','); // Days Absent,12
+            var row33 = lines[32].Split(','); 
+            var row34 = lines[33].Split(','); 
+            var row35 = lines[34].Split(','); 
 
             int schoolDays = int.TryParse(row33[1], out var sd) ? sd : 0;
             int daysAttended = int.TryParse(row34[1], out var da) ? da : 0;
@@ -54,16 +55,16 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
 
             // Find the student
             var student = await dbContext.ExamTakers
-                .FirstOrDefaultAsync(s => s.FullName == studentName || s.AdmissionNumber == studentName);
+                .FirstOrDefaultAsync(s => s.FullName == studentName || s.AdmissionNumber == studentName, cancellationToken);
 
             if (student == null)
             {
-                return new ResultUploadResponse(0, 0, 1, [$"Student '{studentName}' not found in the system. Please register the student first."]);
+                return Response<ResultUploadResponse, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, $"Student '{studentName}' not found.");
             }
 
             // Create or update assessment
             var assessment = await dbContext.StudentAssessments
-                .FirstOrDefaultAsync(a => a.ExamTakerId == student.Id && a.SessionId == sessionId && a.TermId == termId);
+                .FirstOrDefaultAsync(a => a.ExamTakerId == student.Id && a.SessionId == sessionId && a.TermId == termId, cancellationToken);
 
             if (assessment == null)
             {
@@ -85,16 +86,13 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             assessment.HeadTeacherComment = headTeacherComment;
             assessment.Status = ModerationStatus.Draft;
 
-            // Parse Subjects (Rows 13 to approx 28)
-            // Row 11: SUBJECTS,TEST,EXAM,TOTAL,2ND TERM,3RD TERM,AVRGE,GRADE,RMKS
-            
-            // Clear existing scores for this assessment to avoid duplicates if re-uploading
+            // Parse Subjects
             var existingScores = await dbContext.SubjectScores
                 .Where(s => s.StudentAssessmentId == assessment.Id)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
             dbContext.SubjectScores.RemoveRange(existingScores);
 
-            for (int i = 12; i < 28; i++)
+            for (int i = 12; i < lines.Count && i < 28; i++)
             {
                 var row = lines[i].Split(',');
                 if (row.Length < 4 || string.IsNullOrWhiteSpace(row[0])) continue;
@@ -108,15 +106,8 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 string grade = row[7].Trim();
                 string remark = row[8].Trim();
 
-                // Find subject
-                var subject = await dbContext.Subjects
-                    .FirstOrDefaultAsync(s => s.Name == subjectName);
-
-                if (subject == null)
-                {
-                    errors.Add($"Subject '{subjectName}' not found. Skipping score for this subject.");
-                    continue;
-                }
+                var subject = await dbContext.Subjects.FirstOrDefaultAsync(s => s.Name == subjectName, cancellationToken);
+                if (subject == null) continue;
 
                 dbContext.SubjectScores.Add(new SubjectScoreEntity
                 {
@@ -131,20 +122,18 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 });
             }
 
-            await dbContext.SaveChangesAsync();
-            successCount = 1;
-
-            return new ResultUploadResponse(1, successCount, failureCount, errors);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return Response<ResultUploadResponse, GenericOperationStatuses>.Success(new ResultUploadResponse(1, 1, 0, []), GenericOperationStatuses.Completed);
         }
         catch (Exception ex)
         {
-            return new ResultUploadResponse(0, 0, 1, [$"Error parsing CSV: {ex.Message}"]);
+            return Response<ResultUploadResponse, GenericOperationStatuses>.Failure(GenericOperationStatuses.BadRequest, $"Error: {ex.Message}");
         }
     }
 
-    public async Task<StudentAssessmentDto?> GetStudentAssessmentAsync(Guid assessmentId)
+    public async Task<Response<StudentAssessmentDto, GenericOperationStatuses>> GetStudentAssessmentAsync(Guid assessmentId, CancellationToken cancellationToken)
     {
-        return await dbContext.StudentAssessments
+        var assessment = await dbContext.StudentAssessments
             .Include(a => a.ExamTaker)
             .Include(a => a.Session)
             .Include(a => a.Term)
@@ -152,13 +141,15 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             .Include(a => a.SubjectScores)
                 .ThenInclude(s => s.Subject)
             .Where(a => a.Id == assessmentId)
-            .Select(a => MapToDto(a))
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (assessment == null) return Response<StudentAssessmentDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assessment not found.");
+        return Response<StudentAssessmentDto, GenericOperationStatuses>.Success(MapToDto(assessment), GenericOperationStatuses.Completed);
     }
 
-    public async Task<IEnumerable<StudentAssessmentDto>> GetClassAssessmentsAsync(Guid sessionId, Guid termId, Guid classLevelId)
+    public async Task<Response<IEnumerable<StudentAssessmentDto>, GenericOperationStatuses>> GetClassAssessmentsAsync(Guid sessionId, Guid termId, Guid classLevelId, CancellationToken cancellationToken)
     {
-        return await dbContext.StudentAssessments
+        var assessments = await dbContext.StudentAssessments
             .Include(a => a.ExamTaker)
             .Include(a => a.Session)
             .Include(a => a.Term)
@@ -167,17 +158,19 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 .ThenInclude(s => s.Subject)
             .Where(a => a.SessionId == sessionId && a.TermId == termId && a.ClassLevelId == classLevelId)
             .Select(a => MapToDto(a))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
+
+        return Response<IEnumerable<StudentAssessmentDto>, GenericOperationStatuses>.Success(assessments, GenericOperationStatuses.Completed);
     }
 
-    public async Task<IEnumerable<StudentAssessmentDto>> GetParentChildrenResultsAsync(string parentUserId)
+    public async Task<Response<IEnumerable<StudentAssessmentDto>, GenericOperationStatuses>> GetParentChildrenResultsAsync(string parentUserId, CancellationToken cancellationToken)
     {
         var studentIds = await dbContext.ParentStudentLinks
             .Where(l => l.ParentId == parentUserId)
             .Select(l => l.StudentId)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
-        return await dbContext.StudentAssessments
+        var assessments = await dbContext.StudentAssessments
             .Include(a => a.ExamTaker)
             .Include(a => a.Session)
             .Include(a => a.Term)
@@ -186,21 +179,179 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 .ThenInclude(s => s.Subject)
             .Where(a => studentIds.Contains(a.ExamTakerId) && a.Status == ModerationStatus.Published)
             .Select(a => MapToDto(a))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
+
+        return Response<IEnumerable<StudentAssessmentDto>, GenericOperationStatuses>.Success(assessments, GenericOperationStatuses.Completed);
     }
 
-    public async Task UpdateStatusAsync(Guid assessmentId, ModerationStatus status)
+    public async Task<Response<GenericOperationStatuses>> UpdateStatusAsync(Guid assessmentId, ModerationStatus status, CancellationToken cancellationToken)
     {
-        var assessment = await dbContext.StudentAssessments.FindAsync(assessmentId);
-        if (assessment != null)
+        var assessment = await dbContext.StudentAssessments.FindAsync([assessmentId], cancellationToken);
+        if (assessment == null) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assessment not found.");
+        
+        assessment.Status = status;
+        if (status == ModerationStatus.Published) assessment.PublishedAt = DateTime.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed);
+    }
+
+    public async Task<Response<AssessmentDetailsDto, GenericOperationStatuses>> GetAssessmentDetailsAsync(Guid assessmentId, CancellationToken cancellationToken)
+    {
+        var assessment = await dbContext.StudentAssessments
+            .Include(a => a.ExamTaker)
+            .Include(a => a.SubjectScores)
+                .ThenInclude(s => s.Subject)
+            .FirstOrDefaultAsync(a => a.Id == assessmentId, cancellationToken);
+
+        if (assessment == null) return Response<AssessmentDetailsDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assessment not found.");
+
+        return Response<AssessmentDetailsDto, GenericOperationStatuses>.Success(new AssessmentDetailsDto
         {
-            assessment.Status = status;
-            if (status == ModerationStatus.Published)
+            Id = assessment.Id,
+            ExamTakerId = assessment.ExamTakerId,
+            StudentName = assessment.ExamTaker?.FullName ?? "Unknown",
+            AdmissionNumber = assessment.ExamTaker?.AdmissionNumber,
+            Status = assessment.Status,
+            TotalMarksObtained = assessment.TotalMarksObtained,
+            TotalMarksObtainable = assessment.TotalMarksObtainable,
+            AverageScore = assessment.AverageScore,
+            PositionInClass = assessment.PositionInClass,
+            NumberInClass = assessment.NumberInClass,
+            OverallGrade = assessment.OverallGrade,
+            TimesSchoolOpened = assessment.TimesSchoolOpened,
+            TimesPresent = assessment.TimesPresent,
+            TimesAbsent = assessment.TimesAbsent,
+            ClassTeacherComment = assessment.ClassTeacherComment,
+            HeadTeacherComment = assessment.HeadTeacherComment,
+            SubjectScores = assessment.SubjectScores.Select(s => new StudentSubjectScoreDto
             {
-                assessment.PublishedAt = DateTime.UtcNow;
+                ExamTakerId = assessment.ExamTakerId,
+                TestScore = s.TestScore,
+                ExamScore = s.ExamScore,
+                SubjectRemark = s.SubjectRemark
+            }).ToList()
+        }, GenericOperationStatuses.Completed);
+    }
+
+    public async Task<Response<GenericOperationStatuses>> SaveBulkScoresAsync(BulkScoreEntryDto request, CancellationToken cancellationToken)
+    {
+        foreach (var entry in request.Scores)
+        {
+            var student = await dbContext.ExamTakers.FirstOrDefaultAsync(s => s.Id == entry.ExamTakerId || s.AdmissionNumber == entry.ExamTakerId, cancellationToken);
+            if (student == null) continue;
+
+            var assessment = await dbContext.StudentAssessments
+                .FirstOrDefaultAsync(a => a.ExamTakerId == student.Id && a.SessionId == request.SessionId && a.TermId == request.TermId, cancellationToken);
+
+            if (assessment == null)
+            {
+                assessment = new StudentAssessmentEntity
+                {
+                    Id = Guid.NewGuid(),
+                    ExamTakerId = student.Id,
+                    SessionId = request.SessionId,
+                    TermId = request.TermId,
+                    ClassLevelId = request.ClassLevelId,
+                    Status = ModerationStatus.Draft
+                };
+                dbContext.StudentAssessments.Add(assessment);
             }
-            await dbContext.SaveChangesAsync();
+
+            var score = await dbContext.SubjectScores
+                .FirstOrDefaultAsync(s => s.StudentAssessmentId == assessment.Id && s.SubjectId == request.SubjectId, cancellationToken);
+
+            if (score == null)
+            {
+                score = new SubjectScoreEntity
+                {
+                    Id = Guid.NewGuid(),
+                    StudentAssessmentId = assessment.Id,
+                    SubjectId = request.SubjectId
+                };
+                dbContext.SubjectScores.Add(score);
+            }
+
+            score.TestScore = entry.TestScore ?? 0;
+            score.ExamScore = entry.ExamScore ?? 0;
+            score.TotalScore = score.TestScore + score.ExamScore;
+            score.SubjectRemark = entry.SubjectRemark;
         }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed);
+    }
+
+    public async Task<Response<GenericOperationStatuses>> CalculateClassResultsAsync(Guid sessionId, Guid termId, Guid classLevelId, CancellationToken cancellationToken)
+    {
+        var assessments = await dbContext.StudentAssessments
+            .Include(a => a.SubjectScores)
+            .Where(a => a.SessionId == sessionId && a.TermId == termId && a.ClassLevelId == classLevelId)
+            .ToListAsync(cancellationToken);
+
+        if (!assessments.Any()) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "No assessments found for this class.");
+
+        foreach (var a in assessments)
+        {
+            a.TotalMarksObtained = a.SubjectScores.Sum(s => s.TotalScore);
+            a.TotalMarksObtainable = a.SubjectScores.Count * 100;
+            a.AverageScore = a.TotalMarksObtainable > 0 ? (a.TotalMarksObtained / a.TotalMarksObtainable) * 100 : 0;
+        }
+
+        var ranked = assessments.OrderByDescending(a => a.AverageScore).ToList();
+        for (int i = 0; i < ranked.Count; i++)
+        {
+            ranked[i].PositionInClass = i + 1;
+            ranked[i].NumberInClass = ranked.Count;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed);
+    }
+
+    public async Task<Response<GenericOperationStatuses>> UpdateAssessmentStatusAsync(Guid assessmentId, ModerationStatus newStatus, CancellationToken cancellationToken)
+    {
+        return await UpdateStatusAsync(assessmentId, newStatus, cancellationToken);
+    }
+
+    public async Task<Response<GenericOperationStatuses>> UpdateAssessmentDetailsAsync(Guid assessmentId, UpdateAssessmentDetailsDto request, CancellationToken cancellationToken)
+    {
+        var assessment = await dbContext.StudentAssessments.FindAsync([assessmentId], cancellationToken);
+        if (assessment == null) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assessment not found.");
+
+        assessment.TimesSchoolOpened = request.TimesSchoolOpened ?? assessment.TimesSchoolOpened;
+        assessment.TimesPresent = request.TimesPresent ?? assessment.TimesPresent;
+        assessment.TimesAbsent = request.TimesAbsent ?? assessment.TimesAbsent;
+        assessment.ClassTeacherComment = request.ClassTeacherComment ?? assessment.ClassTeacherComment;
+        assessment.HeadTeacherComment = request.HeadTeacherComment ?? assessment.HeadTeacherComment;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed);
+    }
+
+    public async Task<Response<GenericOperationStatuses>> ToggleAssessmentLockAsync(Guid assessmentId, bool isLocked, CancellationToken cancellationToken)
+    {
+        var assessment = await dbContext.StudentAssessments.FindAsync([assessmentId], cancellationToken);
+        if (assessment == null) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assessment not found.");
+
+        assessment.IsLockedForParents = isLocked;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed);
+    }
+
+    public async Task<Response<GenericOperationStatuses>> BatchUpdateClassStatusAsync(Guid sessionId, Guid termId, Guid classLevelId, ModerationStatus currentStatus, ModerationStatus newStatus, CancellationToken cancellationToken)
+    {
+        var assessments = await dbContext.StudentAssessments
+            .Where(a => a.SessionId == sessionId && a.TermId == termId && a.ClassLevelId == classLevelId && a.Status == currentStatus)
+            .ToListAsync(cancellationToken);
+
+        foreach (var a in assessments)
+        {
+            a.Status = newStatus;
+            if (newStatus == ModerationStatus.Published) a.PublishedAt = DateTime.UtcNow;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed);
     }
 
     private static StudentAssessmentDto MapToDto(StudentAssessmentEntity a)
@@ -233,7 +384,9 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 s.TotalScore,
                 s.Grade,
                 s.SubjectRemark
-            )).ToList()
+            )).ToList(),
+            a.PublishedAt,
+            a.IsLockedForParents
         );
     }
 }
