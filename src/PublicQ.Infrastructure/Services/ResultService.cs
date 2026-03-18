@@ -15,14 +15,13 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
     public async Task<Response<ResultUploadResponse, GenericOperationStatuses>> UploadResultCsvAsync(Stream fileStream, Guid sessionId, Guid termId, Guid classLevelId, CancellationToken cancellationToken)
     {
         var errors = new List<string>();
-        int successCount = 0;
-        int failureCount = 0;
 
         using var reader = new StreamReader(fileStream);
         var lines = new List<string>();
-        while (!reader.EndOfStream)
+        string? line;
+        while ((line = await reader.ReadLineAsync()) != null)
         {
-            lines.Add(await reader.ReadLineAsync() ?? "");
+            lines.Add(line);
         }
 
         if (lines.Count < 30)

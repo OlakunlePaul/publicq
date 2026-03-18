@@ -28,6 +28,7 @@ public class UsersController(IUserService userService) : ControllerBase
     /// Authenticates a user and issues an access token.
     /// </summary>
     /// <param name="userToLogin">The login request containing the user's email and password.</param>
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> LoginAsync(
         [FromBody] UserOperationRequest userToLogin)
@@ -150,6 +151,7 @@ public class UsersController(IUserService userService) : ControllerBase
     /// <param name="dto">The registration request containing email and password.</param>
     /// <param name="validator">Validator for <see cref="UserOperationRequest"/>.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> RegisterIdentityUserAsync(
         [FromBody] UserRegisterRequest dto,
@@ -447,6 +449,7 @@ public class UsersController(IUserService userService) : ControllerBase
     /// <param name="validator"><see cref="ForgetPasswordRequestValidator"/></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>This endpoint should always return success if user exists.</returns>
+    [AllowAnonymous]
     [HttpPost("password/forget")]
     public async Task<IActionResult> ForgetPasswordAsync(
         [FromBody] ForgetPasswordRequest request,
@@ -484,6 +487,7 @@ public class UsersController(IUserService userService) : ControllerBase
     /// <returns>Returns <see cref="GenericOperationStatuses"/> wrapped into <see cref="Response{TStatus}"/>
     /// If the token is valid, returns <see cref="GenericOperationStatuses.Completed"/>, otherwise <see cref="GenericOperationStatuses.Failed"/>.
     /// </returns>
+    [AllowAnonymous]
     [HttpPost("password/reset/token/validate")]
     public async Task<IActionResult> ValidatePasswordResetTokenAsync(
         [FromBody] CheckPasswordTokenRequest request,
@@ -515,6 +519,7 @@ public class UsersController(IUserService userService) : ControllerBase
     /// <param name="validator"><see cref="ResetPasswordRequestValidator"/></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns a JWT token wrapped into <see cref="Response{TData, TStatus}"/></returns>
+    [AllowAnonymous]
     [HttpPost("password/reset")]
     public async Task<IActionResult> ResetPasswordAsync(
         [FromBody] ResetPasswordRequest request,

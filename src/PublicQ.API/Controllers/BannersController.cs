@@ -35,6 +35,7 @@ public class BannersController(IBannerService bannerService) : ControllerBase
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns <see cref="Response{TData, TStatus}"/></returns>
+    [AllowAnonymous]
     [HttpGet("active")]
     public async Task<IActionResult> GetActiveAsync(CancellationToken cancellationToken)
     {

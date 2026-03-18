@@ -32,6 +32,7 @@ public class AcademicStructureController(IAcademicStructureService apiService) :
     }
 
     // Sessions
+    [AllowAnonymous]
     [HttpGet("sessions")]
     public async Task<IActionResult> GetSessionsAsync(CancellationToken cancellationToken)
     {
@@ -56,6 +57,7 @@ public class AcademicStructureController(IAcademicStructureService apiService) :
     }
 
     // Terms
+    [AllowAnonymous]
     [HttpGet("sessions/{sessionId:guid}/terms")]
     public async Task<IActionResult> GetTermsBySessionAsync(Guid sessionId, CancellationToken cancellationToken)
     {
@@ -72,6 +74,7 @@ public class AcademicStructureController(IAcademicStructureService apiService) :
     }
 
     // Class Levels
+    [AllowAnonymous]
     [HttpGet("classes")]
     public async Task<IActionResult> GetClassLevelsAsync(CancellationToken cancellationToken)
     {

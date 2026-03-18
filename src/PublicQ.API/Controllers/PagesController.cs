@@ -22,6 +22,7 @@ public class PagesController(IPageService pageService) : ControllerBase
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns a contact page wrapped into <see cref="Response{TData, TStatus}"/></returns>
+    [AllowAnonymous]
     [HttpGet("contact")]
     public async Task<IActionResult> GetContactPageAsync(
         CancellationToken cancellationToken = default)

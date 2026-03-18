@@ -10,8 +10,7 @@ using PublicQ.Infrastructure.Persistence.Entities.Academic;
 namespace PublicQ.Infrastructure.Services;
 
 public class AcademicStructureService(
-    ApplicationDbContext dbContext,
-    ILogger<AcademicStructureService> logger) : IAcademicStructureService
+    ApplicationDbContext dbContext) : IAcademicStructureService
 {
     public async Task<Response<IList<SubjectDto>, GenericOperationStatuses>> GetSubjectsAsync(CancellationToken cancellationToken = default)
     {
