@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import commonStyles from '../Admin/AdminCommon.module.css';
 import { 
   SessionDto, TermDto, ClassLevelDto, SubjectDto, 
-  AssessmentReportDto, BulkScoreEntryDto, StudentSubjectScoreDto, AssessmentDetailsDto 
+  BulkScoreEntryDto, AssessmentDetailsDto 
 } from '../../models/academic';
 import { academicStructureService } from '../../services/academicStructureService';
 import { resultService } from '../../services/resultService';

@@ -1,5 +1,4 @@
 import api from '../api/axios';
-import { ResponseWithData } from '../models/responseWithData';
 
 export enum ModerationStatus {
   Draft = 0,
@@ -93,22 +92,22 @@ export const resultService = {
 
   // Added missing methods for ResultManagement.tsx compatibility
   saveBulkScores: async (payload: any): Promise<{ isSuccess: boolean, message?: string }> => {
-    const r = await api.post('results/bulk-scores', payload);
+    await api.post('results/bulk-scores', payload);
     return { isSuccess: true };
   },
 
   calculateClassResults: async (sessionId: string, termId: string, classLevelId: string): Promise<{ isSuccess: boolean, message?: string }> => {
-    const r = await api.post('results/calculate', { sessionId, termId, classLevelId });
+    await api.post('results/calculate', { sessionId, termId, classLevelId });
     return { isSuccess: true };
   },
 
   toggleAssessmentLock: async (assessmentId: string, isLocked: boolean): Promise<{ isSuccess: boolean, message?: string }> => {
-    const r = await api.patch(`results/${assessmentId}/lock`, { isLocked });
+    await api.patch(`results/${assessmentId}/lock`, { isLocked });
     return { isSuccess: true };
   },
 
   batchUpdateClassStatus: async (sessionId: string, termId: string, classLevelId: string, currentStatus: number, newStatus: number): Promise<{ isSuccess: boolean, message?: string }> => {
-    const r = await api.patch('results/batch-status', { sessionId, termId, classLevelId, currentStatus, newStatus });
+    await api.patch('results/batch-status', { sessionId, termId, classLevelId, currentStatus, newStatus });
     return { isSuccess: true };
   }
 };

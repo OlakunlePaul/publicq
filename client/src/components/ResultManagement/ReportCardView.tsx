@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import commonStyles from '../Admin/AdminCommon.module.css';
 import { AssessmentDetailsDto, UpdateAssessmentDetailsDto } from '../../models/academic';
 import { resultService } from '../../services/resultService';
 import { ValidationMessage } from '../Shared/ValidationComponents';
@@ -89,7 +88,7 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
     setSuccess('');
 
     try {
-      const resp = await resultService.updateStatus(assessmentId, 0); // Status update dummy or actual details update
+      await resultService.updateStatus(assessmentId, 0); // Status update dummy or actual details update
       // resultService should have an updateAssessmentDetails method, let's assume it or use updateStatus
       setSuccess('Report card details updated successfully.');
       setTimeout(() => {

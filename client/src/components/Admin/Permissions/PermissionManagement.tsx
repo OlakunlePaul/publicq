@@ -12,11 +12,7 @@ const PermissionManagement: React.FC = () => {
 
   const roles = Object.values(UserRole);
 
-  useEffect(() => {
-    fetchData();
-  }, [selectedRole]);
-
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     try {
       setLoading(true);
       const [allPerms, activePerms] = await Promise.all([
@@ -30,7 +26,11 @@ const PermissionManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedRole]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleTogglePermission = (name: string) => {
     if (selectedRole === UserRole.ADMINISTRATOR) return; // Admins have all perms
