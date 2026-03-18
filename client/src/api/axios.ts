@@ -70,8 +70,12 @@ api.interceptors.response.use(
           // Fallback: clear localStorage if callback isn't available
           localStorage.removeItem(CONSTANTS.TOKEN_VARIABLE_NAME);
         }
+        
         // Handle unauthorized access, e.g., redirect to login
-        window.location.href = '/login';
+        // Only redirect if not already on the login page to avoid infinite loops
+        if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+        }
       }
     }
     
