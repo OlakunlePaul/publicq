@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -57,6 +58,7 @@ public static class ServiceRegistration
             services.AddScoped<IApplicationInitializer, ApplicationInitializer>();
             services.AddScoped<IConfigurationUpdateService, ConfigurationUpdateService>();
             services.AddScoped<IStorageService, FileStorageService>();
+            services.AddScoped<IPermissionService, PermissionService>();
         
             services.AddScoped<IAssessmentService, AssessmentService>();
             services.AddScoped<IAssignmentService, AssignmentService>();
@@ -113,6 +115,9 @@ public static class ServiceRegistration
         /// </summary>
         IServiceCollection AddAuth(IConfiguration config)
         {
+            services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+            services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+
             // Relaxing password policy for Identity Framework.
             // The password configuration will be stored in the database.
             services.AddOptions<AuthOptions>().Bind(config.GetSection(nameof(AuthOptions)));
@@ -148,7 +153,10 @@ public static class ServiceRegistration
                 .AddPolicy(Constants.ModeratorsPolicy, policy =>
                     policy.RequireRole(nameof(UserRole.Moderator), nameof(UserRole.Manager), nameof(UserRole.Administrator)))
                 .AddPolicy(Constants.ManagersPolicy, policy => 
-                    policy.RequireRole(nameof(UserRole.Manager), nameof(UserRole.Administrator)));
+                    policy.RequireRole(nameof(UserRole.Manager), nameof(UserRole.Administrator)))
+                // New generic permission policy that can be used via [Authorize(Policy = "Permission:Results.Edit")]
+                // A Custom AuthorizationPolicyProvider can be added later for more elegance if needed.
+                .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
         
             services.AddScoped<IUserConfigurationProvider, UserConfigurationProvider>();
             services.AddScoped<IUserService, UserService>();

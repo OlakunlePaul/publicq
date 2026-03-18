@@ -20,6 +20,7 @@ import ReportsAnalytics from '../components/ReportsAnalytics/ReportsAnalytics';
 import AcademicStructureManagement from '../components/AcademicStructureManagement/AcademicStructureManagement';
 import ResultManagement from '../components/ResultManagement/ResultManagement';
 import SchoolBrandingManagement from '../components/Admin/Settings/SchoolBrandingManagement';
+import PermissionManagement from '../components/Admin/Permissions/PermissionManagement';
 import { PlatformStatisticService } from '../services/platformStatisticService';
 import { User } from '../models/user';
 import { Group } from '../models/group';
@@ -31,7 +32,7 @@ import { UserPolicies } from '../models/user-policy';
 import { cn } from '../utils/cn';
 import cssStyles from './Admin.module.css';
 
-type AdminSection = 'dashboard' | 'users' | 'groups' | 'assignments' | 'assessments' | 'reports' | 'email' | 'banners' | 'pages' | 'ai' | 'ai-chat' | 'security' | 'cache' | 'storage' | 'logs' | 'admissions' | 'branding' | 'academic' | 'results';
+type AdminSection = 'dashboard' | 'users' | 'groups' | 'assignments' | 'assessments' | 'reports' | 'email' | 'banners' | 'pages' | 'ai' | 'ai-chat' | 'security' | 'cache' | 'storage' | 'logs' | 'admissions' | 'branding' | 'academic' | 'results' | 'permissions';
 
 // Animated Counter Component
 const AnimatedCounter = ({ target, duration = 1000, delay = 0 }: { target: number; duration?: number; delay?: number }) => {
@@ -230,7 +231,8 @@ const Admin = () => {
       admissions: { title: 'Admission Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Admissions" style={{width: '24px', height: '24px'}} />, description: 'Configure student admission number format' },
       branding: { title: 'School Branding', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Branding" style={{width: '24px', height: '24px'}} />, description: 'Configure school identity' },
       academic: { title: 'Academic Structure', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Academic" style={{width: '24px', height: '24px'}} />, description: 'Manage Sessions, Terms, Classes, and Subjects' },
-      results: { title: 'Result Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Results" style={{width: '24px', height: '24px'}} />, description: 'Manage bulk scores, ranking, and moderation' }
+      results: { title: 'Result Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Results" style={{width: '24px', height: '24px'}} />, description: 'Manage bulk scores, ranking, and moderation' },
+      permissions: { title: 'Permission Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="Permissions" style={{width: '24px', height: '24px'}} />, description: 'Configure granular access for each role' }
     };
     return sectionMap[section] || sectionMap.dashboard;
   };
@@ -314,6 +316,7 @@ const Admin = () => {
       case 'academic': return <AcademicStructureManagement />;
       case 'results': return <ResultManagement />;
       case 'branding': return <SchoolBrandingManagement />;
+      case 'permissions': return <PermissionManagement />;
       default: return <DashboardContent userCount={userCount} groupCount={groupCount} moduleCount={moduleCount} assignmentCount={assignmentCount} questionCount={questionCount} loading={dashboardLoading} error={dashboardError} onNavigate={navigateToSection} />;
     }
   };
@@ -390,6 +393,11 @@ const Admin = () => {
               <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Security
             </button>
           )}
+          {UserPolicies.hasAdminAccess(userRoles) && (
+            <button onClick={() => navigateToSection('permissions')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'permissions' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Permissions
+            </button>
+          )}
           {UserPolicies.hasManagerAccess(userRoles) && (
             <button onClick={() => navigateToSection('users')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'users' })}>
               <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Users
@@ -438,7 +446,7 @@ const Admin = () => {
             </button>
             {isDropdownOpen && (
               <div style={{ position: 'absolute', top: '100%', right: 0, background: 'white', border: '1px solid rgba(226, 232, 240, 0.8)', borderRadius: '16px', marginTop: '12px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', zIndex: 1000, overflow: 'hidden', padding: '8px', minWidth: '220px' }}>
-                {['dashboard', 'users', 'admissions', 'branding', 'groups', 'assignments', 'assessments', 'reports', 'email', 'banners', 'ai', 'ai-chat', 'security', 'logs'].map(section => (
+                {['dashboard', 'users', 'admissions', 'branding', 'permissions', 'groups', 'assignments', 'assessments', 'reports', 'email', 'banners', 'ai', 'ai-chat', 'security', 'logs'].map(section => (
                   <button key={section} onClick={() => { navigateToSection(section as AdminSection); setIsDropdownOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', width: '100%', border: 'none', background: 'transparent', borderRadius: '8px', cursor: 'pointer', textAlign: 'left', fontWeight: activeSection === section ? 600 : 400, color: activeSection === section ? '#4f46e5' : '#475569' }}>
                     {getSectionInfo(section as AdminSection).icon}
                     <span>{getSectionInfo(section as AdminSection).title}</span>

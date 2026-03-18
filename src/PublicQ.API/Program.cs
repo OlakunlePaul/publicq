@@ -84,6 +84,9 @@ try
     using (var scope = app.Services.CreateScope())
     {
         await UserRoleSeeder.SeedRolesAndDataAsync(scope.ServiceProvider);
+        
+        var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
+        await permissionService.SeedPermissionsAsync();
     }
     Console.WriteLine("Database seeding completed successfully.");
 }

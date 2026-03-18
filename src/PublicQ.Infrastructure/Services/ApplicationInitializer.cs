@@ -15,6 +15,7 @@ public class ApplicationInitializer(
     ApplicationDbContext dbContext, 
     IOptionsMonitor<InitialSetupOptions> initialSetupOptions, 
     IOptionsMonitor<FileStorageOptions> fileStorageOptions, 
+    IPermissionService permissionService,
     ILogger<ApplicationInitializer> logger) 
     : IApplicationInitializer
 {
@@ -22,6 +23,7 @@ public class ApplicationInitializer(
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly IOptionsMonitor<InitialSetupOptions> _initialSetupOptions = initialSetupOptions;
     private readonly IOptionsMonitor<FileStorageOptions> _fileStorageOptions  = fileStorageOptions;
+    private readonly IPermissionService _permissionService = permissionService;
     private readonly ILogger<ApplicationInitializer> _logger = logger;
     
     /// <summary>
@@ -53,6 +55,9 @@ public class ApplicationInitializer(
         }
         
         _configProvider.Set($"{nameof(InitialSetupOptions)}:{nameof(InitialSetupOptions.IsInitialized)}", "true");
+        
+        await _permissionService.SeedPermissionsAsync();
+
         _logger.LogInformation("Application initialized successfully.");
 
         

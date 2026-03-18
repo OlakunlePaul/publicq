@@ -13,6 +13,16 @@ public static class UserRolesNames
     public const string ExamTaker = nameof(UserRole.ExamTaker);
     
     /// <summary>
+    /// <see cref="UserRole.Teacher"/>
+    /// </summary>
+    public const string Teacher = nameof(UserRole.Teacher);
+    
+    /// <summary>
+    /// <see cref="UserRole.Parent"/>
+    /// </summary>
+    public const string Parent = nameof(UserRole.Parent);
+    
+    /// <summary>
     /// Analyst role, typically for users who can view and analyze data but have limited content management capabilities.
     /// </summary>
     public const string Analyst = nameof(UserRole.Analyst);
@@ -40,6 +50,6 @@ public static class UserRolesNames
     /// <summary>
     /// Helper array containing all user roles in the system.
     /// </summary>
-    public static readonly string[] All = [Administrator, Analyst, Manager, Moderator, Contributor, ExamTaker];
+    public static readonly string[] All = [Administrator, Analyst, Manager, Moderator, Contributor, ExamTaker, Teacher, Parent];
 
 }

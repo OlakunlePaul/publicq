@@ -180,6 +180,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     /// Individual subject scores linked to a student assessment.
     /// </summary>
     public DbSet<SubjectScoreEntity> SubjectScores { get; set; }
+
+    /// <summary>
+    /// Available permissions in the system.
+    /// </summary>
+    public DbSet<Permission> Permissions { get; set; }
+
+    /// <summary>
+    /// Links between roles and permissions.
+    /// </summary>
+    public DbSet<RolePermissionLink> RolePermissionLinks { get; set; }
     
     /// <summary>
     /// This method is called when the model for a derived context is being created.
@@ -374,6 +384,29 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<SubjectScoreEntity>()
             .HasIndex(s => new { s.StudentAssessmentId, s.SubjectId })
             .IsUnique();
+        
+        // -----------------------------------------------------------------
+        // Permission Management Configuration
+        // -----------------------------------------------------------------
+        
+        modelBuilder.Entity<Permission>()
+            .HasIndex(p => p.Name)
+            .IsUnique();
+            
+        modelBuilder.Entity<RolePermissionLink>()
+            .HasKey(r => new { r.RoleId, r.PermissionId });
+            
+        modelBuilder.Entity<RolePermissionLink>()
+            .HasOne(r => r.Role)
+            .WithMany()
+            .HasForeignKey(r => r.RoleId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        modelBuilder.Entity<RolePermissionLink>()
+            .HasOne(r => r.Permission)
+            .WithMany()
+            .HasForeignKey(r => r.PermissionId)
+            .OnDelete(DeleteBehavior.Cascade);
         
         # endregion
         
