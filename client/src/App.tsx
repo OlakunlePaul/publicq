@@ -20,6 +20,7 @@ import { ROUTES } from './constants/contstants';
 import AiChatDemo from './pages/AiChat';
 import DemoExam from './components/DemoExam/DemoExam';
 import ContactUs from './pages/ContactUs/ContactUs';
+import ParentDashboard from './pages/ParentDashboard';
 
 function HomePage() {
   const { isAuthenticated, userRoles } = useAuth();
@@ -242,6 +243,11 @@ function AppContent() {
         } />
         <Route path={ROUTES.DEMO} element={<DemoExam />} />
         <Route path={ROUTES.CONTACT_US} element={<ContactUs />} />
+        <Route path={ROUTES.PARENT_DASHBOARD} element={
+          <RoleGuard requiredRoles={[UserRole.PARENT]} redirectTo={ROUTES.LOGIN}>
+            <ParentDashboard />
+          </RoleGuard>
+        } />
       </Routes>
     </>
   );

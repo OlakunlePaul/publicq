@@ -21,6 +21,7 @@ export const ROUTES = {
   AI_CHAT: '/ai-chat',
   DEMO: '/demo',
   CONTACT_US: '/contact',
+  PARENT_DASHBOARD: '/parent-dashboard',
 } as const;
 
 /**

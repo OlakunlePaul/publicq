@@ -1,444 +1,239 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using PublicQ.Application.Interfaces;
-using PublicQ.Application.Models;
+using PublicQ.Application.Models.Academic;
 using PublicQ.Domain.Enums;
 using PublicQ.Infrastructure.Persistence;
+using PublicQ.Infrastructure.Persistence.Entities.Academic;
+using System.Globalization;
 
 namespace PublicQ.Infrastructure.Services;
 
-/// <summary>
-/// Implementation of result management logic.
-/// </summary>
-public class ResultService(
-    ApplicationDbContext dbContext,
-    IMessageService messageService,
-    ILogger<ResultService> logger) : IResultService
+public class ResultService(ApplicationDbContext dbContext) : IResultService
 {
-    public async Task<Response<GenericOperationStatuses>> CalculateClassResultsAsync(
-        Guid sessionId, 
-        Guid termId, 
-        Guid classLevelId, 
-        CancellationToken cancellationToken = default)
+    public async Task<ResultUploadResponse> UploadResultCsvAsync(Stream fileStream, Guid sessionId, Guid termId, Guid classLevelId)
     {
-        logger.LogInformation("Calculating results for Session: {Session}, Term: {Term}, Class: {Class}", 
-            sessionId, termId, classLevelId);
+        var errors = new List<string>();
+        int successCount = 0;
+        int failureCount = 0;
 
-        // Fetch all assessments for this class in this term/session
-        var assessments = await dbContext.StudentAssessments
-            .Include(a => a.SubjectScores)
-            .Where(a => a.SessionId == sessionId 
-                     && a.TermId == termId 
-                     && a.ClassLevelId == classLevelId)
-            .ToListAsync(cancellationToken);
-
-        if (!assessments.Any())
+        using var reader = new StreamReader(fileStream);
+        var lines = new List<string>();
+        while (!reader.EndOfStream)
         {
-            return Response<GenericOperationStatuses>.Success(
-                GenericOperationStatuses.Completed, 
-                "No assessments found to calculate.");
+            lines.Add(await reader.ReadLineAsync() ?? "");
         }
 
-        int numberInClass = assessments.Count;
-
-        // Step 1: Calculate individual totals and averages
-        foreach (var assessment in assessments)
+        if (lines.Count < 50)
         {
-            decimal totalScoreObtained = 0;
-            decimal totalScoreObtainable = 0;
+            return new ResultUploadResponse(0, 0, 1, ["Invalid CSV format. Expected Mercy's Gate Report Card format (approx 52 lines)."]);
+        }
 
-            foreach (var subject in assessment.SubjectScores)
+        try
+        {
+            // Parsing Logic based on the provided CSV structure
+            // Row 8: Student’s/Pupil’s Name,STUDENT 1,,,,,,Class,SSS1
+            var row8 = lines[7].Split(',');
+            string studentName = row8[1].Trim();
+            
+            // Row 33-35: Attendance
+            var row33 = lines[32].Split(','); // School Days,120
+            var row34 = lines[33].Split(','); // Days Attended,108
+            var row35 = lines[34].Split(','); // Days Absent,12
+
+            int schoolDays = int.TryParse(row33[1], out var sd) ? sd : 0;
+            int daysAttended = int.TryParse(row34[1], out var da) ? da : 0;
+            int daysAbsent = int.TryParse(row35[1], out var dab) ? dab : 0;
+
+            // Row 44: Teacher’s Comments
+            var row44 = lines[43].Split(',');
+            string teacherComment = row44[3].Trim();
+
+            // Row 46: Principal’s Comments
+            var row46 = lines[45].Split(',');
+            string headTeacherComment = row46[3].Trim();
+
+            // Find the student
+            var student = await dbContext.ExamTakers
+                .FirstOrDefaultAsync(s => s.FullName == studentName || s.AdmissionNumber == studentName);
+
+            if (student == null)
             {
-                // Calculate Test + Exam (Max 100 per subject)
-                var test = subject.TestScore ?? 0;
-                var exam = subject.ExamScore ?? 0;
-                subject.TotalScore = Math.Min(test + exam, 100); 
-                subject.Grade = CalculateGrade(subject.TotalScore.Value);
-                
-                totalScoreObtained += subject.TotalScore.Value;
-                totalScoreObtainable += 100; // Assuming each subject is out of 100
+                return new ResultUploadResponse(0, 0, 1, [$"Student '{studentName}' not found in the system. Please register the student first."]);
             }
 
-            assessment.TotalMarksObtained = totalScoreObtained;
-            assessment.TotalMarksObtainable = totalScoreObtainable;
-            assessment.NumberInClass = numberInClass;
-            
-            if (assessment.SubjectScores.Any())
-            {
-                assessment.AverageScore = totalScoreObtained / assessment.SubjectScores.Count;
-                assessment.OverallGrade = CalculateGrade(assessment.AverageScore.Value);
-            }
-        }
+            // Create or update assessment
+            var assessment = await dbContext.StudentAssessments
+                .FirstOrDefaultAsync(a => a.ExamTakerId == student.Id && a.SessionId == sessionId && a.TermId == termId);
 
-        // Step 2: Rank students by Average Score (Highest to lowest)
-        // Groups students by score to handle ties correctly
-        var rankedGroups = assessments
-            .Where(a => a.AverageScore.HasValue)
-            .GroupBy(a => a.AverageScore)
-            .OrderByDescending(g => g.Key)
-            .ToList();
-
-        int currentRank = 1;
-        foreach (var group in rankedGroups)
-        {
-            foreach (var student in group)
-            {
-                student.PositionInClass = currentRank;
-            }
-            // If two people tie for 1st, the next person is 3rd.
-            currentRank += group.Count(); 
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-        
-        logger.LogInformation("Calculated and ranked {Count} students successfully.", assessments.Count);
-        return Response<GenericOperationStatuses>.Success(
-            GenericOperationStatuses.Completed, 
-            "Class results calculated and ranked successfully.");
-    }
-
-    public async Task<Response<GenericOperationStatuses>> UpdateAssessmentStatusAsync(
-        Guid assessmentId, 
-        ModerationStatus newStatus, 
-        CancellationToken cancellationToken = default)
-    {
-        var assessment = await dbContext.StudentAssessments
-            .FirstOrDefaultAsync(a => a.Id == assessmentId, cancellationToken);
-
-        if (assessment == null)
-        {
-            return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assessment not found.");
-        }
-
-        assessment.Status = newStatus;
-        bool isNewlyPublished = false;
-
-        if (newStatus == ModerationStatus.Published && assessment.PublishedAt == null)
-        {
-            assessment.PublishedAt = DateTime.UtcNow;
-            isNewlyPublished = true;
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        if (isNewlyPublished)
-        {
-            await NotifyParentsAsync(new[] { assessment.ExamTakerId }, cancellationToken);
-        }
-
-        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Status updated.");
-    }
-
-    public async Task<Response<GenericOperationStatuses>> UpdateAssessmentDetailsAsync(
-        Guid assessmentId, 
-        UpdateAssessmentDetailsDto details, 
-        CancellationToken cancellationToken = default)
-    {
-        var assessment = await dbContext.StudentAssessments
-            .FirstOrDefaultAsync(a => a.Id == assessmentId, cancellationToken);
-
-        if (assessment == null)
-        {
-            return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assessment not found.");
-        }
-
-        // Update Attendance
-        assessment.TimesSchoolOpened = details.TimesSchoolOpened ?? assessment.TimesSchoolOpened;
-        assessment.TimesPresent = details.TimesPresent ?? assessment.TimesPresent;
-        assessment.TimesAbsent = details.TimesAbsent ?? assessment.TimesAbsent;
-
-        // Update Affective Domain
-        assessment.Regularity = details.Regularity ?? assessment.Regularity;
-        assessment.Punctuality = details.Punctuality ?? assessment.Punctuality;
-        assessment.Neatness = details.Neatness ?? assessment.Neatness;
-        assessment.AttitudeInSchool = details.AttitudeInSchool ?? assessment.AttitudeInSchool;
-        assessment.SocialActivities = details.SocialActivities ?? assessment.SocialActivities;
-
-        // Update Psychomotor
-        assessment.IndoorGames = details.IndoorGames ?? assessment.IndoorGames;
-        assessment.FieldGames = details.FieldGames ?? assessment.FieldGames;
-        assessment.TrackGames = details.TrackGames ?? assessment.TrackGames;
-        assessment.Jumps = details.Jumps ?? assessment.Jumps;
-        assessment.Swims = details.Swims ?? assessment.Swims;
-
-        // Update Remarks
-        assessment.ClassTeacherComment = details.ClassTeacherComment ?? assessment.ClassTeacherComment;
-        assessment.HeadTeacherComment = details.HeadTeacherComment ?? assessment.HeadTeacherComment;
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Assessment details updated.");
-    }
-
-    public async Task<Response<GenericOperationStatuses>> ToggleAssessmentLockAsync(
-        Guid assessmentId, 
-        bool isLocked, 
-        CancellationToken cancellationToken = default)
-    {
-        var assessment = await dbContext.StudentAssessments
-            .FirstOrDefaultAsync(a => a.Id == assessmentId, cancellationToken);
-
-        if (assessment == null)
-        {
-            return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assessment not found.");
-        }
-
-        assessment.IsLockedForParents = isLocked;
-        await dbContext.SaveChangesAsync(cancellationToken);
-        
-        return Response<GenericOperationStatuses>.Success(
-            GenericOperationStatuses.Completed, 
-            $"Assessment {(isLocked ? "locked" : "unlocked")} successfully.");
-    }
-
-    public async Task<Response<GenericOperationStatuses>> BatchUpdateClassStatusAsync(
-        Guid sessionId, 
-        Guid termId, 
-        Guid classLevelId, 
-        ModerationStatus currentStatus,
-        ModerationStatus newStatus, 
-        CancellationToken cancellationToken = default)
-    {
-        var assessmentsToUpdate = await dbContext.StudentAssessments
-            .Where(a => a.SessionId == sessionId 
-                     && a.TermId == termId 
-                     && a.ClassLevelId == classLevelId
-                     && a.Status == currentStatus)
-            .ToListAsync(cancellationToken);
-
-        if (!assessmentsToUpdate.Any())
-        {
-            return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "No matching assessments to update.");
-        }
-
-        var newlyPublishedExamTakerIds = new List<string>();
-
-        foreach (var a in assessmentsToUpdate)
-        {
-            a.Status = newStatus;
-            if (newStatus == ModerationStatus.Published && a.PublishedAt == null)
-            {
-                a.PublishedAt = DateTime.UtcNow;
-                newlyPublishedExamTakerIds.Add(a.ExamTakerId);
-            }
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        if (newlyPublishedExamTakerIds.Any())
-        {
-            await NotifyParentsAsync(newlyPublishedExamTakerIds, cancellationToken);
-        }
-
-        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, $"Batch updated {assessmentsToUpdate.Count} records to {newStatus}.");
-    }
-
-    public async Task<Response<IList<AssessmentReportDto>, GenericOperationStatuses>> GetClassAssessmentsAsync(
-        Guid sessionId, 
-        Guid termId, 
-        Guid classLevelId, 
-        CancellationToken cancellationToken = default)
-    {
-        var assessments = await dbContext.StudentAssessments
-            .Include(a => a.ExamTaker)
-            .Where(a => a.SessionId == sessionId 
-                     && a.TermId == termId 
-                     && a.ClassLevelId == classLevelId)
-            .Select(a => new AssessmentReportDto
-            {
-                Id = a.Id,
-                ExamTakerId = a.ExamTakerId,
-                StudentName = a.ExamTaker.FullName ?? a.ExamTaker.Email ?? "Unknown",
-                AdmissionNumber = a.ExamTaker.AdmissionNumber,
-                Status = a.Status,
-                IsLockedForParents = a.IsLockedForParents,
-                TotalMarksObtained = a.TotalMarksObtained,
-                AverageScore = a.AverageScore,
-                PositionInClass = a.PositionInClass,
-                OverallGrade = a.OverallGrade,
-                CreatedAt = a.CreatedAt,
-                PublishedAt = a.PublishedAt
-            })
-            .ToListAsync(cancellationToken);
-
-        return Response<IList<AssessmentReportDto>, GenericOperationStatuses>.Success(
-            assessments, 
-            GenericOperationStatuses.Completed, 
-            "Fetched class assessments successfully.");
-    }
-
-    public async Task<Response<AssessmentDetailsDto, GenericOperationStatuses>> GetAssessmentDetailsAsync(
-        Guid assessmentId, 
-        CancellationToken cancellationToken = default)
-    {
-        var assessment = await dbContext.StudentAssessments
-            .Include(a => a.ExamTaker)
-            .Include(a => a.SubjectScores)
-                .ThenInclude(s => s.Subject)
-            .FirstOrDefaultAsync(a => a.Id == assessmentId, cancellationToken);
-
-        if (assessment == null)
-        {
-            return Response<AssessmentDetailsDto, GenericOperationStatuses>.Failure(
-                GenericOperationStatuses.NotFound, "Assessment not found.");
-        }
-
-        var dto = new AssessmentDetailsDto
-        {
-            Id = assessment.Id,
-            ExamTakerId = assessment.ExamTakerId,
-            StudentName = assessment.ExamTaker.FullName ?? assessment.ExamTaker.Email ?? "Unknown",
-            AdmissionNumber = assessment.ExamTaker.AdmissionNumber,
-            Status = assessment.Status,
-            TotalMarksObtained = assessment.TotalMarksObtained,
-            TotalMarksObtainable = assessment.TotalMarksObtainable,
-            AverageScore = assessment.AverageScore,
-            PositionInClass = assessment.PositionInClass,
-            NumberInClass = assessment.NumberInClass,
-            OverallGrade = assessment.OverallGrade,
-            
-            TimesSchoolOpened = assessment.TimesSchoolOpened,
-            TimesPresent = assessment.TimesPresent,
-            TimesAbsent = assessment.TimesAbsent,
-            
-            Regularity = assessment.Regularity,
-            Punctuality = assessment.Punctuality,
-            Neatness = assessment.Neatness,
-            AttitudeInSchool = assessment.AttitudeInSchool,
-            SocialActivities = assessment.SocialActivities,
-            
-            IndoorGames = assessment.IndoorGames,
-            FieldGames = assessment.FieldGames,
-            TrackGames = assessment.TrackGames,
-            Jumps = assessment.Jumps,
-            Swims = assessment.Swims,
-            
-            ClassTeacherComment = assessment.ClassTeacherComment,
-            HeadTeacherComment = assessment.HeadTeacherComment,
-            
-            SubjectScores = assessment.SubjectScores.Select(s => new StudentSubjectScoreDto
-            {
-                ExamTakerId = assessment.ExamTakerId,
-                TestScore = s.TestScore,
-                ExamScore = s.ExamScore,
-                SubjectRemark = s.SubjectRemark
-                // Note: The SubjectName is not currently in StudentSubjectScoreDto, but could be added if needed, or fetched alongside.
-            }).ToList()
-        };
-
-        return Response<AssessmentDetailsDto, GenericOperationStatuses>.Success(
-            dto, GenericOperationStatuses.Completed, "Fetched assessment details successfully.");
-    }
-
-    public async Task<Response<GenericOperationStatuses>> SaveBulkScoresAsync(
-        BulkScoreEntryDto dto, 
-        CancellationToken cancellationToken = default)
-    {
-        // 1. Fetch existing assessments for this context to link scores
-        var existingAssessments = await dbContext.StudentAssessments
-            .Include(a => a.SubjectScores)
-            .Where(a => a.SessionId == dto.SessionId 
-                     && a.TermId == dto.TermId 
-                     && a.ClassLevelId == dto.ClassLevelId)
-            .ToListAsync(cancellationToken);
-
-        foreach (var scoreEntry in dto.Scores)
-        {
-            // Find or create the master assessment record for this student
-            var assessment = existingAssessments.FirstOrDefault(a => a.ExamTakerId == scoreEntry.ExamTakerId);
-            
             if (assessment == null)
             {
-                assessment = new Persistence.Entities.Academic.StudentAssessmentEntity
+                assessment = new StudentAssessmentEntity
                 {
                     Id = Guid.NewGuid(),
-                    ExamTakerId = scoreEntry.ExamTakerId,
-                    SessionId = dto.SessionId,
-                    TermId = dto.TermId,
-                    ClassLevelId = dto.ClassLevelId,
-                    Status = ModerationStatus.Draft, // Starting status
-                    CreatedAt = DateTime.UtcNow
+                    ExamTakerId = student.Id,
+                    SessionId = sessionId,
+                    TermId = termId,
+                    ClassLevelId = classLevelId
                 };
                 dbContext.StudentAssessments.Add(assessment);
-                existingAssessments.Add(assessment); // Add to local list in case of duplicate entries
             }
 
-            // Find or create the specific subject score record inside the assessment
-            var subjectScore = assessment.SubjectScores.FirstOrDefault(s => s.SubjectId == dto.SubjectId);
-            if (subjectScore == null)
+            assessment.TimesSchoolOpened = schoolDays;
+            assessment.TimesPresent = daysAttended;
+            assessment.TimesAbsent = daysAbsent;
+            assessment.ClassTeacherComment = teacherComment;
+            assessment.HeadTeacherComment = headTeacherComment;
+            assessment.Status = ModerationStatus.Draft;
+
+            // Parse Subjects (Rows 13 to approx 28)
+            // Row 11: SUBJECTS,TEST,EXAM,TOTAL,2ND TERM,3RD TERM,AVRGE,GRADE,RMKS
+            
+            // Clear existing scores for this assessment to avoid duplicates if re-uploading
+            var existingScores = await dbContext.SubjectScores
+                .Where(s => s.StudentAssessmentId == assessment.Id)
+                .ToListAsync();
+            dbContext.SubjectScores.RemoveRange(existingScores);
+
+            for (int i = 12; i < 28; i++)
             {
-                subjectScore = new Persistence.Entities.Academic.SubjectScoreEntity
+                var row = lines[i].Split(',');
+                if (row.Length < 4 || string.IsNullOrWhiteSpace(row[0])) continue;
+
+                string subjectName = row[0].Trim();
+                if (subjectName.Equals("Total", StringComparison.OrdinalIgnoreCase)) break;
+
+                decimal testScore = decimal.TryParse(row[1], out var ts) ? ts : 0;
+                decimal examScore = decimal.TryParse(row[2], out var es) ? es : 0;
+                decimal totalScore = decimal.TryParse(row[3], out var tot) ? tot : 0;
+                string grade = row[7].Trim();
+                string remark = row[8].Trim();
+
+                // Find subject
+                var subject = await dbContext.Subjects
+                    .FirstOrDefaultAsync(s => s.Name == subjectName);
+
+                if (subject == null)
+                {
+                    errors.Add($"Subject '{subjectName}' not found. Skipping score for this subject.");
+                    continue;
+                }
+
+                dbContext.SubjectScores.Add(new SubjectScoreEntity
                 {
                     Id = Guid.NewGuid(),
                     StudentAssessmentId = assessment.Id,
-                    SubjectId = dto.SubjectId
-                };
-                assessment.SubjectScores.Add(subjectScore);
+                    SubjectId = subject.Id,
+                    TestScore = testScore,
+                    ExamScore = examScore,
+                    TotalScore = totalScore,
+                    Grade = grade,
+                    SubjectRemark = remark
+                });
             }
 
-            // Update scores
-            subjectScore.TestScore = scoreEntry.TestScore;
-            subjectScore.ExamScore = scoreEntry.ExamScore;
-            subjectScore.SubjectRemark = scoreEntry.SubjectRemark;
+            await dbContext.SaveChangesAsync();
+            successCount = 1;
 
-            // Recalculate this specific subject total to keep the UI in sync before final Calc results
-            var test = subjectScore.TestScore ?? 0;
-            var exam = subjectScore.ExamScore ?? 0;
-            subjectScore.TotalScore = Math.Min(test + exam, 100);
-            subjectScore.Grade = CalculateGrade(subjectScore.TotalScore.Value);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Response<GenericOperationStatuses>.Success(
-            GenericOperationStatuses.Completed, 
-            "Bulk scores saved successfully.");
-    }
-
-    /// <summary>
-    /// Basic hardcoded grading scale.
-    /// </summary>
-    public string CalculateGrade(decimal score)
-    {
-        return score switch
-        {
-            >= 75 => "A1",
-            >= 70 => "B2",
-            >= 65 => "B3",
-            >= 60 => "C4",
-            >= 55 => "C5",
-            >= 50 => "C6",
-            >= 45 => "D7",
-            >= 40 => "E8",
-            _ => "F9"
-        };
-    }
-
-    private async Task NotifyParentsAsync(IEnumerable<string> examTakerIds, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var parentEmails = await dbContext.ParentStudentLinks
-                .Include(l => l.Parent)
-                .Where(l => examTakerIds.Contains(l.StudentId) && !string.IsNullOrEmpty(l.Parent.Email))
-                .Select(l => l.Parent.Email)
-                .Distinct()
-                .ToListAsync(cancellationToken);
-
-            if (!parentEmails.Any()) return;
-
-            var req = new SendMessageRequest
-            {
-                Subject = "Student Result Published - ExamNova",
-                Body = "Dear Parent/Guardian, \n\nThe academic result for your ward has been processed and officially published. You can now log into the ExamNova Parent Portal to view the comprehensive Report Card.\n\nThank you,\nExamNova Administration",
-                Recipients = parentEmails
-            };
-
-            await messageService.SendAsync(req, cancellationToken);
-            logger.LogInformation("Sent publication notification to {Count} parents.", parentEmails.Count);
+            return new ResultUploadResponse(1, successCount, failureCount, errors);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send parent result notifications.");
+            return new ResultUploadResponse(0, 0, 1, [$"Error parsing CSV: {ex.Message}"]);
         }
+    }
+
+    public async Task<StudentAssessmentDto?> GetStudentAssessmentAsync(Guid assessmentId)
+    {
+        return await dbContext.StudentAssessments
+            .Include(a => a.ExamTaker)
+            .Include(a => a.Session)
+            .Include(a => a.Term)
+            .Include(a => a.ClassLevel)
+            .Include(a => a.SubjectScores)
+                .ThenInclude(s => s.Subject)
+            .Where(a => a.Id == assessmentId)
+            .Select(a => MapToDto(a))
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<IEnumerable<StudentAssessmentDto>> GetClassAssessmentsAsync(Guid sessionId, Guid termId, Guid classLevelId)
+    {
+        return await dbContext.StudentAssessments
+            .Include(a => a.ExamTaker)
+            .Include(a => a.Session)
+            .Include(a => a.Term)
+            .Include(a => a.ClassLevel)
+            .Include(a => a.SubjectScores)
+                .ThenInclude(s => s.Subject)
+            .Where(a => a.SessionId == sessionId && a.TermId == termId && a.ClassLevelId == classLevelId)
+            .Select(a => MapToDto(a))
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<StudentAssessmentDto>> GetParentChildrenResultsAsync(string parentUserId)
+    {
+        var studentIds = await dbContext.ParentStudentLinks
+            .Where(l => l.ParentId == parentUserId)
+            .Select(l => l.StudentId)
+            .ToListAsync();
+
+        return await dbContext.StudentAssessments
+            .Include(a => a.ExamTaker)
+            .Include(a => a.Session)
+            .Include(a => a.Term)
+            .Include(a => a.ClassLevel)
+            .Include(a => a.SubjectScores)
+                .ThenInclude(s => s.Subject)
+            .Where(a => studentIds.Contains(a.ExamTakerId) && a.Status == ModerationStatus.Published)
+            .Select(a => MapToDto(a))
+            .ToListAsync();
+    }
+
+    public async Task UpdateStatusAsync(Guid assessmentId, ModerationStatus status)
+    {
+        var assessment = await dbContext.StudentAssessments.FindAsync(assessmentId);
+        if (assessment != null)
+        {
+            assessment.Status = status;
+            if (status == ModerationStatus.Published)
+            {
+                assessment.PublishedAt = DateTime.UtcNow;
+            }
+            await dbContext.SaveChangesAsync();
+        }
+    }
+
+    private static StudentAssessmentDto MapToDto(StudentAssessmentEntity a)
+    {
+        return new StudentAssessmentDto(
+            a.Id,
+            a.ExamTakerId,
+            a.ExamTaker?.FullName ?? "Unknown",
+            a.ExamTaker?.AdmissionNumber ?? "N/A",
+            a.Session?.Name ?? "N/A",
+            a.Term?.Name ?? "N/A",
+            a.ClassLevel?.Name ?? "N/A",
+            a.Status,
+            a.TotalMarksObtained,
+            a.TotalMarksObtainable,
+            a.AverageScore,
+            a.PositionInClass,
+            a.NumberInClass,
+            a.OverallGrade,
+            a.TimesSchoolOpened,
+            a.TimesPresent,
+            a.TimesAbsent,
+            a.ClassTeacherComment,
+            a.HeadTeacherComment,
+            a.SubjectScores.Select(s => new SubjectScoreDto(
+                s.Id,
+                s.Subject?.Name ?? "Unknown",
+                s.TestScore,
+                s.ExamScore,
+                s.TotalScore,
+                s.Grade,
+                s.SubjectRemark
+            )).ToList()
+        );
     }
 }

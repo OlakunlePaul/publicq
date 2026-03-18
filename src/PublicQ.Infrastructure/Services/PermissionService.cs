@@ -24,7 +24,8 @@ public class PermissionService(
         ("Academic.Settings", "Manage subjects, classes, and sessions"),
         ("Admissions.Settings", "Manage admission number format"),
         ("Settings.Branding", "Manage school profile and logo"),
-        ("Communications.Send", "Send emails and SMS notifications")
+        ("Communications.Send", "Send emails and SMS notifications"),
+        ("System.Settings", "Critical system and technical configuration (Super Admin only)")
     ];
 
     public async Task<IEnumerable<PermissionDto>> GetAllPermissionsAsync()
@@ -119,7 +120,63 @@ public class PermissionService(
             await dbContext.SaveChangesAsync();
         }
         
-        // 3. Optional: Seed default permissions for other roles (Manager, Teacher)
-        // This can be expanded based on specific requirements.
+        await dbContext.SaveChangesAsync();
+
+        // 3. Seed default permissions for other roles
+        
+        // --- Manager: Full school operations except Security/System ---
+        var managerRole = await roleManager.FindByNameAsync("Manager");
+        if (managerRole != null)
+        {
+            var managerPermissionNames = new[] 
+            { 
+                "Users.View", "Users.Manage", "Results.View", "Results.Edit", 
+                "Results.Approve", "Academic.Settings", "Admissions.Settings", 
+                "Settings.Branding", "Communications.Send" 
+            };
+            await AssignPermissionsToRole(managerRole.Id, managerPermissionNames);
+        }
+
+        // --- Teacher: Academic focused ---
+        var teacherRole = await roleManager.FindByNameAsync("Teacher");
+        if (teacherRole != null)
+        {
+            var teacherPermissionNames = new[] { "Users.View", "Results.View", "Results.Edit" };
+            await AssignPermissionsToRole(teacherRole.Id, teacherPermissionNames);
+        }
+
+        // --- Parent: View only ---
+        var parentRole = await roleManager.FindByNameAsync("Parent");
+        if (parentRole != null)
+        {
+            var parentPermissionNames = new[] { "Results.View" };
+            await AssignPermissionsToRole(parentRole.Id, parentPermissionNames);
+        }
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private async Task AssignPermissionsToRole(string roleId, string[] permissionNames)
+    {
+        var existingLinks = await dbContext.RolePermissionLinks
+            .Where(l => l.RoleId == roleId)
+            .Include(l => l.Permission)
+            .ToListAsync();
+
+        var permissionsToAdd = await dbContext.Permissions
+            .Where(p => permissionNames.Contains(p.Name))
+            .ToListAsync();
+
+        foreach (var permission in permissionsToAdd)
+        {
+            if (!existingLinks.Any(l => l.PermissionId == permission.Id))
+            {
+                dbContext.RolePermissionLinks.Add(new RolePermissionLink
+                {
+                    RoleId = roleId,
+                    PermissionId = permission.Id
+                });
+            }
+        }
     }
 }

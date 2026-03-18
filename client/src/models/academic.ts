@@ -85,8 +85,12 @@ export interface BulkScoreEntryDto {
 
 export interface StudentSubjectScoreDto {
     examTakerId: string;
+    subjectId?: string;
+    subjectName?: string;
     testScore?: number;
     examScore?: number;
+    totalScore?: number;
+    grade?: string;
     subjectRemark?: string;
 }
 

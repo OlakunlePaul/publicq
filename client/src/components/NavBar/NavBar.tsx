@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { RoleGuard } from '../Shared/RoleGuard';
 import { UserPolicies } from '../../models/user-policy';
+import { UserRole } from '../../models/UserRole';
 import { cn } from '../../utils/cn';
 import { PageService } from '../../services/pageService';
 import { PageType } from '../../models/page-type';
@@ -98,6 +99,20 @@ const NavBar = () => {
                   onClick={closeMobileMenu}
                 >
                   Admin Panel
+                </NavLink>
+              </li>
+            </RoleGuard>
+            <RoleGuard requiredRoles={[UserRole.PARENT]} redirectTo="/login">
+              <li>
+                <NavLink 
+                  to={ROUTES.PARENT_DASHBOARD}
+                  className={({ isActive }) => cn(
+                    navStyles.navBtn,
+                    isActive && navStyles['navBtn--active']
+                  )}
+                  onClick={closeMobileMenu}
+                >
+                  Parent Dashboard
                 </NavLink>
               </li>
             </RoleGuard>

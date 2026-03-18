@@ -9,6 +9,7 @@ import { resultService } from '../../services/resultService';
 import { ValidationMessage } from '../Shared/ValidationComponents';
 import ReportCardView from './ReportCardView';
 import PrintableReportCard from './PrintableReportCard';
+import ResultUpload from './ResultUpload';
 
 const ResultManagement: React.FC = () => {
   const [sessions, setSessions] = useState<SessionDto[]>([]);
@@ -21,7 +22,7 @@ const ResultManagement: React.FC = () => {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
 
-  const [students, setStudents] = useState<AssessmentReportDto[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [scores, setScores] = useState<Record<string, { testScore: string, examScore: string }>>({});
   
   const [loading, setLoading] = useState(false);
@@ -30,6 +31,7 @@ const ResultManagement: React.FC = () => {
   const [success, setSuccess] = useState('');
   
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<string | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
   const [printAssessmentId, setPrintAssessmentId] = useState<string | null>(null);
   const [printAssessmentReport, setPrintAssessmentReport] = useState<AssessmentDetailsDto | null>(null);
 
@@ -89,23 +91,18 @@ const ResultManagement: React.FC = () => {
     setSuccess('');
     
     try {
-      const resp = await resultService.getClassAssessments(selectedSession, selectedTerm, selectedClass);
-      if (resp.isSuccess) {
-        const assessments = resp.data || [];
-        setStudents(assessments);
+      const assessments = await resultService.getClassResults(selectedSession, selectedTerm, selectedClass);
+      setStudents(assessments as any);
         
-        // Initialize scores state (in a real app, you'd fetch existing subject scores too, but for bulk entry we can start fresh or need a different endpoint)
-        const initialScores: Record<string, { testScore: string, examScore: string }> = {};
-        assessments.forEach(stu => {
-          initialScores[stu.examTakerId] = { testScore: '', examScore: '' };
-        });
-        setScores(initialScores);
-        
-        if (assessments.length === 0) {
-          setError('No students found for this class in the selected session/term.');
-        }
-      } else {
-        setError(resp.message || 'Failed to fetch students.');
+      // Initialize scores state
+      const initialScores: Record<string, { testScore: string, examScore: string }> = {};
+      assessments.forEach(stu => {
+        initialScores[stu.examTakerId] = { testScore: '', examScore: '' };
+      });
+      setScores(initialScores);
+      
+      if (assessments.length === 0) {
+        setError('No students found for this class in the selected session/term.');
       }
     } catch (err: any) {
       setError('Failed to fetch students: ' + err.message);
@@ -150,6 +147,7 @@ const ResultManagement: React.FC = () => {
       subjectId: selectedSubject,
       scores: students.map(stu => ({
         examTakerId: stu.examTakerId,
+        subjectId: selectedSubject,
         testScore: scores[stu.examTakerId]?.testScore !== '' ? parseInt(scores[stu.examTakerId].testScore) : undefined,
         examScore: scores[stu.examTakerId]?.examScore !== '' ? parseInt(scores[stu.examTakerId].examScore) : undefined,
       }))
@@ -200,12 +198,12 @@ const ResultManagement: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const resp = await resultService.getAssessmentDetails(id);
-      if (resp.isSuccess && resp.data) {
-        setPrintAssessmentReport(resp.data);
+      const resp = await resultService.getReportCard(id);
+      if (resp) {
+        setPrintAssessmentReport(resp as any);
         setPrintAssessmentId(id);
       } else {
-        setError(resp.message || 'Failed to load report for printing.');
+        setError('Failed to load report for printing.');
       }
     } catch (err: any) {
       setError('Error loading report: ' + err.message);
@@ -222,7 +220,7 @@ const ResultManagement: React.FC = () => {
       if (resp.isSuccess) {
         setSuccess(`Result ${!currentLockState ? 'locked' : 'unlocked'} successfully.`);
         // Optimistically update the local state to avoid full refetch
-        setStudents(prev => prev.map(s => s.id === id ? { ...s, isLockedForParents: !currentLockState } : s));
+        setStudents((prev: any[]) => prev.map((s: any) => s.id === id ? { ...s, isLockedForParents: !currentLockState } : s));
       } else {
         setError(resp.message || 'Failed to toggle lock.');
       }
@@ -267,7 +265,31 @@ const ResultManagement: React.FC = () => {
             Bulk enter scores, review, and moderate student assessments.
           </p>
         </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            onClick={() => setShowUpload(true)}
+            style={{ padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
+            disabled={!selectedClass}
+          >
+            Bulk Upload CSV
+          </button>
+        </div>
       </div>
+
+      {showUpload && (
+        <div style={modalOverlayStyle}>
+          <ResultUpload 
+            sessionId={selectedSession}
+            termId={selectedTerm}
+            classLevelId={selectedClass}
+            onSuccess={() => {
+                setSuccess('Results uploaded successfully!');
+                handleFetchStudents();
+            }}
+            onClose={() => setShowUpload(false)}
+          />
+        </div>
+      )}
 
       <div className={commonStyles.card} style={{ marginBottom: '24px', padding: '20px' }}>
         <h3 style={{ marginTop: 0, fontSize: '16px' }}>Filter Context</h3>

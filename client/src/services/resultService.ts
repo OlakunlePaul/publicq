@@ -1,112 +1,114 @@
-import { GenericOperationStatuses } from "../models/GenericOperationStatuses";
-import { Response } from "../models/response";
-import { ResponseWithData } from "../models/responseWithData";
-import { AssessmentReportDto, BulkScoreEntryDto, ModerationStatus, UpdateAssessmentDetailsDto, AssessmentDetailsDto } from "../models/academic";
-import { AccessToken } from "../models/accessToken";
+import api from '../api/axios';
+import { ResponseWithData } from '../models/responseWithData';
 
-const API_BASE_URL = "/api/v1/results";
+export enum ModerationStatus {
+  Draft = 0,
+  Moderated = 1,
+  Approved = 2,
+  Published = 3
+}
 
-// Helper function
-async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<any> {
-    const token = localStorage.getItem("token");
-    let AuthToken: AccessToken | null = null;
-    if (token) {
-        AuthToken = JSON.parse(token);
-    }
-    
-    const headers = new Headers(options.headers || {});
-    if (AuthToken?.accessToken) {
-        headers.set("Authorization", `Bearer ${AuthToken.accessToken}`);
-    }
-    
-    if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
-        headers.set("Content-Type", "application/json");
-    }
+export interface SubjectScore {
+  id: string;
+  subjectName: string;
+  testScore: number;
+  examScore: number;
+  totalScore: number;
+  grade: string;
+  subjectRemark: string;
+}
 
-    const response = await window.fetch(url, { ...options, headers });
-    if (response.status === 204) return null;
-    
-    return await response.json();
+export interface StudentAssessment {
+  id: string;
+  examTakerId: string;
+  studentName: string;
+  admissionNumber: string;
+  sessionName: string;
+  termName: string;
+  className: string;
+  status: ModerationStatus;
+  isLockedForParents: boolean;
+  createdAt: string;
+  totalMarksObtained?: number;
+  totalMarksObtainable?: number;
+  averageScore?: number;
+  positionInClass?: number;
+  numberInClass?: number;
+  overallGrade?: string;
+  timesSchoolOpened?: number;
+  timesPresent?: number;
+  timesAbsent?: number;
+  classTeacherComment?: string;
+  headTeacherComment?: string;
+  subjectScores: SubjectScore[];
+}
+
+export interface ResultUploadResponse {
+  totalProcessed: number;
+  successCount: number;
+  failureCount: number;
+  errors: string[];
 }
 
 export const resultService = {
-    async getClassAssessments(
-        sessionId: string,
-        termId: string,
-        classLevelId: string
-    ): Promise<ResponseWithData<AssessmentReportDto[], GenericOperationStatuses>> {
-        const queryParams = new URLSearchParams({ sessionId, termId, classLevelId });
-        return await fetchWithAuth(`${API_BASE_URL}/class-assessments?${queryParams}`);
-    },
+  uploadCsv: async (file: File, sessionId: string, termId: string, classLevelId: string): Promise<ResultUploadResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('sessionId', sessionId);
+    formData.append('termId', termId);
+    formData.append('classLevelId', classLevelId);
 
-    async getAssessmentDetails(assessmentId: string): Promise<ResponseWithData<AssessmentDetailsDto, GenericOperationStatuses>> {
-        return await fetchWithAuth(`${API_BASE_URL}/${assessmentId}`);
-    },
+    const r = await api.post<ResultUploadResponse>('results/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return r.data;
+  },
 
-    async saveBulkScores(data: BulkScoreEntryDto): Promise<Response<GenericOperationStatuses>> {
-        return await fetchWithAuth(`${API_BASE_URL}/bulk-scores`, {
-            method: "POST",
-            body: JSON.stringify(data),
-        });
-    },
+  getReportCard: async (assessmentId: string): Promise<StudentAssessment> => {
+    const r = await api.get<StudentAssessment>(`results/report-card/${assessmentId}`);
+    return r.data;
+  },
 
-    async calculateClassResults(
-        sessionId: string,
-        termId: string,
-        classLevelId: string
-    ): Promise<Response<GenericOperationStatuses>> {
-        const queryParams = new URLSearchParams({ sessionId, termId, classLevelId });
-        return await fetchWithAuth(`${API_BASE_URL}/calculate-class?${queryParams}`, {
-            method: "POST",
-        });
-    },
+  getClassResults: async (sessionId: string, termId: string, classLevelId: string): Promise<StudentAssessment[]> => {
+    const r = await api.get<StudentAssessment[]>('results/class', {
+      params: { sessionId, termId, classLevelId }
+    });
+    return r.data;
+  },
 
-    async updateAssessmentStatus(
-        assessmentId: string,
-        newStatus: ModerationStatus
-    ): Promise<Response<GenericOperationStatuses>> {
-        const queryParams = new URLSearchParams({ newStatus: newStatus.toString() });
-        return await fetchWithAuth(`${API_BASE_URL}/${assessmentId}/status?${queryParams}`, {
-            method: "PATCH",
-        });
-    },
+  getParentChildrenResults: async (): Promise<StudentAssessment[]> => {
+    const r = await api.get<StudentAssessment[]>('results/parent/children');
+    return r.data;
+  },
 
-    async updateAssessmentDetails(
-        assessmentId: string,
-        details: UpdateAssessmentDetailsDto
-    ): Promise<Response<GenericOperationStatuses>> {
-        return await fetchWithAuth(`${API_BASE_URL}/${assessmentId}/details`, {
-            method: "PATCH",
-            body: JSON.stringify(details),
-        });
-    },
+  updateStatus: async (assessmentId: string, status: ModerationStatus): Promise<void> => {
+    await api.patch(`results/${assessmentId}/status`, status, {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+  },
 
-    async toggleAssessmentLock(
-        assessmentId: string,
-        isLocked: boolean
-    ): Promise<Response<GenericOperationStatuses>> {
-        const queryParams = new URLSearchParams({ isLocked: isLocked.toString() });
-        return await fetchWithAuth(`${API_BASE_URL}/${assessmentId}/lock?${queryParams}`, {
-            method: "PATCH",
-        });
-    },
+  // Added missing methods for ResultManagement.tsx compatibility
+  saveBulkScores: async (payload: any): Promise<{ isSuccess: boolean, message?: string }> => {
+    const r = await api.post('results/bulk-scores', payload);
+    return { isSuccess: true };
+  },
 
-    async batchUpdateClassStatus(
-        sessionId: string,
-        termId: string,
-        classLevelId: string,
-        currentStatus: ModerationStatus,
-        newStatus: ModerationStatus
-    ): Promise<Response<GenericOperationStatuses>> {
-        const queryParams = new URLSearchParams({ 
-            sessionId, 
-            termId, 
-            classLevelId,
-            currentStatus: currentStatus.toString(),
-            newStatus: newStatus.toString()
-        });
-        return await fetchWithAuth(`${API_BASE_URL}/class-status?${queryParams}`, {
-            method: "PATCH",
-        });
-    }
+  calculateClassResults: async (sessionId: string, termId: string, classLevelId: string): Promise<{ isSuccess: boolean, message?: string }> => {
+    const r = await api.post('results/calculate', { sessionId, termId, classLevelId });
+    return { isSuccess: true };
+  },
+
+  toggleAssessmentLock: async (assessmentId: string, isLocked: boolean): Promise<{ isSuccess: boolean, message?: string }> => {
+    const r = await api.patch(`results/${assessmentId}/lock`, { isLocked });
+    return { isSuccess: true };
+  },
+
+  batchUpdateClassStatus: async (sessionId: string, termId: string, classLevelId: string, currentStatus: number, newStatus: number): Promise<{ isSuccess: boolean, message?: string }> => {
+    const r = await api.patch('results/batch-status', { sessionId, termId, classLevelId, currentStatus, newStatus });
+    return { isSuccess: true };
+  }
 };
