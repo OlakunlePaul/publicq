@@ -15,6 +15,7 @@ import { IpRateLimitOptions } from '../models/ip-rate-limit-options';
 import { LlmIntegrationOptions, OpenAIOptions } from '../models/llm-integration-options';
 import { McpApiKeyOptions } from '../models/mcp-api-key-options';
 import { AdmissionNumberConfiguration } from '../models/admission-number-configuration';
+import { SchoolBrandingConfiguration } from '../models/school-branding-configuration';
 
 export const configurationService = {
   getEmailOptions: async (): Promise<EmailOption> => {
@@ -161,6 +162,16 @@ export const configurationService = {
 
   setAdmissionNumberConfiguration: async (options: AdmissionNumberConfiguration): Promise<Response<GenericOperationStatuses>> => {
     const response = await axios.post<Response<GenericOperationStatuses>>('configuration/admission-number', options);
+    return response.data;
+  },
+
+  getSchoolBrandingConfiguration: async (): Promise<ResponseWithData<SchoolBrandingConfiguration, GenericOperationStatuses>> => {
+    const response = await axios.get<ResponseWithData<SchoolBrandingConfiguration, GenericOperationStatuses>>('configuration/school-branding');
+    return response.data;
+  },
+
+  setSchoolBrandingConfiguration: async (options: SchoolBrandingConfiguration): Promise<Response<GenericOperationStatuses>> => {
+    const response = await axios.post<Response<GenericOperationStatuses>>('configuration/school-branding', options);
     return response.data;
   }
 };

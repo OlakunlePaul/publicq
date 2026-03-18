@@ -63,6 +63,8 @@ public static class ServiceRegistration
             services.AddScoped<IQuestionService, QuestionService>();
             services.AddScoped<IGroupService, GroupService>();
             services.AddScoped<ISessionService, SessionService>();
+            services.AddScoped<IResultService, ResultService>();
+            services.AddScoped<IAcademicStructureService, AcademicStructureService>();
 
             services.AddCachedService<IPlatformStatisticService, PlatformStatisticService>();
             services.AddCachedService<IReportingService, ReportingService>();
@@ -141,7 +143,7 @@ public static class ServiceRegistration
                 .AddPolicy(Constants.AnalyticsPolicy, policy =>
                     policy.RequireRole(nameof(UserRole.Analyst), nameof(UserRole.Manager), nameof(UserRole.Administrator)))
                 .AddPolicy(Constants.ContributorsPolicy, policy =>
-                    policy.RequireRole(nameof(UserRole.Contributor), nameof(UserRole.Moderator),
+                    policy.RequireRole(nameof(UserRole.Contributor), nameof(UserRole.Teacher), nameof(UserRole.Moderator),
                         nameof(UserRole.Manager), nameof(UserRole.Administrator)))
                 .AddPolicy(Constants.ModeratorsPolicy, policy =>
                     policy.RequireRole(nameof(UserRole.Moderator), nameof(UserRole.Manager), nameof(UserRole.Administrator)))

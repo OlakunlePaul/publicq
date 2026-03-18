@@ -5,5 +5,6 @@ namespace PublicQ.Shared.Enums;
 /// </summary>
 public enum UserConfigTypes
 {
-    AdmissionNumber = 1
+    AdmissionNumber = 1,
+    SchoolBranding = 2
 }

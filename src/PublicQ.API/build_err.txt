@@ -1,0 +1,19 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  PublicQ.Domain -> C:\Users\hp\publicq\src\PublicQ.Domain\bin\Debug\net10.0\PublicQ.Domain.dll
+  PublicQ.Shared -> C:\Users\hp\publicq\src\PublicQ.Shared\bin\Debug\net10.0\PublicQ.Shared.dll
+C:\Users\hp\publicq\src\PublicQ.Application\Models\SchoolBrandingConfiguration.cs(2,22): error CS0234: The type or namespace name 'Interfaces' does not exist in the namespace 'PublicQ.Shared' (are you missing an assembly reference?) [C:\Users\hp\publicq\src\PublicQ.Application\PublicQ.Application.csproj]
+C:\Users\hp\publicq\src\PublicQ.Application\Interfaces\IAIChatHandler.cs(29,49): warning CS8625: Cannot convert null literal to non-nullable reference type. [C:\Users\hp\publicq\src\PublicQ.Application\PublicQ.Application.csproj]
+C:\Users\hp\publicq\src\PublicQ.Application\Interfaces\IAIChatService.cs(22,49): warning CS8625: Cannot convert null literal to non-nullable reference type. [C:\Users\hp\publicq\src\PublicQ.Application\PublicQ.Application.csproj]
+C:\Users\hp\publicq\src\PublicQ.Application\Models\SchoolBrandingConfiguration.cs(9,44): error CS0246: The type or namespace name 'IUserConfigItem' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\hp\publicq\src\PublicQ.Application\PublicQ.Application.csproj]
+
+Build FAILED.
+
+C:\Users\hp\publicq\src\PublicQ.Application\Interfaces\IAIChatHandler.cs(29,49): warning CS8625: Cannot convert null literal to non-nullable reference type. [C:\Users\hp\publicq\src\PublicQ.Application\PublicQ.Application.csproj]
+C:\Users\hp\publicq\src\PublicQ.Application\Interfaces\IAIChatService.cs(22,49): warning CS8625: Cannot convert null literal to non-nullable reference type. [C:\Users\hp\publicq\src\PublicQ.Application\PublicQ.Application.csproj]
+C:\Users\hp\publicq\src\PublicQ.Application\Models\SchoolBrandingConfiguration.cs(2,22): error CS0234: The type or namespace name 'Interfaces' does not exist in the namespace 'PublicQ.Shared' (are you missing an assembly reference?) [C:\Users\hp\publicq\src\PublicQ.Application\PublicQ.Application.csproj]
+C:\Users\hp\publicq\src\PublicQ.Application\Models\SchoolBrandingConfiguration.cs(9,44): error CS0246: The type or namespace name 'IUserConfigItem' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\hp\publicq\src\PublicQ.Application\PublicQ.Application.csproj]
+    2 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:02.83

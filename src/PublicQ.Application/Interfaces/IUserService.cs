@@ -62,7 +62,7 @@ public interface IUserService
         MailAddress email,
         string fullName,
         string? password,
-        DateTime dateOfBirth,
+        DateTime? dateOfBirth,
         string? admissionNumber,
         string? baseUrl,
         CancellationToken cancellationToken);

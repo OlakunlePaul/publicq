@@ -6,6 +6,7 @@ using PublicQ.Infrastructure.Persistence.Entities;
 using PublicQ.Infrastructure.Persistence.Entities.Assignment;
 using PublicQ.Infrastructure.Persistence.Entities.Group;
 using PublicQ.Infrastructure.Persistence.Entities.Module;
+using PublicQ.Infrastructure.Persistence.Entities.Academic;
 using PublicQ.Infrastructure.Persistence.Seeders;
 
 namespace PublicQ.Infrastructure.Persistence;
@@ -141,6 +142,45 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     /// </summary>
     public DbSet<PageEntity> Pages { get; set; }
     
+    // ==========================================
+    // Academic & Result Entities (Phase 5)
+    // ==========================================
+    
+    /// <summary>
+    /// Academic sessions (e.g., 2023/2024).
+    /// </summary>
+    public DbSet<SessionEntity> Sessions { get; set; }
+    
+    /// <summary>
+    /// Connects parent users to students
+    /// </summary>
+    public DbSet<ParentStudentLinkEntity> ParentStudentLinks { get; set; }
+    
+    /// <summary>
+    /// Academic terms within a session.
+    /// </summary>
+    public DbSet<TermEntity> Terms { get; set; }
+    
+    /// <summary>
+    /// Class levels (e.g., JSS 1, Primary 5).
+    /// </summary>
+    public DbSet<ClassLevelEntity> ClassLevels { get; set; }
+    
+    /// <summary>
+    /// School subjects (e.g., Mathematics, English).
+    /// </summary>
+    public DbSet<SubjectEntity> Subjects { get; set; }
+    
+    /// <summary>
+    /// Master record for a student's terminal assessment/report card.
+    /// </summary>
+    public DbSet<StudentAssessmentEntity> StudentAssessments { get; set; }
+    
+    /// <summary>
+    /// Individual subject scores linked to a student assessment.
+    /// </summary>
+    public DbSet<SubjectScoreEntity> SubjectScores { get; set; }
+    
     /// <summary>
     /// This method is called when the model for a derived context is being created.
     /// </summary>
@@ -249,6 +289,91 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         modelBuilder.Entity<BannerEntity>()
             .HasIndex(b => b.ShowToAuthenticatedUsersOnly);
+            
+        // -----------------------------------------------------------------
+        // Academic & Result Entities Configuration
+        // -----------------------------------------------------------------
+        
+        modelBuilder.Entity<SessionEntity>()
+            .HasIndex(s => s.Name)
+            .IsUnique();
+            
+        modelBuilder.Entity<ParentStudentLinkEntity>()
+            .HasOne(p => p.Parent)
+            .WithMany()
+            .HasForeignKey(p => p.ParentId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        modelBuilder.Entity<ParentStudentLinkEntity>()
+            .HasOne(p => p.Student)
+            .WithMany()
+            .HasForeignKey(p => p.StudentId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        // Prevent duplicate links between the same parent and student
+        modelBuilder.Entity<ParentStudentLinkEntity>()
+            .HasIndex(p => new { p.ParentId, p.StudentId })
+            .IsUnique();
+            
+        modelBuilder.Entity<TermEntity>()
+            .HasOne(t => t.Session)
+            .WithMany(s => s.Terms)
+            .HasForeignKey(t => t.SessionId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        modelBuilder.Entity<ClassLevelEntity>()
+            .HasIndex(c => new { c.Name, c.SectionOrArm })
+            .IsUnique();
+            
+        modelBuilder.Entity<SubjectEntity>()
+            .HasIndex(s => s.Name)
+            .IsUnique();
+            
+        modelBuilder.Entity<StudentAssessmentEntity>()
+            .HasOne(a => a.Session)
+            .WithMany()
+            .HasForeignKey(a => a.SessionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<StudentAssessmentEntity>()
+            .HasOne(a => a.Term)
+            .WithMany()
+            .HasForeignKey(a => a.TermId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<StudentAssessmentEntity>()
+            .HasOne(a => a.ClassLevel)
+            .WithMany()
+            .HasForeignKey(a => a.ClassLevelId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        modelBuilder.Entity<StudentAssessmentEntity>()
+            .HasOne(a => a.ExamTaker)
+            .WithMany()
+            .HasForeignKey(a => a.ExamTakerId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        // Ensure a student only has one assessment per term/session
+        modelBuilder.Entity<StudentAssessmentEntity>()
+            .HasIndex(a => new { a.ExamTakerId, a.SessionId, a.TermId })
+            .IsUnique();
+            
+        modelBuilder.Entity<SubjectScoreEntity>()
+            .HasOne(s => s.StudentAssessment)
+            .WithMany(a => a.SubjectScores)
+            .HasForeignKey(s => s.StudentAssessmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        modelBuilder.Entity<SubjectScoreEntity>()
+            .HasOne(s => s.Subject)
+            .WithMany()
+            .HasForeignKey(s => s.SubjectId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        // Prevent duplicate subjects for the same assessment
+        modelBuilder.Entity<SubjectScoreEntity>()
+            .HasIndex(s => new { s.StudentAssessmentId, s.SubjectId })
+            .IsUnique();
         
         # endregion
         

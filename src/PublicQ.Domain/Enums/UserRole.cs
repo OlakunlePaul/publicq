@@ -9,6 +9,11 @@ public enum UserRole
     /// Parent role, for users who can view their children's exam results and progress.
     /// </summary>
     Parent,
+    
+    /// <summary>
+    /// Teacher role, for users who manage classes, subjects, and enter student scores.
+    /// </summary>
+    Teacher,
 
     /// <summary>
     /// The least privileged role, typically for regular users.

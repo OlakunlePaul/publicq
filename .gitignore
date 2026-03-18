@@ -60,3 +60,6 @@ TestResults/
 *.coverage
 *.coveragexml
 publicq_complete_deployment_guide.md
+build_errors.txt
+build_output.txt
+client/tsc_err.txt

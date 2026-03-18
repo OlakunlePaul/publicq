@@ -714,4 +714,48 @@ public class ConfigurationController(
         var result = await userConfigurationProvider.SetConfigurationAsync(options, cancellationToken);
         return result.ToActionResult(nameof(GetAdmissionNumberConfiguration));
     }
+
+    /// <summary>
+    /// Gets School Branding configuration
+    /// </summary>
+    /// <returns>Returns <see cref="SchoolBrandingConfiguration"/></returns>
+    [HttpGet("school-branding", Name = nameof(GetSchoolBrandingConfiguration))]
+    [Authorize(Constants.ManagersPolicy)]
+    public async Task<IActionResult> GetSchoolBrandingConfiguration(CancellationToken cancellationToken)
+    {
+        var result = await userConfigurationProvider.GetConfigurationAsync<SchoolBrandingConfiguration>(
+            UserConfigTypes.SchoolBranding, cancellationToken);
+            
+        if (!result.IsSuccess && result.Status == GenericOperationStatuses.NotFound)
+        {
+            var defaultFallback = new SchoolBrandingConfiguration();
+            return Response<SchoolBrandingConfiguration, GenericOperationStatuses>
+                .Success(defaultFallback, GenericOperationStatuses.Completed, "Successfully generated default configuration.")
+                .ToActionResult();
+        }
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>
+    /// Sets School Branding configuration
+    /// </summary>
+    /// <param name="options"><see cref="SchoolBrandingConfiguration"/></param>
+    /// <returns>Returns <see cref="Response{TStatus}"/></returns>
+    [HttpPost("school-branding")]
+    [Authorize(Constants.ManagersPolicy)]
+    public async Task<IActionResult> SetSchoolBrandingConfiguration(
+        [FromBody] SchoolBrandingConfiguration options,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(options.SchoolName))
+        {
+            return Response<SchoolBrandingConfiguration, GenericOperationStatuses>
+                .Failure(GenericOperationStatuses.BadRequest, "School Name cannot be empty.")
+                .ToActionResult();
+        }
+
+        var result = await userConfigurationProvider.SetConfigurationAsync(options, cancellationToken);
+        return result.ToActionResult(nameof(GetSchoolBrandingConfiguration));
+    }
 }
