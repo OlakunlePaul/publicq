@@ -88,8 +88,10 @@ try
         
         var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
         await permissionService.SeedPermissionsAsync();
+
+        await PageSeeder.SeedAsync(app.Services);
     }
-    Console.WriteLine("Database seeding completed successfully.");
+    Console.WriteLine("Database and Page seeding completed successfully.");
 }
 catch (Exception ex)
 {

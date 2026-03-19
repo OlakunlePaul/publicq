@@ -12,6 +12,12 @@ namespace PublicQ.Infrastructure.Services;
 public class AcademicStructureService(
     ApplicationDbContext dbContext) : IAcademicStructureService
 {
+    private DateTime? EnsureUtc(DateTime? dateTime)
+    {
+        if (dateTime == null) return null;
+        return DateTime.SpecifyKind(dateTime.Value, DateTimeKind.Utc);
+    }
+
     public async Task<Response<IList<SubjectDto>, GenericOperationStatuses>> GetSubjectsAsync(CancellationToken cancellationToken = default)
     {
         var subjects = await dbContext.Subjects
@@ -75,8 +81,8 @@ public class AcademicStructureService(
         {
             Id = Guid.NewGuid(),
             Name = dto.Name,
-            StartDate = dto.StartDate,
-            EndDate = dto.EndDate,
+            StartDate = EnsureUtc(dto.StartDate),
+            EndDate = EnsureUtc(dto.EndDate),
             IsActive = dto.IsActive
         };
 
@@ -135,9 +141,9 @@ public class AcademicStructureService(
             Id = Guid.NewGuid(),
             SessionId = dto.SessionId,
             Name = dto.Name,
-            StartDate = dto.StartDate,
-            EndDate = dto.EndDate,
-            NextTermBegins = dto.NextTermBegins,
+            StartDate = EnsureUtc(dto.StartDate),
+            EndDate = EnsureUtc(dto.EndDate),
+            NextTermBegins = EnsureUtc(dto.NextTermBegins),
             IsActive = dto.IsActive
         };
 
@@ -224,8 +230,8 @@ public class AcademicStructureService(
         if (session == null) return Response<SessionDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Session not found.");
 
         session.Name = dto.Name;
-        session.StartDate = dto.StartDate;
-        session.EndDate = dto.EndDate;
+        session.StartDate = EnsureUtc(dto.StartDate);
+        session.EndDate = EnsureUtc(dto.EndDate);
 
         if (dto.IsActive && !session.IsActive)
         {
@@ -259,9 +265,9 @@ public class AcademicStructureService(
         if (term == null) return Response<TermDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Term not found.");
 
         term.Name = dto.Name;
-        term.StartDate = dto.StartDate;
-        term.EndDate = dto.EndDate;
-        term.NextTermBegins = dto.NextTermBegins;
+        term.StartDate = EnsureUtc(dto.StartDate);
+        term.EndDate = EnsureUtc(dto.EndDate);
+        term.NextTermBegins = EnsureUtc(dto.NextTermBegins);
 
         if (dto.IsActive && !term.IsActive)
         {
