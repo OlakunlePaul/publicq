@@ -138,8 +138,13 @@ public class ConfigurationController(
     [HttpGet("sendgrid", Name = nameof(GetSendgridConfig))]
     public ActionResult<Response<SendgridOptions, GenericOperationStatuses>> GetSendgridConfig()
     {
+        var options = sendgridOptions.CurrentValue;
+        var maskedOptions = new SendgridOptions 
+        { 
+            ApiKey = string.IsNullOrWhiteSpace(options.ApiKey) ? string.Empty : "SG.********************************" 
+        };
         return Ok(Response<SendgridOptions, GenericOperationStatuses>
-            .Success(sendgridOptions.CurrentValue, GenericOperationStatuses.Completed, "Successfully retrieved configuration."));
+            .Success(maskedOptions, GenericOperationStatuses.Completed, "Successfully retrieved configuration."));
     }
 
     /// <summary>
@@ -218,8 +223,13 @@ public class ConfigurationController(
     [HttpGet("resend", Name = nameof(GetResendConfig))]
     public ActionResult<Response<ResendOptions, GenericOperationStatuses>> GetResendConfig()
     {
+        var options = resendOptions.CurrentValue;
+        var maskedOptions = new ResendOptions 
+        { 
+            ApiKey = string.IsNullOrWhiteSpace(options.ApiKey) ? string.Empty : "re_********************************" 
+        };
         return Ok(Response<ResendOptions, GenericOperationStatuses>
-            .Success(resendOptions.CurrentValue, GenericOperationStatuses.Completed, "Successfully retrieved configuration."));
+            .Success(maskedOptions, GenericOperationStatuses.Completed, "Successfully retrieved configuration."));
     }
 
     /// <summary>

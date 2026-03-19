@@ -46,6 +46,8 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
     useSsl: false
   });
   const [smtpLoaded, setSmtpLoaded] = useState(false);
+  const [sendgridLoaded, setSendgridLoaded] = useState(false);
+  const [resendLoaded, setResendLoaded] = useState(false);
 
   const loadEmailOptions = useCallback(async () => {
     setLoading(true);
@@ -78,6 +80,40 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
     }
   }, []);
 
+  const loadSendgridOptions = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await configurationService.getSendgridOptions();
+      if (response.isSuccess && response.data?.apiKey) {
+        setSendgridApiKey(response.data.apiKey);
+      }
+      setSendgridLoaded(true);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Failed to load SendGrid configuration');
+      setSendgridLoaded(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadResendOptions = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await configurationService.getResendOptions();
+      if (response.isSuccess && response.data?.apiKey) {
+        setResendApiKey(response.data.apiKey);
+      }
+      setResendLoaded(true);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Failed to load Resend configuration');
+      setResendLoaded(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (emailOptions.dataLoaded) {
       return;
@@ -90,7 +126,13 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
     if (emailOptions.messageProvider === MessageProvider.Smtp && emailOptions.enabled && !smtpLoaded) {
       loadSmtpOptions();
     }
-  }, [emailOptions.messageProvider, emailOptions.enabled, smtpLoaded, loadSmtpOptions]);
+    if (emailOptions.messageProvider === MessageProvider.Sendgrid && emailOptions.enabled && !sendgridLoaded) {
+      loadSendgridOptions();
+    }
+    if (emailOptions.messageProvider === MessageProvider.Resend && emailOptions.enabled && !resendLoaded) {
+      loadResendOptions();
+    }
+  }, [emailOptions.messageProvider, emailOptions.enabled, smtpLoaded, sendgridLoaded, resendLoaded, loadSmtpOptions, loadSendgridOptions, loadResendOptions]);
 
   const handleSaveEmailOptions = async () => {
     setLoading(true);
@@ -119,7 +161,7 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
     try {
       await configurationService.setSendgridOptions(sendgridApiKey);
       setSuccess('SendGrid configuration saved successfully');
-      setSendgridApiKey('');
+      setSendgridLoaded(false); // Trigger reload to show masked value
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to save SendGrid configuration');
     } finally {
@@ -139,7 +181,7 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
     try {
       await configurationService.setResendOptions(resendApiKey);
       setSuccess('Resend configuration saved successfully');
-      setResendApiKey('');
+      setResendLoaded(false); // Trigger reload to show masked value
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to save Resend configuration');
     } finally {

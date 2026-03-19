@@ -36,6 +36,16 @@ export const configurationService = {
     await axios.post('configuration/resend', { apiKey });
   },
 
+  getSendgridOptions: async (): Promise<ResponseWithData<{ apiKey: string }, GenericOperationStatuses>> => {
+    const response = await axios.get<ResponseWithData<{ apiKey: string }, GenericOperationStatuses>>('configuration/sendgrid');
+    return response.data;
+  },
+
+  getResendOptions: async (): Promise<ResponseWithData<{ apiKey: string }, GenericOperationStatuses>> => {
+    const response = await axios.get<ResponseWithData<{ apiKey: string }, GenericOperationStatuses>>('configuration/resend');
+    return response.data;
+  },
+
   getSmtpOptions: async (): Promise<ResponseWithData<SmtpOptions, GenericOperationStatuses>> => {
     const response = await axios.get<ResponseWithData<SmtpOptions, GenericOperationStatuses>>('configuration/smtp');
     return response.data;
