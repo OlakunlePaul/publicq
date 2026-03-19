@@ -252,7 +252,7 @@ const Admin = () => {
           case 'S': if (UserPolicies.hasAdminAccess(userRoles)) { e.preventDefault(); navigateToSection('security'); } break;
           case 'C': if (UserPolicies.hasAdminAccess(userRoles)) { e.preventDefault(); navigateToSection('cache'); } break;
           case 'F': if (UserPolicies.hasAdminAccess(userRoles)) { e.preventDefault(); navigateToSection('storage'); } break;
-          case 'L': if (UserPolicies.hasAdminAccess(userRoles)) { e.preventDefault(); navigateToSection('logs'); } break;
+          case 'L': if (UserPolicies.hasManagerAccess(userRoles)) { e.preventDefault(); navigateToSection('logs'); } break;
           case 'R': if (UserPolicies.hasManagerAccess(userRoles)) { e.preventDefault(); navigateToSection('reports'); } break;
         }
       }
@@ -373,7 +373,7 @@ const Admin = () => {
               <img src="https://cdn-icons-png.flaticon.com/512/615/615075.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Groups
             </button>
           )}
-          {UserPolicies.hasAdminAccess(userRoles) && (
+          {UserPolicies.hasManagerAccess(userRoles) && (
             <button onClick={() => navigateToSection('logs')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'logs' })}>
               <img src="https://cdn-icons-png.flaticon.com/512/1069/1069159.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Logs
             </button>

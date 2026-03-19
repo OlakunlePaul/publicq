@@ -11,7 +11,7 @@ namespace PublicQ.API.Controllers;
 /// Controller for managing and retrieving application logs.
 /// </summary>
 [ApiController]
-[Authorize(Constants.AdminsPolicy)]
+[Authorize(Constants.ManagersPolicy)]
 [Route($"{Constants.ControllerRoutePrefix}/[controller]")]
 public class LogsController(
     ILogger<LogsController> logger, 
