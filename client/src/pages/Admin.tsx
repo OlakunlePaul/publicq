@@ -125,6 +125,7 @@ const Admin = () => {
     enabled: false,
     messageProvider: MessageProvider.Sendgrid,
     sendFrom: '',
+    frontendUrl: '',
     dataLoaded: false,
   });
 
