@@ -103,6 +103,35 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseExceptionHandler(exceptionHandlerApp =>
+{
+    exceptionHandlerApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        // Manually add CORS headers to the 500 response so the frontend can read the error
+        var origin = context.Request.Headers["Origin"].ToString();
+        var corsOrigins = app.Configuration["CORS_ORIGINS"]?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [];
+        if (!string.IsNullOrEmpty(origin) && (corsOrigins.Contains(origin) || corsOrigins.Contains("*")))
+        {
+            context.Response.Headers.Append("Access-Control-Allow-Origin", origin);
+            context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
+        }
+
+        var exception = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+        
+        var response = PublicQ.Application.Models.Response<string, PublicQ.Application.Models.GenericOperationStatuses>.Failure(
+            PublicQ.Application.Models.GenericOperationStatuses.Failed,
+            "An unexpected server error occurred.",
+            new List<string> { exception?.Message ?? "Unknown error" }
+        );
+
+        await context.Response.WriteAsJsonAsync(response);
+    });
+});
+
+
 app.UseHttpsRedirection();
 
 // Enable CORS if configured

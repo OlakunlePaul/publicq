@@ -92,7 +92,7 @@ public class ConfigurationController(
     /// Gets requested configuration.
     /// </summary>
     /// <returns>Returns initial setup options wrapped into <see cref="Response{TData, TStatus}"/></returns>
-    [Authorize(Constants.AdminsPolicy)]
+    [Authorize(Constants.ManagersPolicy)]
     [HttpGet("email", Name = nameof(GetEmailConfig))]
     public IActionResult GetEmailConfig()
     {
