@@ -7,87 +7,67 @@ import {
     TermDto, TermCreateDto, 
     ClassLevelDto, ClassLevelCreateDto 
 } from "../models/academic";
-import { AccessToken } from "../models/accessToken";
+import api from "../api/axios";
 
 const API_BASE_URL = "/api/v1/academic-structure";
-
-// Helper function properly typed
-async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<any> {
-    const token = localStorage.getItem("token");
-    let AuthToken: AccessToken | null = null;
-    if (token) {
-        AuthToken = JSON.parse(token);
-    }
-    
-    const headers = new Headers(options.headers || {});
-    if (AuthToken?.accessToken) {
-        headers.set("Authorization", `Bearer ${AuthToken.accessToken}`);
-    }
-    
-    if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
-        headers.set("Content-Type", "application/json");
-    }
-
-    const response = await window.fetch(url, { ...options, headers });
-    
-    // Some 204 No Content responses don't have JSON
-    if (response.status === 204) return null;
-    
-    return await response.json();
-}
 
 export const academicStructureService = {
     // Subjects
     async getSubjects(): Promise<ResponseWithData<SubjectDto[], GenericOperationStatuses>> {
-        return await fetchWithAuth(`${API_BASE_URL}/subjects`);
+        const response = await api.get(`${API_BASE_URL}/subjects`);
+        return response.data;
     },
 
     async createSubject(data: SubjectCreateDto): Promise<ResponseWithData<SubjectDto, GenericOperationStatuses>> {
-        return await fetchWithAuth(`${API_BASE_URL}/subjects`, {
-            method: "POST",
-            body: JSON.stringify(data),
-        });
+        const response = await api.post(`${API_BASE_URL}/subjects`, data);
+        return response.data;
     },
 
     // Sessions
     async getSessions(): Promise<ResponseWithData<SessionDto[], GenericOperationStatuses>> {
-        return await fetchWithAuth(`${API_BASE_URL}/sessions`);
+        const response = await api.get(`${API_BASE_URL}/sessions`);
+        return response.data;
     },
 
     async createSession(data: SessionCreateDto): Promise<ResponseWithData<SessionDto, GenericOperationStatuses>> {
-        return await fetchWithAuth(`${API_BASE_URL}/sessions`, {
-            method: "POST",
-            body: JSON.stringify(data),
-        });
+        const response = await api.post(`${API_BASE_URL}/sessions`, data);
+        return response.data;
     },
 
     async setActiveSession(sessionId: string): Promise<Response<GenericOperationStatuses>> {
-        return await fetchWithAuth(`${API_BASE_URL}/sessions/${sessionId}/active`, {
-            method: "PATCH",
-        });
+        const response = await api.patch(`${API_BASE_URL}/sessions/${sessionId}/active`);
+        return response.data;
     },
 
     // Terms
     async getTermsBySession(sessionId: string): Promise<ResponseWithData<TermDto[], GenericOperationStatuses>> {
-        return await fetchWithAuth(`${API_BASE_URL}/sessions/${sessionId}/terms`);
+        const response = await api.get(`${API_BASE_URL}/sessions/${sessionId}/terms`);
+        return response.data;
     },
 
     async createTerm(data: TermCreateDto): Promise<ResponseWithData<TermDto, GenericOperationStatuses>> {
-        return await fetchWithAuth(`${API_BASE_URL}/terms`, {
-            method: "POST",
-            body: JSON.stringify(data),
-        });
+        const response = await api.post(`${API_BASE_URL}/terms`, data);
+        return response.data;
     },
 
     // Class Levels
     async getClassLevels(): Promise<ResponseWithData<ClassLevelDto[], GenericOperationStatuses>> {
-        return await fetchWithAuth(`${API_BASE_URL}/classes`);
+        const response = await api.get(`${API_BASE_URL}/classes`);
+        return response.data;
     },
 
     async createClassLevel(data: ClassLevelCreateDto): Promise<ResponseWithData<ClassLevelDto, GenericOperationStatuses>> {
-        return await fetchWithAuth(`${API_BASE_URL}/classes`, {
-            method: "POST",
-            body: JSON.stringify(data),
-        });
+        const response = await api.post(`${API_BASE_URL}/classes`, data);
+        return response.data;
+    },
+
+    async updateClassLevel(id: string, data: ClassLevelCreateDto): Promise<ResponseWithData<ClassLevelDto, GenericOperationStatuses>> {
+        const response = await api.put(`${API_BASE_URL}/classes/${id}`, data);
+        return response.data;
+    },
+
+    async deleteClassLevel(id: string): Promise<Response<GenericOperationStatuses>> {
+        const response = await api.delete(`${API_BASE_URL}/classes/${id}`);
+        return response.data;
     }
 };

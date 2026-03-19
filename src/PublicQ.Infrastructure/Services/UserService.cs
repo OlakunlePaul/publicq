@@ -694,6 +694,8 @@ public class UserService(
     public async Task<Response<PaginatedResponse<User>, GenericOperationStatuses>> GetUsersAsync(
         int pageNumber = 1,
         int pageSize = 10,
+        string? currentUserId = null,
+        bool isSuperAdmin = true,
         CancellationToken cancellationToken = default)
     {
         // TODO: Move to a repository pattern
@@ -706,7 +708,22 @@ public class UserService(
         pageSize = Math.Min(pageSize, userServiceOptions.CurrentValue.MaxPageSize);
 
         // Project both sets to a common shape and UNION ALL, then order & page once.
-        var usersQ = dbContext.Users
+        var usersQ = dbContext.Users.AsQueryable();
+
+        if (!isSuperAdmin)
+        {
+            // Managers see only themselves, teachers, and students (ExamTakers)
+            var teacherRole = await dbContext.Roles
+                .Where(r => r.Name == UserRolesNames.Teacher)
+                .Select(r => r.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            usersQ = usersQ.Where(u =>
+                u.Id == currentUserId ||
+                (teacherRole != null && dbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == teacherRole)));
+        }
+
+        var projectedUsersQ = usersQ
             .Select(u => new
             {
                 u.Id,
@@ -728,7 +745,7 @@ public class UserService(
                 HasCredential = false
             });
 
-        var unifiedQ = usersQ.Concat(examTakersQ!);
+        var unifiedQ = projectedUsersQ.Concat(examTakersQ!);
 
         var totalCount = await unifiedQ.LongCountAsync(cancellationToken);
 
@@ -806,11 +823,13 @@ public class UserService(
     /// TODO: Combine SearchUsersByEmailAsync and GetUsersAsync into a single method with optional email parameter
     /// TODO: Should we use Specification pattern here?
     public async Task<Response<PaginatedResponse<User>, GenericOperationStatuses>> GetUsersByFilter(
-    string? email,
-    string? id,
-    int pageNumber = 1,
-    int pageSize = 10,
-    CancellationToken cancellationToken = default)
+        string? email,
+        string? id,
+        int pageNumber = 1,
+        int pageSize = 10,
+        string? currentUserId = null,
+        bool isSuperAdmin = true,
+        CancellationToken cancellationToken = default)
     {
         if (pageNumber < 1)
         {
@@ -824,11 +843,23 @@ public class UserService(
         var emailIsEmpty = string.IsNullOrWhiteSpace(email);
         var idIsEmpty = string.IsNullOrWhiteSpace(id);
 
-        var queryIdentityUsers = dbContext.Users
-            .AsNoTracking();
+        var queryIdentityUsers = dbContext.Users.AsNoTracking();
+
+        if (!isSuperAdmin)
+        {
+            var teacherRole = await dbContext.Roles
+                .Where(r => r.Name == UserRolesNames.Teacher)
+                .Select(r => r.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            queryIdentityUsers = queryIdentityUsers.Where(u =>
+                u.Id == currentUserId ||
+                (teacherRole != null && dbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == teacherRole)));
+        }
+
         var queryExamTakers = dbContext.ExamTakers
             .AsNoTracking();
-        
+
         if (!emailIsEmpty)
         {
             var norm = email!.ToUpperInvariant();

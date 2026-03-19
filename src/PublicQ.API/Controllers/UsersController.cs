@@ -368,9 +368,14 @@ public class UsersController(IUserService userService) : ControllerBase
                 .ToActionResult();
         }
 
+        var currentUserId = UserClaimParser.GetUserId(User.Claims);
+        var isSuperAdmin = UserClaimParser.IsAdministrator(User.Claims);
+
         var result = await userService.GetUsersAsync(
             request.PageNumber,
             request.PageSize,
+            currentUserId,
+            isSuperAdmin,
             cancellationToken);
 
         return result.ToActionResult();
@@ -387,11 +392,16 @@ public class UsersController(IUserService userService) : ControllerBase
         [FromQuery] SearchUserRequest request,
         CancellationToken cancellationToken)
     {
+        var currentUserId = UserClaimParser.GetUserId(User.Claims);
+        var isSuperAdmin = UserClaimParser.IsAdministrator(User.Claims);
+
         var result = await userService.GetUsersByFilter(
             request.EmailPart,
             request.IdPart,
             request.PageNumber,
             request.PageSize,
+            currentUserId,
+            isSuperAdmin,
             cancellationToken);
 
         return result.ToActionResult();

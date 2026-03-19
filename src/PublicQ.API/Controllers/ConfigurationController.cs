@@ -33,6 +33,8 @@ namespace PublicQ.API.Controllers;
 /// <param name="llmOptions">LLM Integration options</param>
 /// <param name="mcpApiKeyOptions">MCP API integration options</param>
 /// <param name="openAIOptions">OpenAI configuration options</param>
+/// <param name="userConfigurationProvider">User configuration provider</param>
+/// <param name="storageService">Storage service</param>
 /// <remarks>
 /// I made a decision in favor of the strongly-typed controller instead of the generic one.
 /// In my opinion, it will simplify code generation for the HTTP client on the front end and improve documentation.
@@ -55,7 +57,8 @@ public class ConfigurationController(
     IOptionsMonitor<LlmIntegrationOptions> llmOptions,
     IOptionsMonitor<McpApiKeyOptions> mcpApiKeyOptions,
     IOptionsMonitor<OpenAIOptions> openAIOptions,
-    IUserConfigurationProvider userConfigurationProvider) : ControllerBase
+    IUserConfigurationProvider userConfigurationProvider,
+    IStorageService storageService) : ControllerBase
 {
     /// <summary>
     /// Gets requested configuration.
@@ -674,6 +677,7 @@ public class ConfigurationController(
     /// <summary>
     /// Gets Admission Number configuration
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns <see cref="AdmissionNumberConfiguration"/></returns>
     [HttpGet("admission-number", Name = nameof(GetAdmissionNumberConfiguration))]
     [Authorize(Constants.ManagersPolicy)]
@@ -697,6 +701,7 @@ public class ConfigurationController(
     /// Sets Admission Number configuration
     /// </summary>
     /// <param name="options"><see cref="AdmissionNumberConfiguration"/></param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns <see cref="Response{TStatus}"/></returns>
     [HttpPost("admission-number")]
     [Authorize(Constants.ManagersPolicy)]
@@ -718,6 +723,7 @@ public class ConfigurationController(
     /// <summary>
     /// Gets School Branding configuration
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns <see cref="SchoolBrandingConfiguration"/></returns>
     [HttpGet("school-branding", Name = nameof(GetSchoolBrandingConfiguration))]
     [Authorize(Constants.ManagersPolicy)]
@@ -741,6 +747,7 @@ public class ConfigurationController(
     /// Sets School Branding configuration
     /// </summary>
     /// <param name="options"><see cref="SchoolBrandingConfiguration"/></param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns <see cref="Response{TStatus}"/></returns>
     [HttpPost("school-branding")]
     [Authorize(Constants.ManagersPolicy)]
@@ -757,5 +764,48 @@ public class ConfigurationController(
 
         var result = await userConfigurationProvider.SetConfigurationAsync(options, cancellationToken);
         return result.ToActionResult(nameof(GetSchoolBrandingConfiguration));
+    }
+
+    /// <summary>
+    /// Uploads a school logo.
+    /// </summary>
+    /// <param name="file">The logo file</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Returns the URL of the uploaded logo</returns>
+    [HttpPost("school-branding/logo")]
+    [Authorize(Constants.ManagersPolicy)]
+    public async Task<IActionResult> UploadSchoolLogo(
+        IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return Response<string, GenericOperationStatuses>
+                .Failure(GenericOperationStatuses.BadRequest, "No file uploaded.")
+                .ToActionResult();
+        }
+
+        // Validate file type (e.g., images only)
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!allowedExtensions.Contains(extension))
+        {
+            return Response<string, GenericOperationStatuses>
+                .Failure(GenericOperationStatuses.BadRequest, "Invalid file type. Only JPG, PNG, and GIF are allowed.")
+                .ToActionResult();
+        }
+
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms, cancellationToken);
+
+        var storageItem = new PublicQ.Shared.Models.StorageItem
+        {
+            Name = $"school_logo_{Guid.NewGuid()}{extension}",
+            Content = ms.ToArray(),
+            RelativePath = "branding"
+        };
+
+        var result = await storageService.SaveAsync(storageItem, cancellationToken);
+        return result.ToActionResult();
     }
 }

@@ -158,6 +158,8 @@ public interface IUserService
     Task<Response<PaginatedResponse<User>, GenericOperationStatuses>> GetUsersAsync(
         int pageNumber = 1, 
         int pageSize = 10, 
+        string? currentUserId = null,
+        bool isSuperAdmin = true,
         CancellationToken cancellationToken = default);
     
     /// <summary>
@@ -184,6 +186,8 @@ public interface IUserService
         string id,
         int pageNumber = 1, 
         int pageSize = 10,
+        string? currentUserId = null,
+        bool isSuperAdmin = true,
         CancellationToken cancellationToken = default);
 
     /// <summary>

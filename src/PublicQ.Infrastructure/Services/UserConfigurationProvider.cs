@@ -63,15 +63,6 @@ public class UserConfigurationProvider(ApplicationDbContext context, ILogger<Use
     {
         _logger.LogDebug("Setting configuration for type: {Type}", typeof(TConfig).Name);
 
-        var configResponse = await GetConfigurationAsync<TConfig>(configToUpdate.UserConfigType, cancellationToken);
-        if (configResponse.IsFailed)
-        {
-            return Response<TConfig, GenericOperationStatuses>.Failure(
-                configResponse.Status, 
-                configResponse.Message, 
-                configResponse.Errors);
-        }
-        
         var jsonData = JsonSerializer.Serialize(configToUpdate);
         if (string.IsNullOrEmpty(jsonData))
         {
@@ -81,16 +72,30 @@ public class UserConfigurationProvider(ApplicationDbContext context, ILogger<Use
                 $"Failed to serialize configuration for '{configToUpdate.UserConfigType}'.");
         }
 
-        await _context.UserConfigurations
-            .Where(c => c.Type == configResponse.Data!.UserConfigType)
-            .ExecuteUpdateAsync(
-                c => c.SetProperty(c => c.DataJson, jsonData),
-                cancellationToken);
+        var configuration = await _context.UserConfigurations
+            .FirstOrDefaultAsync(c => c.Type == configToUpdate.UserConfigType, cancellationToken);
 
-        _logger.LogDebug("Configuration for {ConfigType} set successfully.", configToUpdate.UserConfigType);
+        if (configuration is null)
+        {
+            _logger.LogDebug("Creating new configuration for type {Type}", configToUpdate.UserConfigType);
+            _context.UserConfigurations.Add(new ConfigurationEntity
+            {
+                Type = configToUpdate.UserConfigType,
+                DataJson = jsonData
+            });
+        }
+        else
+        {
+            _logger.LogDebug("Updating existing configuration for type {Type}", configToUpdate.UserConfigType);
+            configuration.DataJson = jsonData;
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogDebug("Configuration for {ConfigType} saved successfully.", configToUpdate.UserConfigType);
 
         return Response<TConfig, GenericOperationStatuses>.Success(
             GenericOperationStatuses.Completed,
-            $"Configuration for {configToUpdate.UserConfigType} set successfully.");
+            $"Configuration for {configToUpdate.UserConfigType} saved successfully.");
     }
 }

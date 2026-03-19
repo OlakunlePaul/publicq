@@ -15,6 +15,8 @@ const SchoolBrandingManagement: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         const fetchConfig = async () => {
@@ -38,6 +40,33 @@ const SchoolBrandingManagement: React.FC = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setConfig(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setLogoFile(e.target.files[0]);
+        }
+    };
+
+    const handleUploadLogo = async () => {
+        if (!logoFile) return;
+        setUploading(true);
+        setError(null);
+        try {
+            const response = await configurationService.uploadSchoolLogo(logoFile);
+            if (response.isSuccess && response.data) {
+                setConfig(prev => ({ ...prev, schoolLogoUrl: response.data as any }));
+                setSuccess('Logo uploaded successfully.');
+                setLogoFile(null);
+                // The backend returns the URL in data
+            } else {
+                setError(response.message || 'Failed to upload logo.');
+            }
+        } catch (err) {
+            setError('Error uploading logo.');
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleSave = async (e: React.FormEvent) => {
@@ -116,7 +145,51 @@ const SchoolBrandingManagement: React.FC = () => {
                 </div>
 
                 <div className={commonStyles.formGroup}>
-                    <label htmlFor="schoolLogoUrl" className={commonStyles.label}>Logo URL (Optional)</label>
+                    <label className={commonStyles.label}>School Logo</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '10px' }}>
+                        {config.schoolLogoUrl && (
+                            <div style={{ 
+                                width: '100px', 
+                                height: '100px', 
+                                border: '1px solid #e5e7eb', 
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: '#f9fafb',
+                                overflow: 'hidden'
+                            }}>
+                                <img 
+                                    src={config.schoolLogoUrl} 
+                                    alt="School Logo" 
+                                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
+                                />
+                            </div>
+                        )}
+                        <div style={{ flex: 1 }}>
+                            <input
+                                id="logoUpload"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className={commonStyles.input}
+                                style={{ marginBottom: '8px' }}
+                            />
+                            <button
+                                type="button"
+                                onClick={handleUploadLogo}
+                                disabled={!logoFile || uploading}
+                                className={commonStyles.submitButton}
+                                style={{ width: 'auto', padding: '0.5rem 1rem', fontSize: '0.875rem', backgroundColor: '#4f46e5' }}
+                            >
+                                {uploading ? 'Uploading...' : 'Upload Logo'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className={commonStyles.formGroup}>
+                    <label htmlFor="schoolLogoUrl" className={commonStyles.label}>Logo URL (Manual Entry)</label>
                     <input
                         id="schoolLogoUrl"
                         name="schoolLogoUrl"
@@ -127,7 +200,7 @@ const SchoolBrandingManagement: React.FC = () => {
                         placeholder="https://example.com/logo.png"
                     />
                     <small style={{display: 'block', marginTop: '4px', color: '#6b7280'}}>
-                        Provide a URL to the school's logo image to display on printed reports.
+                        Upload a logo above or provide a direct URL to the image.
                     </small>
                 </div>
 

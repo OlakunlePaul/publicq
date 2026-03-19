@@ -173,5 +173,16 @@ export const configurationService = {
   setSchoolBrandingConfiguration: async (options: SchoolBrandingConfiguration): Promise<Response<GenericOperationStatuses>> => {
     const response = await axios.post<Response<GenericOperationStatuses>>('configuration/school-branding', options);
     return response.data;
+  },
+
+  uploadSchoolLogo: async (file: File): Promise<ResponseWithData<string, GenericOperationStatuses>> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axios.post<ResponseWithData<string, GenericOperationStatuses>>('configuration/school-branding/logo', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
   }
 };
