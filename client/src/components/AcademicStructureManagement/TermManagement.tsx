@@ -1,40 +1,45 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { SessionDto, SessionCreateDto } from '../../models/academic';
+import { TermDto, TermCreateDto, SessionDto } from '../../models/academic';
 import { academicStructureService } from '../../services/academicStructureService';
 import { ValidationMessage } from '../Shared/ValidationComponents';
 
-interface SessionFormModalProps {
+interface TermFormModalProps {
   isOpen: boolean;
-  session?: SessionDto; // Pass session for editing
-  onConfirm: (session: SessionCreateDto) => void;
+  term?: TermDto;
+  sessionId: string;
+  onConfirm: (term: TermCreateDto) => void;
   onCancel: () => void;
   apiError?: string;
 }
 
-const SessionFormModal = ({ isOpen, session, onConfirm, onCancel, apiError }: SessionFormModalProps) => {
-  const [formData, setFormData] = useState<SessionCreateDto>({
+const TermFormModal = ({ isOpen, term, sessionId, onConfirm, onCancel, apiError }: TermFormModalProps) => {
+  const [formData, setFormData] = useState<TermCreateDto>({
+    sessionId: sessionId,
     name: '',
     startDate: '',
     endDate: '',
+    nextTermBegins: '',
     isActive: false,
   });
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
-      if (session) {
+      if (term) {
         setFormData({
-          name: session.name,
-          startDate: session.startDate ? session.startDate.split('T')[0] : '',
-          endDate: session.endDate ? session.endDate.split('T')[0] : '',
-          isActive: session.isActive,
+          sessionId: term.sessionId,
+          name: term.name,
+          startDate: term.startDate ? term.startDate.split('T')[0] : '',
+          endDate: term.endDate ? term.endDate.split('T')[0] : '',
+          nextTermBegins: term.nextTermBegins ? term.nextTermBegins.split('T')[0] : '',
+          isActive: term.isActive,
         });
       } else {
-        setFormData({ name: '', startDate: '', endDate: '', isActive: false });
+        setFormData({ sessionId, name: '', startDate: '', endDate: '', nextTermBegins: '', isActive: false });
       }
       setError('');
     }
-  }, [isOpen, session]);
+  }, [isOpen, term, sessionId]);
 
   useEffect(() => {
     if (apiError) setError(apiError);
@@ -42,7 +47,7 @@ const SessionFormModal = ({ isOpen, session, onConfirm, onCancel, apiError }: Se
 
   const validate = () => {
     if (!formData.name.trim()) {
-      setError('Session Name is required');
+      setError('Term Name is required');
       return false;
     }
     return true;
@@ -52,8 +57,9 @@ const SessionFormModal = ({ isOpen, session, onConfirm, onCancel, apiError }: Se
     if (validate()) {
       onConfirm({
         ...formData,
-        startDate: formData.startDate ? formData.startDate : undefined,
-        endDate: formData.endDate ? formData.endDate : undefined,
+        startDate: formData.startDate || undefined,
+        endDate: formData.endDate || undefined,
+        nextTermBegins: formData.nextTermBegins || undefined,
       });
     }
   };
@@ -63,16 +69,16 @@ const SessionFormModal = ({ isOpen, session, onConfirm, onCancel, apiError }: Se
   return (
     <div style={styles.modalOverlay}>
       <div style={styles.modal}>
-        <h3 style={styles.modalTitle}>{session ? 'Edit Session' : 'Create New Session'}</h3>
+        <h3 style={styles.modalTitle}>{term ? 'Edit Term' : 'Create New Term'}</h3>
         {error && <ValidationMessage type="error" message={error} />}
         
         <div style={styles.formGroup}>
-          <label style={styles.formLabel}>Session Name (e.g. 2024/2025):</label>
+          <label style={styles.formLabel}>Term Name (e.g. First Term):</label>
           <input
             style={styles.formInput}
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="2024/2025"
+            placeholder="First Term"
           />
         </div>
         
@@ -97,6 +103,16 @@ const SessionFormModal = ({ isOpen, session, onConfirm, onCancel, apiError }: Se
         </div>
 
         <div style={styles.formGroup}>
+          <label style={styles.formLabel}>Next Term Begins (optional):</label>
+          <input
+            type="date"
+            style={styles.formInput}
+            value={formData.nextTermBegins || ''}
+            onChange={(e) => setFormData({ ...formData, nextTermBegins: e.target.value })}
+          />
+        </div>
+
+        <div style={styles.formGroup}>
           <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}>
             <input
               type="checkbox"
@@ -104,37 +120,51 @@ const SessionFormModal = ({ isOpen, session, onConfirm, onCancel, apiError }: Se
               checked={formData.isActive}
               onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
             />
-            Set as Active Session
+            Set as Active Term
           </label>
-          <p style={{ fontSize: '12px', color: '#6b7280', margin: '4px 0 0 20px' }}>
-            Only one session can be active at a time. This will deactivate the current active session.
-          </p>
         </div>
 
         <div style={styles.modalActions}>
           <button onClick={onCancel} style={styles.modalCancelButton}>Cancel</button>
-          <button onClick={handleConfirm} style={styles.modalConfirmButton}>{session ? 'Update Session' : 'Create Session'}</button>
+          <button onClick={handleConfirm} style={styles.modalConfirmButton}>{term ? 'Update Term' : 'Create Term'}</button>
         </div>
       </div>
     </div>
   );
 };
 
-const SessionManagement = () => {
+const TermManagement = () => {
   const [sessions, setSessions] = useState<SessionDto[]>([]);
+  const [selectedSessionId, setSelectedSessionId] = useState<string>('');
+  const [terms, setTerms] = useState<TermDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formModal, setFormModal] = useState<{ isOpen: boolean; apiError: string; session?: SessionDto }>({ isOpen: false, apiError: '' });
+  const [formModal, setFormModal] = useState<{ isOpen: boolean; apiError: string; term?: TermDto }>({ isOpen: false, apiError: '' });
 
   const loadSessions = useCallback(async () => {
-    setLoading(true);
     try {
       const response = await academicStructureService.getSessions();
-      if (response.isSuccess) {
-        setSessions(response.data || []);
+      if (response.isSuccess && response.data) {
+        setSessions(response.data);
+        const active = response.data.find(s => s.isActive);
+        if (active) setSelectedSessionId(active.id);
+        else if (response.data.length > 0) setSelectedSessionId(response.data[0].id);
       }
     } catch (err: any) {
       setError('Failed to load sessions: ' + err.message);
+    }
+  }, []);
+
+  const loadTerms = useCallback(async (sessionId: string) => {
+    if (!sessionId) return;
+    setLoading(true);
+    try {
+      const response = await academicStructureService.getTermsBySession(sessionId);
+      if (response.isSuccess) {
+        setTerms(response.data || []);
+      }
+    } catch (err: any) {
+      setError('Failed to load terms: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -144,20 +174,24 @@ const SessionManagement = () => {
     loadSessions();
   }, [loadSessions]);
 
-  const handleSave = async (data: SessionCreateDto) => {
+  useEffect(() => {
+    if (selectedSessionId) loadTerms(selectedSessionId);
+  }, [selectedSessionId, loadTerms]);
+
+  const handleSave = async (data: TermCreateDto) => {
     try {
       let resp;
-      if (formModal.session) {
-        resp = await academicStructureService.updateSession(formModal.session.id, data);
+      if (formModal.term) {
+        resp = await academicStructureService.updateTerm(formModal.term.id, data);
       } else {
-        resp = await academicStructureService.createSession(data);
+        resp = await academicStructureService.createTerm(data);
       }
 
       if (resp.isSuccess) {
-        setFormModal({ isOpen: false, apiError: '', session: undefined });
-        loadSessions();
+        setFormModal({ isOpen: false, apiError: '', term: undefined });
+        loadTerms(selectedSessionId);
       } else {
-        setFormModal({ ...formModal, apiError: resp.message || 'Failed to save session' });
+        setFormModal({ ...formModal, apiError: resp.message || 'Failed to save term' });
       }
     } catch (err: any) {
       setFormModal({ ...formModal, apiError: err.message || 'Error occurred' });
@@ -165,30 +199,18 @@ const SessionManagement = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this session?")) return;
+    if (!window.confirm("Are you sure you want to delete this term?")) return;
     try {
-      const resp = await academicStructureService.deleteSession(id);
+      const resp = await academicStructureService.deleteTerm(id);
       if (resp.isSuccess) {
-        loadSessions();
+        loadTerms(selectedSessionId);
       } else {
-        alert(resp.message || "Failed to delete session (ensure it has no terms)");
+        alert(resp.message || "Failed to delete term");
       }
     } catch (err: any) {
       alert("Error: " + err.message);
     }
   };
-
-  const setAsActive = async (sessionId: string) => {
-    if (!window.confirm("Are you sure you want to make this the active session?")) return;
-    try {
-      setLoading(true);
-      await academicStructureService.setActiveSession(sessionId);
-      loadSessions();
-    } catch (err: any) {
-      alert("Error setting active session: " + err.message);
-      setLoading(false);
-    }
-  }
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
@@ -197,24 +219,40 @@ const SessionManagement = () => {
 
   return (
     <div>
-      <SessionFormModal 
+      <TermFormModal 
         isOpen={formModal.isOpen} 
-        session={formModal.session}
+        term={formModal.term}
+        sessionId={selectedSessionId}
         onConfirm={handleSave} 
-        onCancel={() => setFormModal({ isOpen: false, apiError: '', session: undefined })} 
+        onCancel={() => setFormModal({ isOpen: false, apiError: '', term: undefined })} 
         apiError={formModal.apiError}
       />
       
       <div style={styles.header}>
-        <h3 style={{ margin: 0 }}>Session Management</h3>
-        <button style={styles.createButton} onClick={() => setFormModal({ isOpen: true, apiError: '', session: undefined })}>
-          Create Session
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <h3 style={{ margin: 0 }}>Term Management</h3>
+          <select 
+            style={styles.select}
+            value={selectedSessionId}
+            onChange={(e) => setSelectedSessionId(e.target.value)}
+          >
+            {sessions.map(s => (
+              <option key={s.id} value={s.id}>{s.name} {s.isActive ? '(Active)' : ''}</option>
+            ))}
+          </select>
+        </div>
+        <button 
+          style={styles.createButton} 
+          onClick={() => setFormModal({ isOpen: true, apiError: '', term: undefined })}
+          disabled={!selectedSessionId}
+        >
+          Create Term
         </button>
       </div>
       
       {error && <ValidationMessage type="error" message={error} />}
       
-      {loading ? <p>Loading sessions...</p> : (
+      {loading ? <p>Loading terms...</p> : (
         <div style={styles.tableContainer}>
           <table style={styles.table}>
             <thead>
@@ -222,21 +260,23 @@ const SessionManagement = () => {
                 <th style={styles.th}>Name</th>
                 <th style={styles.th}>Start Date</th>
                 <th style={styles.th}>End Date</th>
+                <th style={styles.th}>Next Term Begins</th>
                 <th style={styles.th}>Status</th>
                 <th style={styles.th}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {sessions.length === 0 ? (
-                <tr><td colSpan={5} style={styles.td}>No sessions found.</td></tr>
+              {terms.length === 0 ? (
+                <tr><td colSpan={6} style={styles.td}>No terms found for this session.</td></tr>
               ) : (
-                sessions.map(s => (
-                  <tr key={s.id} style={styles.tr}>
-                    <td style={styles.td}><strong>{s.name}</strong></td>
-                    <td style={styles.td}>{formatDate(s.startDate)}</td>
-                    <td style={styles.td}>{formatDate(s.endDate)}</td>
+                terms.map(t => (
+                  <tr key={t.id} style={styles.tr}>
+                    <td style={styles.td}><strong>{t.name}</strong></td>
+                    <td style={styles.td}>{formatDate(t.startDate)}</td>
+                    <td style={styles.td}>{formatDate(t.endDate)}</td>
+                    <td style={styles.td}>{formatDate(t.nextTermBegins)}</td>
                     <td style={styles.td}>
-                      {s.isActive ? (
+                      {t.isActive ? (
                         <span style={styles.activeBadge}>Active</span>
                       ) : (
                         <span style={styles.inactiveBadge}>Inactive</span>
@@ -245,16 +285,16 @@ const SessionManagement = () => {
                     <td style={styles.td}>
                       <button 
                         style={{ ...styles.actionButton, backgroundColor: '#3b82f6', marginRight: '8px' }} 
-                        onClick={() => setFormModal({ isOpen: true, apiError: '', session: s })}
+                        onClick={() => setFormModal({ isOpen: true, apiError: '', term: t })}
                       >
                         Edit
                       </button>
-                      {!s.isActive && (
-                        <>
-                          <button style={{ ...styles.actionButton, backgroundColor: '#10b981', marginRight: '8px' }} onClick={() => setAsActive(s.id)}>Set Active</button>
-                          <button style={{ ...styles.actionButton, backgroundColor: '#ef4444' }} onClick={() => handleDelete(s.id)}>Delete</button>
-                        </>
-                      )}
+                      <button 
+                        style={{ ...styles.actionButton, backgroundColor: '#ef4444' }} 
+                        onClick={() => handleDelete(t.id)}
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -273,6 +313,12 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: '20px',
+  },
+  select: {
+    padding: '8px 12px',
+    borderRadius: '6px',
+    border: '1px solid #d1d5db',
+    fontSize: '14px',
   },
   createButton: {
     padding: '10px 20px',
@@ -311,13 +357,29 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#374151',
   },
   activeBadge: {
-    backgroundColor: '#dcfce7', color: '#166534', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 600
+    padding: '4px 8px',
+    backgroundColor: '#dcfce7',
+    color: '#166534',
+    borderRadius: '9999px',
+    fontSize: '12px',
+    fontWeight: 600,
   },
   inactiveBadge: {
-    backgroundColor: '#f3f4f6', color: '#4b5563', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 600
+    padding: '4px 8px',
+    backgroundColor: '#f3f4f6',
+    color: '#374151',
+    borderRadius: '9999px',
+    fontSize: '12px',
+    fontWeight: 600,
   },
   actionButton: {
-    padding: '6px 12px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 600
+    padding: '6px 12px',
+    borderRadius: '4px',
+    border: 'none',
+    color: 'white',
+    fontSize: '12px',
+    fontWeight: 600,
+    cursor: 'pointer',
   },
   modalOverlay: {
     position: 'fixed',
@@ -332,7 +394,7 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: 'white',
     padding: '24px',
     borderRadius: '12px',
-    width: '400px',
+    width: '450px',
     maxWidth: '90%',
   },
   modalTitle: { margin: '0 0 16px 0', fontSize: '18px' },
@@ -347,4 +409,4 @@ const styles: Record<string, React.CSSProperties> = {
   modalConfirmButton: { padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#3b82f6', color: 'white', cursor: 'pointer' },
 };
 
-export default SessionManagement;
+export default TermManagement;

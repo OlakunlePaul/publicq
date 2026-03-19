@@ -192,4 +192,122 @@ public class AcademicStructureService(
             new ClassLevelDto(classLevel.Id, classLevel.Name, classLevel.SectionOrArm, classLevel.OrderIndex),
             GenericOperationStatuses.Completed, "Class level created successfully.");
     }
+
+    public async Task<Response<SubjectDto, GenericOperationStatuses>> UpdateSubjectAsync(Guid id, SubjectCreateDto dto, CancellationToken cancellationToken = default)
+    {
+        var subject = await dbContext.Subjects.FindAsync(new object[] { id }, cancellationToken);
+        if (subject == null) return Response<SubjectDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Subject not found.");
+
+        subject.Name = dto.Name;
+        subject.Code = dto.Code;
+        subject.DisplayOrder = dto.DisplayOrder;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<SubjectDto, GenericOperationStatuses>.Success(
+            new SubjectDto(subject.Id, subject.Name, subject.Code, subject.DisplayOrder),
+            GenericOperationStatuses.Completed, "Subject updated successfully.");
+    }
+
+    public async Task<Response<GenericOperationStatuses>> DeleteSubjectAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var subject = await dbContext.Subjects.FindAsync(new object[] { id }, cancellationToken);
+        if (subject == null) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Subject not found.");
+
+        dbContext.Subjects.Remove(subject);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Subject deleted successfully.");
+    }
+
+    public async Task<Response<SessionDto, GenericOperationStatuses>> UpdateSessionAsync(Guid id, SessionCreateDto dto, CancellationToken cancellationToken = default)
+    {
+        var session = await dbContext.Sessions.FindAsync(new object[] { id }, cancellationToken);
+        if (session == null) return Response<SessionDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Session not found.");
+
+        session.Name = dto.Name;
+        session.StartDate = dto.StartDate;
+        session.EndDate = dto.EndDate;
+
+        if (dto.IsActive && !session.IsActive)
+        {
+            var activeSessions = await dbContext.Sessions.Where(s => s.IsActive).ToListAsync(cancellationToken);
+            foreach (var acts in activeSessions) acts.IsActive = false;
+        }
+        session.IsActive = dto.IsActive;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<SessionDto, GenericOperationStatuses>.Success(
+            new SessionDto(session.Id, session.Name, session.StartDate, session.EndDate, session.IsActive),
+            GenericOperationStatuses.Completed, "Session updated successfully.");
+    }
+
+    public async Task<Response<GenericOperationStatuses>> DeleteSessionAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var session = await dbContext.Sessions.Include(s => s.Terms).FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        if (session == null) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Session not found.");
+
+        if (session.Terms.Any())
+            return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.Conflict, "Cannot delete session with existing terms. Delete terms first.");
+
+        dbContext.Sessions.Remove(session);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Session deleted successfully.");
+    }
+
+    public async Task<Response<TermDto, GenericOperationStatuses>> UpdateTermAsync(Guid id, TermCreateDto dto, CancellationToken cancellationToken = default)
+    {
+        var term = await dbContext.Terms.FindAsync(new object[] { id }, cancellationToken);
+        if (term == null) return Response<TermDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Term not found.");
+
+        term.Name = dto.Name;
+        term.StartDate = dto.StartDate;
+        term.EndDate = dto.EndDate;
+        term.NextTermBegins = dto.NextTermBegins;
+
+        if (dto.IsActive && !term.IsActive)
+        {
+            var activeTerms = await dbContext.Terms.Where(t => t.SessionId == term.SessionId && t.IsActive).ToListAsync(cancellationToken);
+            foreach (var actt in activeTerms) actt.IsActive = false;
+        }
+        term.IsActive = dto.IsActive;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<TermDto, GenericOperationStatuses>.Success(
+            new TermDto(term.Id, term.SessionId, "Session", term.Name, term.StartDate, term.EndDate, term.NextTermBegins, term.IsActive),
+            GenericOperationStatuses.Completed, "Term updated successfully.");
+    }
+
+    public async Task<Response<GenericOperationStatuses>> DeleteTermAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var term = await dbContext.Terms.FindAsync(new object[] { id }, cancellationToken);
+        if (term == null) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Term not found.");
+
+        dbContext.Terms.Remove(term);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Term deleted successfully.");
+    }
+
+    public async Task<Response<ClassLevelDto, GenericOperationStatuses>> UpdateClassLevelAsync(Guid id, ClassLevelCreateDto dto, CancellationToken cancellationToken = default)
+    {
+        var classLevel = await dbContext.ClassLevels.FindAsync(new object[] { id }, cancellationToken);
+        if (classLevel == null) return Response<ClassLevelDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Class level not found.");
+
+        classLevel.Name = dto.Name;
+        classLevel.SectionOrArm = dto.SectionOrArm;
+        classLevel.OrderIndex = dto.OrderIndex;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<ClassLevelDto, GenericOperationStatuses>.Success(
+            new ClassLevelDto(classLevel.Id, classLevel.Name, classLevel.SectionOrArm, classLevel.OrderIndex),
+            GenericOperationStatuses.Completed, "Class level updated successfully.");
+    }
+
+    public async Task<Response<GenericOperationStatuses>> DeleteClassLevelAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var classLevel = await dbContext.ClassLevels.FindAsync(new object[] { id }, cancellationToken);
+        if (classLevel == null) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Class level not found.");
+
+        dbContext.ClassLevels.Remove(classLevel);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Class level deleted successfully.");
+    }
 }

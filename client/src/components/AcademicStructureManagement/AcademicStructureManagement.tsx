@@ -3,6 +3,7 @@ import commonStyles from '../Admin/AdminCommon.module.css';
 import SubjectManagement from './SubjectManagement';
 import ClassManagement from './ClassManagement';
 import SessionManagement from './SessionManagement';
+import TermManagement from './TermManagement';
 
 const AcademicStructureManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'sessions' | 'terms' | 'classes' | 'subjects'>('subjects');
@@ -28,6 +29,12 @@ const AcademicStructureManagement: React.FC = () => {
           Sessions
         </button>
         <button 
+          className={`${commonStyles.tab} ${activeTab === 'terms' ? commonStyles.activeTab : ''}`}
+          onClick={() => setActiveTab('terms')}
+        >
+          Terms
+        </button>
+        <button 
           className={`${commonStyles.tab} ${activeTab === 'classes' ? commonStyles.activeTab : ''}`}
           onClick={() => setActiveTab('classes')}
         >
@@ -38,6 +45,7 @@ const AcademicStructureManagement: React.FC = () => {
       <div className={commonStyles.tabContent}>
         {activeTab === 'subjects' && <SubjectManagement />}
         {activeTab === 'sessions' && <SessionManagement />}
+        {activeTab === 'terms' && <TermManagement />}
         {activeTab === 'classes' && <ClassManagement />}
       </div>
     </div>

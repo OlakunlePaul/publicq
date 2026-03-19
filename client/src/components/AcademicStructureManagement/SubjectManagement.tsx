@@ -5,12 +5,13 @@ import { ValidationMessage } from '../Shared/ValidationComponents';
 
 interface SubjectFormModalProps {
   isOpen: boolean;
+  subject?: SubjectDto; // Pass subject for editing
   onConfirm: (subject: SubjectCreateDto) => void;
   onCancel: () => void;
   apiError?: string;
 }
 
-const SubjectFormModal = ({ isOpen, onConfirm, onCancel, apiError }: SubjectFormModalProps) => {
+const SubjectFormModal = ({ isOpen, subject, onConfirm, onCancel, apiError }: SubjectFormModalProps) => {
   const [formData, setFormData] = useState<SubjectCreateDto>({
     name: '',
     code: '',
@@ -20,10 +21,14 @@ const SubjectFormModal = ({ isOpen, onConfirm, onCancel, apiError }: SubjectForm
 
   useEffect(() => {
     if (isOpen) {
-      setFormData({ name: '', code: '', displayOrder: 0 });
+      if (subject) {
+        setFormData({ name: subject.name, code: subject.code || '', displayOrder: subject.displayOrder });
+      } else {
+        setFormData({ name: '', code: '', displayOrder: 0 });
+      }
       setError('');
     }
-  }, [isOpen]);
+  }, [isOpen, subject]);
 
   useEffect(() => {
     if (apiError) setError(apiError);
@@ -48,7 +53,7 @@ const SubjectFormModal = ({ isOpen, onConfirm, onCancel, apiError }: SubjectForm
   return (
     <div style={styles.modalOverlay}>
       <div style={styles.modal}>
-        <h3 style={styles.modalTitle}>Create New Subject</h3>
+        <h3 style={styles.modalTitle}>{subject ? 'Edit Subject' : 'Create New Subject'}</h3>
         {error && <ValidationMessage type="error" message={error} />}
         
         <div style={styles.formGroup}>
@@ -83,7 +88,7 @@ const SubjectFormModal = ({ isOpen, onConfirm, onCancel, apiError }: SubjectForm
 
         <div style={styles.modalActions}>
           <button onClick={onCancel} style={styles.modalCancelButton}>Cancel</button>
-          <button onClick={handleConfirm} style={styles.modalConfirmButton}>Create Subject</button>
+          <button onClick={handleConfirm} style={styles.modalConfirmButton}>{subject ? 'Update Subject' : 'Create Subject'}</button>
         </div>
       </div>
     </div>
@@ -94,7 +99,7 @@ const SubjectManagement = () => {
   const [subjects, setSubjects] = useState<SubjectDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formModal, setFormModal] = useState({ isOpen: false, apiError: '' });
+  const [formModal, setFormModal] = useState<{ isOpen: boolean; apiError: string; subject?: SubjectDto }>({ isOpen: false, apiError: '' });
 
   const loadSubjects = useCallback(async () => {
     setLoading(true);
@@ -114,17 +119,37 @@ const SubjectManagement = () => {
     loadSubjects();
   }, [loadSubjects]);
 
-  const handleCreate = async (data: SubjectCreateDto) => {
+  const handleSave = async (data: SubjectCreateDto) => {
     try {
-      const resp = await academicStructureService.createSubject(data);
+      let resp;
+      if (formModal.subject) {
+        resp = await academicStructureService.updateSubject(formModal.subject.id, data);
+      } else {
+        resp = await academicStructureService.createSubject(data);
+      }
+
       if (resp.isSuccess) {
-        setFormModal({ isOpen: false, apiError: '' });
+        setFormModal({ isOpen: false, apiError: '', subject: undefined });
         loadSubjects();
       } else {
-        setFormModal({ isOpen: true, apiError: resp.message || 'Failed to create subject' });
+        setFormModal({ ...formModal, apiError: resp.message || 'Failed to save subject' });
       }
     } catch (err: any) {
-      setFormModal({ isOpen: true, apiError: err.message || 'Error occurred' });
+      setFormModal({ ...formModal, apiError: err.message || 'Error occurred' });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this subject?")) return;
+    try {
+      const resp = await academicStructureService.deleteSubject(id);
+      if (resp.isSuccess) {
+        loadSubjects();
+      } else {
+        alert(resp.message || "Failed to delete subject");
+      }
+    } catch (err: any) {
+      alert("Error: " + err.message);
     }
   };
 
@@ -132,14 +157,15 @@ const SubjectManagement = () => {
     <div>
       <SubjectFormModal 
         isOpen={formModal.isOpen} 
-        onConfirm={handleCreate} 
-        onCancel={() => setFormModal({ isOpen: false, apiError: '' })} 
+        subject={formModal.subject}
+        onConfirm={handleSave} 
+        onCancel={() => setFormModal({ isOpen: false, apiError: '', subject: undefined })} 
         apiError={formModal.apiError}
       />
       
       <div style={styles.header}>
         <h3 style={{ margin: 0 }}>Subject Management</h3>
-        <button style={styles.createButton} onClick={() => setFormModal({ isOpen: true, apiError: '' })}>
+        <button style={styles.createButton} onClick={() => setFormModal({ isOpen: true, apiError: '', subject: undefined })}>
           Create Subject
         </button>
       </div>
@@ -154,17 +180,32 @@ const SubjectManagement = () => {
                 <th style={styles.th}>Name</th>
                 <th style={styles.th}>Code</th>
                 <th style={styles.th}>Display Order</th>
+                <th style={styles.th}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {subjects.length === 0 ? (
-                <tr><td colSpan={3} style={styles.td}>No subjects found.</td></tr>
+                <tr><td colSpan={4} style={styles.td}>No subjects found.</td></tr>
               ) : (
                 subjects.map(s => (
                   <tr key={s.id} style={styles.tr}>
                     <td style={styles.td}><strong>{s.name}</strong></td>
                     <td style={styles.td}>{s.code || '-'}</td>
                     <td style={styles.td}>{s.displayOrder}</td>
+                    <td style={styles.td}>
+                      <button 
+                        style={{ ...styles.actionButton, backgroundColor: '#3b82f6', marginRight: '8px' }} 
+                        onClick={() => setFormModal({ isOpen: true, apiError: '', subject: s })}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        style={{ ...styles.actionButton, backgroundColor: '#ef4444' }} 
+                        onClick={() => handleDelete(s.id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}

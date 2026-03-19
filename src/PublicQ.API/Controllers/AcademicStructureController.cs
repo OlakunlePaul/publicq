@@ -31,6 +31,22 @@ public class AcademicStructureController(IAcademicStructureService apiService) :
         return response.ToActionResult();
     }
 
+    [Authorize(Constants.ManagersPolicy)]
+    [HttpPut("subjects/{id:guid}")]
+    public async Task<IActionResult> UpdateSubjectAsync(Guid id, [FromBody] SubjectCreateDto request, CancellationToken cancellationToken)
+    {
+        var response = await apiService.UpdateSubjectAsync(id, request, cancellationToken);
+        return response.ToActionResult();
+    }
+
+    [Authorize(Constants.ManagersPolicy)]
+    [HttpDelete("subjects/{id:guid}")]
+    public async Task<IActionResult> DeleteSubjectAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var response = await apiService.DeleteSubjectAsync(id, cancellationToken);
+        return response.ToActionResult();
+    }
+
     // Sessions
     [AllowAnonymous]
     [HttpGet("sessions")]
@@ -56,6 +72,22 @@ public class AcademicStructureController(IAcademicStructureService apiService) :
         return response.ToActionResult();
     }
 
+    [Authorize(Constants.ManagersPolicy)]
+    [HttpPut("sessions/{id:guid}")]
+    public async Task<IActionResult> UpdateSessionAsync(Guid id, [FromBody] SessionCreateDto request, CancellationToken cancellationToken)
+    {
+        var response = await apiService.UpdateSessionAsync(id, request, cancellationToken);
+        return response.ToActionResult();
+    }
+
+    [Authorize(Constants.ManagersPolicy)]
+    [HttpDelete("sessions/{id:guid}")]
+    public async Task<IActionResult> DeleteSessionAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var response = await apiService.DeleteSessionAsync(id, cancellationToken);
+        return response.ToActionResult();
+    }
+
     // Terms
     [AllowAnonymous]
     [HttpGet("sessions/{sessionId:guid}/terms")]
@@ -73,6 +105,22 @@ public class AcademicStructureController(IAcademicStructureService apiService) :
         return response.ToActionResult();
     }
 
+    [Authorize(Constants.ManagersPolicy)]
+    [HttpPut("terms/{id:guid}")]
+    public async Task<IActionResult> UpdateTermAsync(Guid id, [FromBody] TermCreateDto request, CancellationToken cancellationToken)
+    {
+        var response = await apiService.UpdateTermAsync(id, request, cancellationToken);
+        return response.ToActionResult();
+    }
+
+    [Authorize(Constants.ManagersPolicy)]
+    [HttpDelete("terms/{id:guid}")]
+    public async Task<IActionResult> DeleteTermAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var response = await apiService.DeleteTermAsync(id, cancellationToken);
+        return response.ToActionResult();
+    }
+
     // Class Levels
     [AllowAnonymous]
     [HttpGet("classes")]
@@ -87,6 +135,22 @@ public class AcademicStructureController(IAcademicStructureService apiService) :
     public async Task<IActionResult> CreateClassLevelAsync([FromBody] ClassLevelCreateDto request, CancellationToken cancellationToken)
     {
         var response = await apiService.CreateClassLevelAsync(request, cancellationToken);
+        return response.ToActionResult();
+    }
+
+    [Authorize(Constants.ManagersPolicy)]
+    [HttpPut("classes/{id:guid}")]
+    public async Task<IActionResult> UpdateClassLevelAsync(Guid id, [FromBody] ClassLevelCreateDto request, CancellationToken cancellationToken)
+    {
+        var response = await apiService.UpdateClassLevelAsync(id, request, cancellationToken);
+        return response.ToActionResult();
+    }
+
+    [Authorize(Constants.ManagersPolicy)]
+    [HttpDelete("classes/{id:guid}")]
+    public async Task<IActionResult> DeleteClassLevelAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var response = await apiService.DeleteClassLevelAsync(id, cancellationToken);
         return response.ToActionResult();
     }
 }

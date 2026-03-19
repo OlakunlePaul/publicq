@@ -5,12 +5,13 @@ import { ValidationMessage } from '../Shared/ValidationComponents';
 
 interface ClassFormModalProps {
   isOpen: boolean;
+  classLevel?: ClassLevelDto; // Pass classLevel for editing
   onConfirm: (classLevel: ClassLevelCreateDto) => void;
   onCancel: () => void;
   apiError?: string;
 }
 
-const ClassFormModal = ({ isOpen, onConfirm, onCancel, apiError }: ClassFormModalProps) => {
+const ClassFormModal = ({ isOpen, classLevel, onConfirm, onCancel, apiError }: ClassFormModalProps) => {
   const [formData, setFormData] = useState<ClassLevelCreateDto>({
     name: '',
     sectionOrArm: '',
@@ -20,10 +21,14 @@ const ClassFormModal = ({ isOpen, onConfirm, onCancel, apiError }: ClassFormModa
 
   useEffect(() => {
     if (isOpen) {
-      setFormData({ name: '', sectionOrArm: '', orderIndex: 0 });
+      if (classLevel) {
+        setFormData({ name: classLevel.name, sectionOrArm: classLevel.sectionOrArm || '', orderIndex: classLevel.orderIndex });
+      } else {
+        setFormData({ name: '', sectionOrArm: '', orderIndex: 0 });
+      }
       setError('');
     }
-  }, [isOpen]);
+  }, [isOpen, classLevel]);
 
   useEffect(() => {
     if (apiError) setError(apiError);
@@ -31,7 +36,7 @@ const ClassFormModal = ({ isOpen, onConfirm, onCancel, apiError }: ClassFormModa
 
   const validate = () => {
     if (!formData.name.trim()) {
-      setError('Class Level Name is required');
+      setError('Class Name is required');
       return false;
     }
     return true;
@@ -48,11 +53,11 @@ const ClassFormModal = ({ isOpen, onConfirm, onCancel, apiError }: ClassFormModa
   return (
     <div style={styles.modalOverlay}>
       <div style={styles.modal}>
-        <h3 style={styles.modalTitle}>Create New Class</h3>
+        <h3 style={styles.modalTitle}>{classLevel ? 'Edit Class Level' : 'Create New Class Level'}</h3>
         {error && <ValidationMessage type="error" message={error} />}
         
         <div style={styles.formGroup}>
-          <label style={styles.formLabel}>Class Name:</label>
+          <label style={styles.formLabel}>Class Name (e.g. JSS 1, Primary 1):</label>
           <input
             style={styles.formInput}
             value={formData.name}
@@ -62,29 +67,28 @@ const ClassFormModal = ({ isOpen, onConfirm, onCancel, apiError }: ClassFormModa
         </div>
         
         <div style={styles.formGroup}>
-          <label style={styles.formLabel}>Section / Arm (optional):</label>
+          <label style={styles.formLabel}>Section/Arm (e.g. A, Gold, Science):</label>
           <input
             style={styles.formInput}
             value={formData.sectionOrArm || ''}
             onChange={(e) => setFormData({ ...formData, sectionOrArm: e.target.value })}
-            placeholder="e.g. Science, Art, Gold"
+            placeholder="e.g. A"
           />
         </div>
         
         <div style={styles.formGroup}>
-          <label style={styles.formLabel}>Display Order:</label>
+          <label style={styles.formLabel}>Sort Order:</label>
           <input
             type="number"
             style={styles.formInput}
             value={formData.orderIndex}
             onChange={(e) => setFormData({ ...formData, orderIndex: parseInt(e.target.value) || 0 })}
-            placeholder="Smaller numbers appear first"
           />
         </div>
 
         <div style={styles.modalActions}>
           <button onClick={onCancel} style={styles.modalCancelButton}>Cancel</button>
-          <button onClick={handleConfirm} style={styles.modalConfirmButton}>Create Class</button>
+          <button onClick={handleConfirm} style={styles.modalConfirmButton}>{classLevel ? 'Update Class' : 'Create Class'}</button>
         </div>
       </div>
     </div>
@@ -95,7 +99,7 @@ const ClassManagement = () => {
   const [classes, setClasses] = useState<ClassLevelDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formModal, setFormModal] = useState({ isOpen: false, apiError: '' });
+  const [formModal, setFormModal] = useState<{ isOpen: boolean; apiError: string; classLevel?: ClassLevelDto }>({ isOpen: false, apiError: '' });
 
   const loadClasses = useCallback(async () => {
     setLoading(true);
@@ -115,17 +119,37 @@ const ClassManagement = () => {
     loadClasses();
   }, [loadClasses]);
 
-  const handleCreate = async (data: ClassLevelCreateDto) => {
+  const handleSave = async (data: ClassLevelCreateDto) => {
     try {
-      const resp = await academicStructureService.createClassLevel(data);
+      let resp;
+      if (formModal.classLevel) {
+        resp = await academicStructureService.updateClassLevel(formModal.classLevel.id, data);
+      } else {
+        resp = await academicStructureService.createClassLevel(data);
+      }
+
       if (resp.isSuccess) {
-        setFormModal({ isOpen: false, apiError: '' });
+        setFormModal({ isOpen: false, apiError: '', classLevel: undefined });
         loadClasses();
       } else {
-        setFormModal({ isOpen: true, apiError: resp.message || 'Failed to create class' });
+        setFormModal({ ...formModal, apiError: resp.message || 'Failed to save class level' });
       }
     } catch (err: any) {
-      setFormModal({ isOpen: true, apiError: err.message || 'Error occurred' });
+      setFormModal({ ...formModal, apiError: err.message || 'Error occurred' });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this class level?")) return;
+    try {
+      const resp = await academicStructureService.deleteClassLevel(id);
+      if (resp.isSuccess) {
+        loadClasses();
+      } else {
+        alert(resp.message || "Failed to delete class level");
+      }
+    } catch (err: any) {
+      alert("Error: " + err.message);
     }
   };
 
@@ -133,14 +157,15 @@ const ClassManagement = () => {
     <div>
       <ClassFormModal 
         isOpen={formModal.isOpen} 
-        onConfirm={handleCreate} 
-        onCancel={() => setFormModal({ isOpen: false, apiError: '' })} 
+        classLevel={formModal.classLevel}
+        onConfirm={handleSave} 
+        onCancel={() => setFormModal({ isOpen: false, apiError: '', classLevel: undefined })} 
         apiError={formModal.apiError}
       />
       
       <div style={styles.header}>
         <h3 style={{ margin: 0 }}>Class Management</h3>
-        <button style={styles.createButton} onClick={() => setFormModal({ isOpen: true, apiError: '' })}>
+        <button style={styles.createButton} onClick={() => setFormModal({ isOpen: true, apiError: '', classLevel: undefined })}>
           Create Class
         </button>
       </div>
@@ -154,18 +179,33 @@ const ClassManagement = () => {
               <tr>
                 <th style={styles.th}>Name</th>
                 <th style={styles.th}>Section/Arm</th>
-                <th style={styles.th}>Display Order</th>
+                <th style={styles.th}>Sort Order</th>
+                <th style={styles.th}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {classes.length === 0 ? (
-                <tr><td colSpan={3} style={styles.td}>No classes found.</td></tr>
+                <tr><td colSpan={4} style={styles.td}>No classes found.</td></tr>
               ) : (
                 classes.map(c => (
                   <tr key={c.id} style={styles.tr}>
                     <td style={styles.td}><strong>{c.name}</strong></td>
                     <td style={styles.td}>{c.sectionOrArm || '-'}</td>
                     <td style={styles.td}>{c.orderIndex}</td>
+                    <td style={styles.td}>
+                      <button 
+                        style={{ ...styles.actionButton, backgroundColor: '#3b82f6', marginRight: '8px' }} 
+                        onClick={() => setFormModal({ isOpen: true, apiError: '', classLevel: c })}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        style={{ ...styles.actionButton, backgroundColor: '#ef4444' }} 
+                        onClick={() => handleDelete(c.id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}

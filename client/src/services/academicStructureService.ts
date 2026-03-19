@@ -23,6 +23,16 @@ export const academicStructureService = {
         return response.data;
     },
 
+    async updateSubject(id: string, data: SubjectCreateDto): Promise<ResponseWithData<SubjectDto, GenericOperationStatuses>> {
+        const response = await api.put(`${API_BASE_URL}/subjects/${id}`, data);
+        return response.data;
+    },
+
+    async deleteSubject(id: string): Promise<Response<GenericOperationStatuses>> {
+        const response = await api.delete(`${API_BASE_URL}/subjects/${id}`);
+        return response.data;
+    },
+
     // Sessions
     async getSessions(): Promise<ResponseWithData<SessionDto[], GenericOperationStatuses>> {
         const response = await api.get(`${API_BASE_URL}/sessions`);
@@ -31,6 +41,16 @@ export const academicStructureService = {
 
     async createSession(data: SessionCreateDto): Promise<ResponseWithData<SessionDto, GenericOperationStatuses>> {
         const response = await api.post(`${API_BASE_URL}/sessions`, data);
+        return response.data;
+    },
+
+    async updateSession(id: string, data: SessionCreateDto): Promise<ResponseWithData<SessionDto, GenericOperationStatuses>> {
+        const response = await api.put(`${API_BASE_URL}/sessions/${id}`, data);
+        return response.data;
+    },
+
+    async deleteSession(id: string): Promise<Response<GenericOperationStatuses>> {
+        const response = await api.delete(`${API_BASE_URL}/sessions/${id}`);
         return response.data;
     },
 
@@ -47,6 +67,16 @@ export const academicStructureService = {
 
     async createTerm(data: TermCreateDto): Promise<ResponseWithData<TermDto, GenericOperationStatuses>> {
         const response = await api.post(`${API_BASE_URL}/terms`, data);
+        return response.data;
+    },
+
+    async updateTerm(id: string, data: TermCreateDto): Promise<ResponseWithData<TermDto, GenericOperationStatuses>> {
+        const response = await api.put(`${API_BASE_URL}/terms/${id}`, data);
+        return response.data;
+    },
+
+    async deleteTerm(id: string): Promise<Response<GenericOperationStatuses>> {
+        const response = await api.delete(`${API_BASE_URL}/terms/${id}`);
         return response.data;
     },
 
