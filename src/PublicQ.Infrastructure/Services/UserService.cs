@@ -727,15 +727,14 @@ public class UserService(
 
         if (!isSuperAdmin)
         {
-            // Managers see only themselves, teachers, and students (ExamTakers)
-            var teacherRole = await dbContext.Roles
-                .Where(r => r.Name == UserRolesNames.Teacher)
-                .Select(r => r.Id)
-                .FirstOrDefaultAsync(cancellationToken);
-
+            // Managers see themselves, teachers, students (ExamTakers), and parents
             usersQ = usersQ.Where(u =>
                 u.Id == currentUserId ||
-                (teacherRole != null && dbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == teacherRole)));
+                dbContext.UserRoles.Any(ur => ur.UserId == u.Id && 
+                    (dbContext.Roles.Any(r => r.Id == ur.RoleId && 
+                        (r.Name == UserRolesNames.Teacher || 
+                         r.Name == UserRolesNames.ExamTaker || 
+                         r.Name == UserRolesNames.Parent)))));
         }
 
         var projectedUsersQ = usersQ
@@ -909,14 +908,14 @@ public class UserService(
 
         if (!isSuperAdmin)
         {
-            var teacherRole = await dbContext.Roles
-                .Where(r => r.Name == UserRolesNames.Teacher)
-                .Select(r => r.Id)
-                .FirstOrDefaultAsync(cancellationToken);
-
+            // Managers see themselves, teachers, students (ExamTakers), and parents
             queryIdentityUsers = queryIdentityUsers.Where(u =>
                 u.Id == currentUserId ||
-                (teacherRole != null && dbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == teacherRole)));
+                dbContext.UserRoles.Any(ur => ur.UserId == u.Id && 
+                    (dbContext.Roles.Any(r => r.Id == ur.RoleId && 
+                        (r.Name == UserRolesNames.Teacher || 
+                         r.Name == UserRolesNames.ExamTaker || 
+                         r.Name == UserRolesNames.Parent)))));
         }
 
         var queryExamTakers = dbContext.ExamTakers

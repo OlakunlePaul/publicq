@@ -43,11 +43,13 @@ public class SmtpMessageHandler(
             var mimeMessage = BuildMimeMessage(message);
 
             // Connect
-            if (currentOptions.UseSsl)
+            // Safeguard: If Port is 465, always use SSL (SslOnConnect) as it's the standard for implicit SSL/TLS.
+            if (currentOptions.UseSsl || currentOptions.SmtpPort == 465)
             {
-                logger.LogInformation("Connecting to {SmtpHost}:{Port} Using SSL.",
+                logger.LogInformation("Connecting to {SmtpHost}:{Port} Using SSL (Automatic safeguard for Port 465: {IsAuto}).",
                     currentOptions.SmtpHost,
-                    currentOptions.SmtpPort);
+                    currentOptions.SmtpPort,
+                    currentOptions.SmtpPort == 465 && !currentOptions.UseSsl);
                 await client.ConnectAsync(
                     currentOptions.SmtpHost,
                     currentOptions.SmtpPort,
