@@ -13,5 +13,10 @@ public enum MessageProvider
     /// <summary>
     /// SMTP email provider.
     /// </summary>
-    Smtp
+    Smtp,
+
+    /// <summary>
+    /// Resend email provider.
+    /// </summary>
+    Resend
 }

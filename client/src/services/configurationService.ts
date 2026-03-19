@@ -32,6 +32,10 @@ export const configurationService = {
     await axios.post('configuration/sendgrid', { apiKey });
   },
 
+  setResendOptions: async (apiKey: string): Promise<void> => {
+    await axios.post('configuration/resend', { apiKey });
+  },
+
   getSmtpOptions: async (): Promise<ResponseWithData<SmtpOptions, GenericOperationStatuses>> => {
     const response = await axios.get<ResponseWithData<SmtpOptions, GenericOperationStatuses>>('configuration/smtp');
     return response.data;

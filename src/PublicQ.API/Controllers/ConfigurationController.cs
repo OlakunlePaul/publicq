@@ -57,6 +57,7 @@ public class ConfigurationController(
     IOptionsMonitor<LlmIntegrationOptions> llmOptions,
     IOptionsMonitor<McpApiKeyOptions> mcpApiKeyOptions,
     IOptionsMonitor<OpenAIOptions> openAIOptions,
+    IOptionsMonitor<ResendOptions> resendOptions,
     IUserConfigurationProvider userConfigurationProvider,
     IStorageService storageService) : ControllerBase
 {
@@ -207,6 +208,45 @@ public class ConfigurationController(
         var response = configUpdateService.Set(options);
 
         return response.ToActionResult(nameof(GetSmtpConfig));
+    }
+    
+    /// <summary>
+    /// Gets <see cref="ResendOptions"/> configuration.
+    /// </summary>
+    /// <returns>Returns Resend options wrapped into <see cref="Response{TData, TStatus}"/></returns>
+    [Authorize(Constants.AdminsPolicy)]
+    [HttpGet("resend", Name = nameof(GetResendConfig))]
+    public ActionResult<Response<ResendOptions, GenericOperationStatuses>> GetResendConfig()
+    {
+        return Ok(Response<ResendOptions, GenericOperationStatuses>
+            .Success(resendOptions.CurrentValue, GenericOperationStatuses.Completed, "Successfully retrieved configuration."));
+    }
+
+    /// <summary>
+    /// Update <see cref="ResendOptions"/>
+    /// </summary>
+    /// <param name="options"><see cref="ResendOptions"/></param>
+    /// <param name="resendOptionsValidator">Resend options validator</param>
+    /// <returns>Returns result of the update operation</returns>
+    [Authorize(Constants.AdminsPolicy)]
+    [HttpPost("resend")]
+    public IActionResult SetResendConfig(
+        [FromBody] ResendOptions options,
+        [FromServices] IValidator<ResendOptions> resendOptionsValidator)
+    {
+        var validationResult = resendOptionsValidator.Validate(options);
+        if (!validationResult.IsValid)
+        {
+            return Response<ResendOptions, GenericOperationStatuses>
+                .Failure(GenericOperationStatuses.BadRequest, 
+                    "Validation error",
+                    validationResult.Errors.Select(e => e.ErrorMessage).ToList())
+                .ToActionResult();
+        }
+        
+        var response = configUpdateService.Set(options);
+
+        return response.ToActionResult(nameof(GetResendConfig));
     }
     
     /// <summary>

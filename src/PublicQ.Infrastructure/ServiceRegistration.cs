@@ -72,6 +72,7 @@ public static class ServiceRegistration
     
         services.AddScoped<IMessageHandler, SendGridMessageHandler>();
         services.AddScoped<IMessageHandler, SmtpMessageHandler>();
+        services.AddScoped<IMessageHandler, ResendMessageHandler>();
         services.AddScoped<IMessageTemplateService, MessageTemplateService>();
         services.AddScoped<IMessageService, MessageService>();
     
@@ -82,6 +83,7 @@ public static class ServiceRegistration
         services.AddOptions<EmailOptions>().Bind(config.GetSection(nameof(EmailOptions)));
         services.AddOptions<SendgridOptions>().Bind(config.GetSection(nameof(SendgridOptions)));
         services.AddOptions<SmtpOptions>().Bind(config.GetSection(nameof(SmtpOptions)));
+        services.AddOptions<ResendOptions>().Bind(config.GetSection(nameof(ResendOptions)));
         services.AddOptions<FileStorageOptions>().Bind(config.GetSection(nameof(FileStorageOptions)));
         services.AddOptions<UserServiceOptions>().Bind(config.GetSection(nameof(UserServiceOptions)));
         services.AddOptions<GroupServiceOptions>().Bind(config.GetSection(nameof(GroupServiceOptions)));

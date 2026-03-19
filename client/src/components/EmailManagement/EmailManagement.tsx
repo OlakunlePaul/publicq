@@ -34,6 +34,7 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [sendgridApiKey, setSendgridApiKey] = useState('');
+  const [resendApiKey, setResendApiKey] = useState('');
   
   // SMTP configuration state
   const [smtpOptions, setSmtpOptions] = useState<SmtpOptions>({
@@ -121,6 +122,26 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
       setSendgridApiKey('');
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to save SendGrid configuration');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveResendOptions = async () => {
+    if (!resendApiKey.trim()) {
+      setError('Resend API Key is required');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      await configurationService.setResendOptions(resendApiKey);
+      setSuccess('Resend configuration saved successfully');
+      setResendApiKey('');
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Failed to save Resend configuration');
     } finally {
       setLoading(false);
     }
@@ -328,6 +349,34 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
             className={cn(styles.saveButton, (loading || !sendgridApiKey.trim()) && 'opacity-60')}
           >
             {loading ? 'Saving...' : 'Save SendGrid API Key'}
+          </button>
+        </div>
+      )}
+
+      {/* Resend Configuration */}
+      {emailOptions.messageProvider === MessageProvider.Resend && emailOptions.enabled && (
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>Resend Configuration</h3>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>API Key</label>
+            <input
+              type="password"
+              value={resendApiKey}
+              onChange={(e) => setResendApiKey(e.target.value)}
+              placeholder="Enter Resend API Key"
+              className={styles.input}
+            />
+            <small className={styles.helpText}>
+              Enter your Resend API key to enable email sending through Resend.
+            </small>
+          </div>
+
+          <button
+            onClick={handleSaveResendOptions}
+            disabled={loading || !resendApiKey.trim()}
+            className={cn(styles.saveButton, (loading || !resendApiKey.trim()) && 'opacity-60')}
+          >
+            {loading ? 'Saving...' : 'Save Resend API Key'}
           </button>
         </div>
       )}

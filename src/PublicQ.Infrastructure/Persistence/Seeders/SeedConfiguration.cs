@@ -48,7 +48,8 @@ public static class SeedConfiguration
             new SystemSettings($"{nameof(FileStorageOptions)}:{nameof(FileStorageOptions.MaxUploadFileSizeInKilobytes)}", "5120"));
         
         modelBuilder.Entity<SystemSettings>().HasData(
-            new SystemSettings($"{nameof(SendgridOptions)}:{nameof(SendgridOptions.ApiKey)}", "<Your Sendgrid API Key>"));
+            new SystemSettings($"{nameof(SendgridOptions)}:{nameof(SendgridOptions.ApiKey)}", "<Your Sendgrid API Key>"),
+            new SystemSettings($"{nameof(ResendOptions)}:{nameof(ResendOptions.ApiKey)}", "<Your Resend API Key>"));
 
         modelBuilder.Entity<SystemSettings>().HasData(
             new SystemSettings($"{nameof(SmtpOptions)}:{nameof(SmtpOptions.SmtpHost)}", "localhost"),

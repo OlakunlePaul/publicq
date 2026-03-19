@@ -1,4 +1,5 @@
 export enum MessageProvider {
   Sendgrid = 'Sendgrid',
-  Smtp = 'Smtp'
+  Smtp = 'Smtp',
+  Resend = 'Resend'
 }
