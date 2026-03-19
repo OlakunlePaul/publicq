@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using PublicQ.Application.Interfaces;
 using PublicQ.Application.Models;
 using PublicQ.Domain.Enums;
+using PublicQ.Domain.Models;
 using PublicQ.Infrastructure.Options;
 using PublicQ.Infrastructure.Persistence;
 using PublicQ.Infrastructure.Persistence.Entities;
@@ -342,6 +343,8 @@ public class UserService(
                     { "User", email.Address.Split("@")[0] }
                 }
             };
+        }
+        
         try
         {
             await NotifyUserAsync(email, messageRequest, cancellationToken);

@@ -36,6 +36,8 @@ public class SmtpMessageHandler(
         Guard.AgainstNullOrWhiteSpace(message.Body, nameof(message.Body));
         
         using var client = new SmtpClient();
+        var currentOptions = options.CurrentValue;
+        var recipientsString = string.Join(", ", message.Recipients);
         try
         {
             var mimeMessage = BuildMimeMessage(message);

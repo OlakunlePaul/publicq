@@ -184,6 +184,8 @@ Example: { ""EmailPart"": ""john"", ""IdPart"": """", ""PageNumber"": 0, ""PageS
             request.IdPart,
             request.PageNumber,
             request.PageSize,
+            currentUserId: null,
+            isSuperAdmin: true,
             cancellationToken);
         
         return result;

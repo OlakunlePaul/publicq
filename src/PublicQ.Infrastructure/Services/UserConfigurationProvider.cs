@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PublicQ.Application.Interfaces;
 using PublicQ.Application.Models;
 using PublicQ.Infrastructure.Persistence;
+using PublicQ.Infrastructure.Entities;
 using PublicQ.Shared.Enums;
 
 namespace PublicQ.Infrastructure.Services;
