@@ -4,4 +4,5 @@ export interface EmailOption {
   enabled: boolean;
   messageProvider: MessageProvider;
   sendFrom: string;
+  frontendUrl: string;
 }

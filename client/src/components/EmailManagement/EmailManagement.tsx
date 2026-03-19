@@ -14,12 +14,14 @@ interface EmailManagementProps {
     enabled: boolean;
     messageProvider: MessageProvider;
     sendFrom: string;
+    frontendUrl: string;
     dataLoaded: boolean;
   };
   setEmailConfig: React.Dispatch<React.SetStateAction<{
     enabled: boolean;
     messageProvider: MessageProvider;
     sendFrom: string;
+    frontendUrl: string;
     dataLoaded: boolean;
   }>>;
 }
@@ -28,7 +30,8 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
   const [originalOptions, setOriginalOptions] = useState<EmailOption>({
     enabled: false,
     messageProvider: MessageProvider.Sendgrid,
-    sendFrom: ''
+    sendFrom: '',
+    frontendUrl: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -220,7 +223,8 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
   const hasUnsavedChanges = () => {
     return emailOptions.enabled !== originalOptions.enabled ||
            emailOptions.messageProvider !== originalOptions.messageProvider || 
-           emailOptions.sendFrom !== originalOptions.sendFrom;
+           emailOptions.sendFrom !== originalOptions.sendFrom ||
+           emailOptions.frontendUrl !== originalOptions.frontendUrl;
   };
 
   const handleReset = () => {
@@ -343,6 +347,24 @@ const EmailManagement: React.FC<EmailManagementProps> = ({ emailConfig: emailOpt
           />
           <small className={styles.helpText}>
             This email address will be used as the sender for all outgoing emails.
+          </small>
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Frontend URL</label>
+          <input
+            type="url"
+            value={emailOptions.frontendUrl}
+            onChange={(e) => setEmailOptions({
+              ...emailOptions,
+              frontendUrl: e.target.value
+            })}
+            placeholder="https://examnova.vercel.app"
+            className={cn(styles.input, !emailOptions.enabled && 'opacity-60')}
+            disabled={!emailOptions.enabled}
+          />
+          <small className={styles.helpText}>
+            The base URL of your frontend application. Used to generate password reset and activation links.
           </small>
         </div>
 

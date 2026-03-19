@@ -3,7 +3,9 @@ using System.Reflection.Metadata;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using PublicQ.API.Helpers;
+using PublicQ.Infrastructure.Options;
 using PublicQ.API.Models.Requests;
 using PublicQ.API.Models.Validators;
 using PublicQ.Application.Interfaces;
@@ -22,7 +24,9 @@ namespace PublicQ.API.Controllers;
 /// </remarks>
 [ApiController]
 [Route($"{Constants.ControllerRoutePrefix}/[controller]")]
-public class UsersController(IUserService userService) : ControllerBase
+public class UsersController(
+    IUserService userService,
+    IOptionsMonitor<EmailOptions> emailOptions) : ControllerBase
 {
     /// <summary>
     /// Authenticates a user and issues an access token.
@@ -200,7 +204,10 @@ public class UsersController(IUserService userService) : ControllerBase
                 .ToActionResult();
         }
         
-        var url = $"{Request.Scheme}://{Request.Host}";
+        var url = !string.IsNullOrWhiteSpace(emailOptions.CurrentValue.FrontendUrl) 
+            ? emailOptions.CurrentValue.FrontendUrl 
+            : $"{Request.Scheme}://{Request.Host}";
+
         var result = await userService.RegisterIdentityUserByAdminAsync(
             new MailAddress(dto.Email),
             dto.FullName,
@@ -479,7 +486,11 @@ public class UsersController(IUserService userService) : ControllerBase
         
         var mailAddress = new MailAddress(request.EmailAddress);
         
-        var url = $"{Request.Scheme}://{Request.Host}/{Constants.FrontEndResetPasswordPath}";
+        var baseUrl = !string.IsNullOrWhiteSpace(emailOptions.CurrentValue.FrontendUrl) 
+            ? emailOptions.CurrentValue.FrontendUrl 
+            : $"{Request.Scheme}://{Request.Host}";
+
+        var url = $"{baseUrl}/{Constants.FrontEndResetPasswordPath}";
         await userService.ForgetPasswordAsync(mailAddress, url, cancellationToken);
 
         return Response<GenericOperationStatuses>.Success(

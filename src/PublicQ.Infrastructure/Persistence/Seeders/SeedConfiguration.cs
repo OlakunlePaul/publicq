@@ -85,7 +85,8 @@ public static class SeedConfiguration
         modelBuilder.Entity<SystemSettings>().HasData(
             new SystemSettings($"{nameof(EmailOptions)}:{nameof(EmailOptions.MessageProvider)}",
                 nameof(MessageProvider.Sendgrid)),
-            new SystemSettings($"{nameof(EmailOptions)}:{nameof(EmailOptions.SendFrom)}", "no-reply@examnova.local"));
+            new SystemSettings($"{nameof(EmailOptions)}:{nameof(EmailOptions.SendFrom)}", "no-reply@examnova.local"),
+            new SystemSettings($"{nameof(EmailOptions)}:{nameof(EmailOptions.FrontendUrl)}", "https://examnova.vercel.app"));
         
         modelBuilder.Entity<SystemSettings>().HasData(
             new SystemSettings($"{nameof(PasswordPolicyOptions)}:{nameof(PasswordPolicyOptions.RequiredLength)}", "8"),

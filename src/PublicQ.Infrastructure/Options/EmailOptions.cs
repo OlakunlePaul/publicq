@@ -19,4 +19,9 @@ public class EmailOptions
     /// Sender's email address used for sending emails.
     /// </summary>
     public string SendFrom { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Base URL for the frontend application (used for generating links in emails).
+    /// </summary>
+    public string FrontendUrl { get; set; } = string.Empty;
 }
