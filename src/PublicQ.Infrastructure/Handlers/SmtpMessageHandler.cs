@@ -35,14 +35,11 @@ public class SmtpMessageHandler(
         Guard.AgainstNullOrWhiteSpace(message.Recipients, nameof(message.Recipients));
         Guard.AgainstNullOrWhiteSpace(message.Body, nameof(message.Body));
         
-        var mimeMessage = BuildMimeMessage(message);
-
-        var currentOptions = options.CurrentValue;
-        var recipientsString = string.Join(", ", message.Recipients);
-        
         using var client = new SmtpClient();
         try
         {
+            var mimeMessage = BuildMimeMessage(message);
+
             // Connect
             if (currentOptions.UseSsl)
             {

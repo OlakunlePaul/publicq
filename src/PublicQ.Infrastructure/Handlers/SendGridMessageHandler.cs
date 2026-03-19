@@ -31,7 +31,6 @@ public class SendGridMessageHandler(
         Guard.AgainstNullOrWhiteSpace(message.Recipients, nameof(message.Recipients));
         Guard.AgainstNullOrWhiteSpace(message.Body, nameof(message.Body));
 
-        var msg = CompileEmailMessage(message);
         var recipientsString = string.Join(", ", message.Recipients);
 
         logger.LogInformation("Sending message from '{Sender}' to '{Recipients}' using '{Provider}'.",
@@ -43,6 +42,7 @@ public class SendGridMessageHandler(
         var client = new SendGridClient(options.CurrentValue.ApiKey);
         try
         {
+            var msg = CompileEmailMessage(message);
             response = await client.SendEmailAsync(msg, cancellationToken);
         }
         // It is a critical part, hence catching all exceptions to properly log them

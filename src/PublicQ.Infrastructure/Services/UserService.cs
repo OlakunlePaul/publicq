@@ -342,9 +342,14 @@ public class UserService(
                     { "User", email.Address.Split("@")[0] }
                 }
             };
+        try
+        {
+            await NotifyUserAsync(email, messageRequest, cancellationToken);
         }
-        
-        await NotifyUserAsync(email, messageRequest, cancellationToken);
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to send welcome message to {Username}. Registration will continue.", email);
+        }
         
         var assignDefaultRoleResult = await userManager.AddToRoleAsync(user, DefaultUserRole.ToString());
         if (!assignDefaultRoleResult.Succeeded)
@@ -521,7 +526,14 @@ public class UserService(
         
         // TODO: Consider removing password from the email notification for security reasons
         // and instead provide a link to set the password via a secure page.
-        await NotifyUserAsync(email, messageRequest, cancellationToken);
+        try
+        {
+            await NotifyUserAsync(email, messageRequest, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to send password reset message to {Username}. Reset will continue.", email);
+        }
 
         return Response<GenericOperationStatuses>.Success(
             GenericOperationStatuses.Completed,
@@ -772,12 +784,59 @@ public class UserService(
             TotalCount = totalCount
         };
         page.Data.AddRange(pageItems);
+
+        await PopulateUserRolesAsync(page.Data, cancellationToken);
         
         var message = pageItems.Count == 0 ? "No users found." : "Users retrieved successfully.";
         return Response<PaginatedResponse<User>, GenericOperationStatuses>.Success(
             page, 
             GenericOperationStatuses.Completed, 
             message);
+    }
+
+    /// <summary>
+    /// Populates roles for a list of users.
+    /// </summary>
+    private async Task PopulateUserRolesAsync(List<User> users, CancellationToken cancellationToken)
+    {
+        var identityUserIds = users
+            .Where(u => u.HasCredential)
+            .Select(u => u.Id)
+            .ToList();
+
+        if (identityUserIds.Count > 0)
+        {
+            var rolesLookup = await dbContext.UserRoles
+                .Join(dbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, r.Name })
+                .Where(x => identityUserIds.Contains(x.UserId))
+                .ToListAsync(cancellationToken);
+
+            foreach (var user in users.Where(u => u.HasCredential))
+            {
+                var userRoles = rolesLookup
+                    .Where(x => x.UserId == user.Id)
+                    .Select(x => x.Name!)
+                    .ToList();
+                
+                // Add roles to the list
+                foreach (var role in userRoles)
+                {
+                    if (!user.Roles.Contains(role))
+                    {
+                        user.Roles.Add(role);
+                    }
+                }
+            }
+        }
+
+        // For Exam Takers (HasCredential = false), ensure they have the ExamTaker role
+        foreach (var user in users.Where(u => !u.HasCredential))
+        {
+            if (!user.Roles.Contains(UserRolesNames.ExamTaker))
+            {
+                user.Roles.Add(UserRolesNames.ExamTaker);
+            }
+        }
     }
 
     /// <inheritdoc cref="IUserService.GetExamTakerByIdAsync"/>
@@ -928,7 +987,9 @@ public class UserService(
         page.Data.AddRange(identityUsers);
         page.Data.AddRange(examTakers);
 
-        if (totalIdentityUsersCount == 0)
+        await PopulateUserRolesAsync(page.Data, cancellationToken);
+
+        if (totalIdentityUsersCount == 0 && totalExamTakersCount == 0)
         {
             logger.LogDebug("No users found. Criteria: email='{Email}', id='{Id}'", email, id);
             return Response<PaginatedResponse<User>, GenericOperationStatuses>
@@ -936,7 +997,7 @@ public class UserService(
         }
 
         logger.LogDebug("Retrieved {Count}/{Total} users for email='{Email}', id='{Id}'",
-            identityUsers.Count, totalIdentityUsersCount, email, id);
+            page.Data.Count, totalIdentityUsersCount + totalExamTakersCount, email, id);
 
         return Response<PaginatedResponse<User>, GenericOperationStatuses>
             .Success(page, GenericOperationStatuses.Completed, "Users retrieved successfully.");
@@ -1005,6 +1066,7 @@ public class UserService(
         }
         
         var allUsers = identityUsers.Concat(examTakers).ToList();
+        await PopulateUserRolesAsync(allUsers, cancellationToken);
         
         return Response<IList<User>, GenericOperationStatuses>.Success(allUsers,GenericOperationStatuses.Completed);
     }
@@ -1418,17 +1480,25 @@ public class UserService(
         SendMessageRequest messageRequest,
         CancellationToken cancellationToken)
     {
-        var messageSendResponse = await messageService.SendAsync(messageRequest, cancellationToken);
-        if (messageSendResponse.IsFailed)
+        try
         {
-            logger.LogWarning("Failed to send message to {Username}: {Errors}",
-                email,
-                messageSendResponse.Errors);
+            var messageSendResponse = await messageService.SendAsync(messageRequest, cancellationToken);
+            if (messageSendResponse.IsFailed)
+            {
+                logger.LogWarning("Failed to send message to {Username}: {Errors}",
+                    email,
+                    messageSendResponse.Errors);
+            }
+            else if (messageSendResponse.Status == GenericOperationStatuses.FeatureIsNotAvailable)
+            {
+                logger.LogDebug("Message send feature is not available. Skipping sending message to {Username}",
+                    email);
+            }
         }
-        else if (messageSendResponse.Status == GenericOperationStatuses.FeatureIsNotAvailable)
+        catch (Exception ex)
         {
-            logger.LogDebug("Message send feature is not available. Skipping sending message to {Username}",
-                email);
+            logger.LogWarning(ex, "An error occurred while sending a message to {Username}: {Message}", 
+                email, ex.Message);
         }
     }
     

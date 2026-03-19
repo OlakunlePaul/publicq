@@ -9,7 +9,7 @@ import {
 } from "../models/academic";
 import api from "../api/axios";
 
-const API_BASE_URL = "/api/v1/academic-structure";
+const API_BASE_URL = "v1/academic-structure";
 
 export const academicStructureService = {
     // Subjects

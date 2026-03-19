@@ -467,11 +467,27 @@ const UserTable: React.FC<UserTableProps> = ({
                     </td>
                     <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`}>
                       <div className={userTableStyles.userTypeContainer}>
-                        {user.hasCredential ? (
-                          <span className={userTableStyles.userBadge}>User</span>
-                        ) : (
-                          <span className={userTableStyles.examTakerBadge}>Exam Taker</span>
-                        )}
+                        {(() => {
+                          if (!user.hasCredential) {
+                            return <span className={userTableStyles.examTakerBadge}>Exam Taker</span>;
+                          }
+                          
+                          const roles = user.roles || [];
+                          if (roles.includes('Administrator')) {
+                            return <span className={userTableStyles.adminBadge}>Admin</span>;
+                          }
+                          if (roles.includes('Manager')) {
+                            return <span className={userTableStyles.managerBadge}>Manager</span>;
+                          }
+                          if (roles.includes('Teacher')) {
+                            return <span className={userTableStyles.teacherBadge}>Teacher</span>;
+                          }
+                          if (roles.includes('ExamTaker')) {
+                            return <span className={userTableStyles.examTakerBadge}>Exam Taker</span>;
+                          }
+                          
+                          return <span className={userTableStyles.userBadge}>User</span>;
+                        })()}
                       </div>
                     </td>
                     {showActions && (

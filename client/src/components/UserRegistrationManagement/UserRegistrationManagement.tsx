@@ -204,20 +204,34 @@ const UserRegistrationManagement: React.FC<UserRegistrationManagementProps> = ({
               </div>
             </div>
             
-            <div style={styles.toggleContainer}>
+            <div 
+              style={styles.toggleContainer}
+              role="switch"
+              aria-checked={userRegistrationConfig.enabled}
+              aria-label="Toggle Self-Service Registration"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (!loading && (e.key === ' ' || e.key === 'Enter')) {
+                  e.preventDefault();
+                  handleToggleChange(!userRegistrationConfig.enabled);
+                }
+              }}
+              onClick={() => !loading && handleToggleChange(!userRegistrationConfig.enabled)}
+            >
               <input
                 type="checkbox"
                 checked={userRegistrationConfig.enabled}
                 onChange={(e) => handleToggleChange(e.target.checked)}
                 style={styles.toggleInput}
                 disabled={loading}
+                tabIndex={-1} // Prevent double tabbing since container is focusable
               />
               <span
                 style={{
                   ...styles.toggleSlider,
                   ...(userRegistrationConfig.enabled ? styles.toggleSliderChecked : {}),
+                  outline: 'none', // Managed by container focus
                 }}
-                onClick={() => !loading && handleToggleChange(!userRegistrationConfig.enabled)}
               >
                 <span
                   style={{
