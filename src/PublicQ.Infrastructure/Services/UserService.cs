@@ -273,7 +273,7 @@ public class UserService(
             UserName = emailAddressUpper,
             NormalizedEmail = emailAddressUpper,
             NormalizedUserName = emailAddressUpper,
-            DateOfBirth = dateOfBirth,
+            DateOfBirth = dateOfBirth?.ToUniversalTime(),
             AdmissionNumber = admissionNumber,
             CreatedAtUtc = DateTime.UtcNow,
         };
@@ -452,7 +452,7 @@ public class UserService(
             Email = email?.Address,
             NormalizedEmail = email?.Address.ToUpperInvariant(),
             FullName = fullName,
-            DateOfBirth = dateOfBirth,
+            DateOfBirth = dateOfBirth?.ToUniversalTime(),
             AdmissionNumber = admissionNumber,
             CreatedAtUtc = DateTime.UtcNow
         };
