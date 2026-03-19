@@ -121,10 +121,16 @@ app.UseExceptionHandler(exceptionHandlerApp =>
 
         var exception = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
         
+        var errors = new List<string> { exception?.Message ?? "Unknown error" };
+        if (exception?.InnerException != null)
+        {
+            errors.Add(exception.InnerException.Message);
+        }
+
         var response = PublicQ.Application.Models.Response<string, PublicQ.Application.Models.GenericOperationStatuses>.Failure(
             PublicQ.Application.Models.GenericOperationStatuses.Failed,
             "An unexpected server error occurred.",
-            new List<string> { exception?.Message ?? "Unknown error" }
+            errors
         );
 
         await context.Response.WriteAsJsonAsync(response);
