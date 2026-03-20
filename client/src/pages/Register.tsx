@@ -10,6 +10,7 @@ import { PasswordPolicyOptions } from "../models/password-policy-options";
 import { academicStructureService } from "../services/academicStructureService";
 import { ClassLevelDto } from "../models/academic";
 import { cn } from '../utils/cn';
+import PasswordInput from '../components/Shared/PasswordInput';
 import registerStyles from './Register.module.css';
 
 const Register = () => {
@@ -362,56 +363,54 @@ const Register = () => {
               </div>
 
               <div className={registerStyles.inputGroup}>
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={e => {
+                <PasswordInput
+                placeholder="Password"
+                value={password}
+                onChange={e => {
                     setPassword(e.target.value);
                     // Show password info when user starts typing
                     if (e.target.value.length > 0 && !showPasswordInfo) {
                       setShowPasswordInfo(true);
                     }
                   }}
-                  className={cn(
+                className={cn(
                     registerStyles.input,
                     touched.password && getFieldError('password') && registerStyles['input--error']
                   )}
-                  onFocus={(e) => {
+                onFocus={(e) => {
                     e.currentTarget.style.borderColor = touched.password && getFieldError('password') ? '#ef4444' : '#3b82f6';
                     // Also show password info when user focuses on password field
                     if (password.length > 0 || !showPasswordInfo) {
                       setShowPasswordInfo(true);
                     }
                   }}
-                  onBlur={(e) => {
+                onBlur={(e) => {
                     handleFieldTouch('password');
                     e.currentTarget.style.borderColor = touched.password && getFieldError('password') ? '#ef4444' : '#d1d5db';
                   }}
-                />
+              />
                 {touched.password && getFieldError('password') && (
                   <div className={registerStyles.fieldError}>{getFieldError('password')}</div>
                 )}
               </div>
 
               <div className={registerStyles.inputGroup}>
-                <input
-                  type="password"
-                  placeholder="Confirm password"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  className={cn(
+                <PasswordInput
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                className={cn(
                     registerStyles.input,
                     touched.confirmPassword && getFieldError('confirmPassword') && registerStyles['input--error']
                   )}
-                  onFocus={(e) => {
+                onFocus={(e) => {
                     e.currentTarget.style.borderColor = touched.confirmPassword && getFieldError('confirmPassword') ? '#ef4444' : '#3b82f6';
                   }}
-                  onBlur={(e) => {
+                onBlur={(e) => {
                     handleFieldTouch('confirmPassword');
                     e.currentTarget.style.borderColor = touched.confirmPassword && getFieldError('confirmPassword') ? '#ef4444' : '#d1d5db';
                   }}
-                />
+              />
                 {touched.confirmPassword && getFieldError('confirmPassword') && (
                   <div className={registerStyles.fieldError}>{getFieldError('confirmPassword')}</div>
                 )}

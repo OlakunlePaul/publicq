@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserLoginRequest } from '../models/user-login-request';
 import { userService } from '../services/userService';
 import { cn } from '../utils/cn';
+import PasswordInput from '../components/Shared/PasswordInput';
 import loginStyles from './Login.module.css';
 
 const Login = () => {
@@ -172,8 +173,7 @@ const Login = () => {
             </div>
 
             <div className={loginStyles.inputGroup}>
-              <input
-                type="password"
+              <PasswordInput
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

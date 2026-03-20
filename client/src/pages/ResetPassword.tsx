@@ -8,6 +8,7 @@ import { GenericOperationStatuses } from '../models/GenericOperationStatuses';
 import { ResponseWithData } from '../models/responseWithData';
 import { useAuth } from '../context/AuthContext';
 import { CONSTANTS } from '../constants/contstants';
+import PasswordInput from '../components/Shared/PasswordInput';
 
 // Add spinner animation styles
 const spinnerStyles = `
@@ -342,9 +343,8 @@ const ResetPassword = () => {
 
         <form onSubmit={handleResetPassword} style={styles.form}>
           <div style={styles.inputGroup}>
-            <input
-              ref={passwordInputRef}
-              type="password"
+            <PasswordInput
+              inputRef={passwordInputRef}
               placeholder="New password"
               value={password}
               onChange={(e) => {
@@ -374,8 +374,7 @@ const ResetPassword = () => {
           </div>
 
           <div style={styles.inputGroup}>
-            <input
-              type="password"
+            <PasswordInput
               placeholder="Confirm new password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
