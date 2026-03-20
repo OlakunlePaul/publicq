@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getUserInformation, type CurrentUser } from '../../utils/tokenUtils';
-import { cn } from '../../utils/cn';
 import styles from './ProfileSettingsModal.module.css';
 
 interface ProfileSettingsModalProps {
