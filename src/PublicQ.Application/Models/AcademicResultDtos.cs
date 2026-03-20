@@ -49,7 +49,7 @@ public record StudentSubjectScoreDto
     public decimal? ExamScore { get; init; }
     public string? SubjectRemark { get; init; }
 }
- bitumen
+
 
 /// <summary>
 /// Payload to update the non-academic details of a student's assessment (Affective, Psychomotor, Attendance, Remarks).
