@@ -511,6 +511,7 @@ const Admin = () => {
 
 const DashboardContent = ({ userCount, studentCount, teacherCount, groupCount, moduleCount, assignmentCount, questionCount, loading, error, onNavigate }: any) => {
   const { userRoles } = useAuth();
+  const [isHandbookModalOpen, setIsHandbookModalOpen] = useState(false);
   
   if (loading) return (
     <div className={cssStyles.dashboardContainer}>
@@ -527,8 +528,6 @@ const DashboardContent = ({ userCount, studentCount, teacherCount, groupCount, m
   const handbookUrl = UserPolicies.hasManagerAccess(userRoles) 
     ? '/handbooks/manager_handbook.md' 
     : '/handbooks/teacher_handbook.md';
-
-  const [isHandbookModalOpen, setIsHandbookModalOpen] = useState(false);
 
   return (
     <div className={cssStyles.dashboardContainer}>
