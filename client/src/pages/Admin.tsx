@@ -356,12 +356,12 @@ const Admin = () => {
               <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Report Cards
             </button>
           )}
-          {UserPolicies.hasManagerAccess(userRoles) && (
+          {UserPolicies.hasContributorAccess(userRoles) && (
             <button onClick={() => navigateToSection('users')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'users' })}>
               <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Students
             </button>
           )}
-          {UserPolicies.hasManagerAccess(userRoles) && (
+          {UserPolicies.hasContributorAccess(userRoles) && (
             <button onClick={() => navigateToSection('academic')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'academic' })}>
               <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> School Structure
             </button>
