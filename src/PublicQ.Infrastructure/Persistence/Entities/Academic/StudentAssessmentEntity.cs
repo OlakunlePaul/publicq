@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using PublicQ.Domain.Enums;
 
 namespace PublicQ.Infrastructure.Persistence.Entities.Academic;
@@ -14,7 +15,11 @@ public class StudentAssessmentEntity
     public Guid Id { get; set; }
 
     // Core Identifiers
+    /// <summary>
+    /// Student/ExamTaker who owns this assessment.
+    /// </summary>
     [Required]
+    [Column("ExamTakerId")]
     public string StudentId { get; set; } = default!;
     
     [Required]

@@ -309,6 +309,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(q => q.ModuleProgressId)
             .OnDelete(DeleteBehavior.Cascade);
         
+        // Map renamed entities to their original database table names
+        modelBuilder.Entity<StudentEntity>()
+            .ToTable("ExamTakers");
+        modelBuilder.Entity<StudentAssignmentEntity>()
+            .ToTable("ExamTakerAssignments");
+
         modelBuilder.Entity<StudentEntity>()
             .HasIndex(e => e.NormalizedEmail)
             .IsUnique();

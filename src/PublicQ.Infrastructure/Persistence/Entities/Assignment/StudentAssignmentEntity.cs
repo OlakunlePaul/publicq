@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using PublicQ.Application.Models.Reporting;
 
 namespace PublicQ.Infrastructure.Persistence.Entities.Assignment;
@@ -52,6 +53,7 @@ public class StudentAssignmentEntity
     /// The same student can have multiple StudentAssignmentEntity records for different assignments.
     /// </remarks>
     [Required]
+    [Column("ExamTakerId")]
     public string StudentId { get; set; } = default!;
     
     /// <summary>
@@ -60,6 +62,7 @@ public class StudentAssignmentEntity
     /// even if the user's name changes later or in case of user deletion in the identity system.
     /// </summary>
     [Required]
+    [Column("ExamTakerDisplayName")]
     public string StudentDisplayName { get; set; } = string.Empty;
     
     // Navigation Properties

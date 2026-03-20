@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using PublicQ.Application.Models.Session;
 using PublicQ.Infrastructure.Persistence.Entities.Group;
 using PublicQ.Infrastructure.Persistence.Entities.Module;
@@ -156,6 +157,7 @@ public class ModuleProgressEntity
     /// Used to group all module progress records for a single student's assignment attempt.
     /// </remarks>
     [Required]
+    [Column("ExamTakerAssignmentId")]
     public Guid StudentAssignmentId { get; set; }
     
     /// <summary>
@@ -170,6 +172,7 @@ public class ModuleProgressEntity
     /// Maximum length follows system requirements for user identifiers.
     /// </remarks>
     [Required]
+    [Column("ExamTakerId")]
     public string StudentId { get; set; } = default!;
     
     /// <summary>
