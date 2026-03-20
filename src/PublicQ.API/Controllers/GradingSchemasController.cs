@@ -12,7 +12,7 @@ namespace PublicQ.API.Controllers;
 /// </summary>
 [ApiController]
 [Authorize(Constants.ManagersPolicy)]
-[Route($"{Constants.ControllerRoutePrefix}/grading-schemas")]
+[Route($"{Constants.ControllerRoutePrefix}/academic-structure/grading-schemas")]
 public class GradingSchemasController(IAcademicStructureService academicService) : ControllerBase
 {
     [HttpGet]

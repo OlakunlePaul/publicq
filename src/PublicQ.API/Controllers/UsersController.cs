@@ -357,7 +357,7 @@ public class UsersController(
     /// <param name="request">Pagination parameters including page number and page size.</param>
     /// <param name="validator">Validator <seealso cref="GetPaginatedEntitiesRequestValidator"/></param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
-    [Authorize(Constants.ManagersPolicy)]
+    [Authorize(Constants.ContributorsPolicy)]
     [HttpGet]
     public async Task<IActionResult> GetUsersAsync(
         [FromQuery] GetPaginatedEntitiesRequest request,
@@ -393,7 +393,7 @@ public class UsersController(
     /// </summary>
     /// <param name="request">The search request including partial email, page number, and page size.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
-    [Authorize(Constants.ManagersPolicy)]
+    [Authorize(Constants.ContributorsPolicy)]
     [HttpGet("search")]
     public async Task<IActionResult> SearchUsersAsync(
         [FromQuery] SearchUserRequest request,
