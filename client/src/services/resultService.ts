@@ -1,4 +1,5 @@
 import api from '../api/axios';
+import { Response as AppResponse } from '../models/response';
 
 export enum ModerationStatus {
   Draft = 0,
@@ -109,5 +110,10 @@ export const resultService = {
   batchUpdateClassStatus: async (sessionId: string, termId: string, classLevelId: string, currentStatus: number, newStatus: number): Promise<{ isSuccess: boolean, message?: string }> => {
     await api.patch('results/batch-status', { sessionId, termId, classLevelId, currentStatus, newStatus });
     return { isSuccess: true };
+  },
+
+  syncOnlineScores: async (sessionId: string, termId: string, classLevelId: string): Promise<{ isSuccess: boolean, message?: string }> => {
+    const r = await api.post<AppResponse>('results/sync-online-scores', { sessionId, termId, classLevelId });
+    return { isSuccess: true, message: r.data?.message };
   }
 };

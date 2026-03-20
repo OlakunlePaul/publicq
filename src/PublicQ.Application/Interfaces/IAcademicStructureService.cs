@@ -33,4 +33,10 @@ public interface IAcademicStructureService
     Task<Response<ClassLevelDto, GenericOperationStatuses>> CreateClassLevelAsync(ClassLevelCreateDto dto, CancellationToken cancellationToken = default);
     Task<Response<ClassLevelDto, GenericOperationStatuses>> UpdateClassLevelAsync(Guid id, ClassLevelCreateDto dto, CancellationToken cancellationToken = default);
     Task<Response<GenericOperationStatuses>> DeleteClassLevelAsync(Guid id, CancellationToken cancellationToken = default);
+
+    // Grading Schemas
+    Task<Response<IList<GradingSchemaDto>, GenericOperationStatuses>> GetGradingSchemasAsync(CancellationToken cancellationToken = default);
+    Task<Response<GradingSchemaDto, GenericOperationStatuses>> CreateGradingSchemaAsync(GradingSchemaCreateDto dto, CancellationToken cancellationToken = default);
+    Task<Response<GradingSchemaDto, GenericOperationStatuses>> UpdateGradingSchemaAsync(Guid id, GradingSchemaCreateDto dto, CancellationToken cancellationToken = default);
+    Task<Response<GenericOperationStatuses>> DeleteGradingSchemaAsync(Guid id, CancellationToken cancellationToken = default);
 }

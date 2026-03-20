@@ -68,4 +68,14 @@ public class ExamTakerAssignmentReportDto
     /// Progress details for each module
     /// </summary>
     public HashSet<ExamTakerModuleReportDto> ModuleReports { get; set; } = [];
+
+    /// <summary>
+    /// Number of times the student switched tabs or minimized the browser during this assignment.
+    /// </summary>
+    public int TabSwitchCount { get; set; }
+
+    /// <summary>
+    /// The last time the student switched tabs or lost focus on the browser.
+    /// </summary>
+    public DateTime? LastTabSwitchAtUtc { get; set; }
 }

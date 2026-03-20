@@ -51,12 +51,14 @@ export interface ClassLevelDto {
     name: string;
     sectionOrArm?: string;
     orderIndex: number;
+    gradingSchemaId?: string;
 }
 
 export interface ClassLevelCreateDto {
     name: string;
     sectionOrArm?: string;
     orderIndex: number;
+    gradingSchemaId?: string;
 }
 
 // Result DTOs
@@ -79,7 +81,7 @@ export interface BulkScoreEntryDto {
     sessionId: string;
     termId: string;
     classLevelId: string;
-    subjectId: string;
+    subjectId?: string;
     scores: StudentSubjectScoreDto[];
 }
 
@@ -156,4 +158,31 @@ export interface AssessmentDetailsDto {
     headTeacherComment?: string;
 
     subjectScores: StudentSubjectScoreDto[];
+}
+
+export interface GradingSchemaDto {
+    id: string;
+    name: string;
+    isActive: boolean;
+    gradeRanges: GradeRangeDto[];
+}
+
+export interface GradeRangeDto {
+    id?: string;
+    gradingSchemaId?: string;
+    symbol: string;
+    minScore: number;
+    maxScore: number;
+    remark: string;
+}
+
+export interface GradingSchemaCreateDto {
+    name: string;
+    isActive: boolean;
+    gradeRanges: GradeRangeDto[];
+}
+
+export interface ClassLevelUpdateDto extends ClassLevelCreateDto {
+    id: string;
+    gradingSchemaId?: string;
 }

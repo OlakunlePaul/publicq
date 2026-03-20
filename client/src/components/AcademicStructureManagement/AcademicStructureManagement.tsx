@@ -4,9 +4,10 @@ import SubjectManagement from './SubjectManagement';
 import ClassManagement from './ClassManagement';
 import SessionManagement from './SessionManagement';
 import TermManagement from './TermManagement';
+import GradingManagement from './GradingManagement';
 
 const AcademicStructureManagement: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'sessions' | 'terms' | 'classes' | 'subjects'>('subjects');
+  const [activeTab, setActiveTab] = useState<'sessions' | 'terms' | 'classes' | 'subjects' | 'grading'>('subjects');
 
   return (
     <div className={commonStyles.container}>
@@ -40,6 +41,12 @@ const AcademicStructureManagement: React.FC = () => {
         >
           Classes
         </button>
+        <button 
+          className={`${commonStyles.tab} ${activeTab === 'grading' ? commonStyles.activeTab : ''}`}
+          onClick={() => setActiveTab('grading')}
+        >
+          Grading
+        </button>
       </div>
 
       <div className={commonStyles.tabContent}>
@@ -47,6 +54,7 @@ const AcademicStructureManagement: React.FC = () => {
         {activeTab === 'sessions' && <SessionManagement />}
         {activeTab === 'terms' && <TermManagement />}
         {activeTab === 'classes' && <ClassManagement />}
+        {activeTab === 'grading' && <GradingManagement />}
       </div>
     </div>
   );

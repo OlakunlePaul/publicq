@@ -163,8 +163,24 @@ public class ResultsController(IResultService resultService) : ControllerBase
             
         return response.ToActionResult();
     }
+
+    /// <summary>
+    /// Synchronizes online exam scores (max 60) for a specific class, session, and term.
+    /// </summary>
+    [HttpPost("sync-online-scores")]
+    [Authorize(Constants.ContributorsPolicy)]
+    public async Task<IActionResult> SyncOnlineScoresAsync(
+        [FromBody] SyncOnlineScoresRequest request,
+        CancellationToken cancellationToken)
+    {
+        var response = await resultService.SyncOnlineScoresAsync(
+            request.SessionId, request.TermId, request.ClassLevelId, cancellationToken);
+            
+        return response.ToActionResult();
+    }
 }
 
 public record CalculateClassRequest(Guid SessionId, Guid TermId, Guid ClassLevelId);
 public record LockAssessmentRequest(bool IsLocked);
 public record BatchStatusRequest(Guid SessionId, Guid TermId, Guid ClassLevelId, ModerationStatus CurrentStatus, ModerationStatus NewStatus);
+public record SyncOnlineScoresRequest(Guid SessionId, Guid TermId, Guid ClassLevelId);

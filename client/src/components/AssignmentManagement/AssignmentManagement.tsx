@@ -5,6 +5,8 @@ import { User } from '../../models/user';
 import { assignmentService } from '../../services/assignmentService';
 import { groupService } from '../../services/groupService';
 import { userService } from '../../services/userService';
+import { academicStructureService } from '../../services/academicStructureService';
+import { SubjectDto } from '../../models/academic';
 import { formatDateToLocal } from '../../utils/dateUtils';
 import UserTable from '../Shared/UserTable';
 import { VALIDATION_CONSTRAINTS } from '../../constants/contstants';
@@ -36,14 +38,17 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
     randomizeQuestions: false,
     randomizeAnswers: false,
     groupId: '',
+    subjectId: '',
   });
   const [error, setError] = useState('');
   const [groups, setGroups] = useState<Group[]>([]);
+  const [subjects, setSubjects] = useState<SubjectDto[]>([]);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       loadGroups();
+      loadSubjects();
       
       if (assignment) {
         // Convert UTC dates to local datetime-local format
@@ -59,6 +64,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           randomizeQuestions: assignment.randomizeQuestions,
           randomizeAnswers: assignment.randomizeAnswers,
           groupId: assignment.groupId,
+          subjectId: assignment.subjectId || '',
         });
       } else {
         // Set default dates: start date = today, end date = next week
@@ -75,6 +81,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           randomizeQuestions: false,
           randomizeAnswers: false,
           groupId: '',
+          subjectId: '',
         });
       }
       setError('');
@@ -138,7 +145,8 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           showResultsImmediately: formData.showResultsImmediately,
           randomizeQuestions: formData.randomizeQuestions,
           randomizeAnswers: formData.randomizeAnswers,
-          groupId: assignment.groupId, // Keep the original groupId for updates
+          groupId: assignment.groupId,
+          subjectId: formData.subjectId || undefined,
         });
       } else {
         // Create new assignment
@@ -151,6 +159,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           randomizeQuestions: formData.randomizeQuestions,
           randomizeAnswers: formData.randomizeAnswers,
           groupId: formData.groupId,
+          subjectId: formData.subjectId || undefined,
         });
       }
     }
@@ -177,9 +186,19 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
 
   const loadGroups = async () => {
     try {
-      const response = await groupService.getGroups(1, 100); // Get first 100 groups
+      const response = await groupService.getGroups(1, 100);
       setGroups(response.data || []);
     } catch (error) {
+      console.error('Failed to load groups', error);
+    }
+  };
+
+  const loadSubjects = async () => {
+    try {
+      const { data } = await academicStructureService.getSubjects();
+      setSubjects(data || []);
+    } catch (error) {
+      console.error('Failed to load subjects', error);
     }
   };
 
@@ -309,6 +328,28 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
               </p>
             </div>
           )}
+
+          <div className={cssStyles.formGroup}>
+            <label className={cssStyles.formLabel}>
+              Link to Subject (for sync):
+            </label>
+            <select
+              name="subjectId"
+              value={formData.subjectId}
+              onChange={handleInputChange}
+              className={cssStyles.formSelect}
+            >
+              <option value="">Select a subject (Optional)</option>
+              {subjects.map(subject => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.name}
+                </option>
+              ))}
+            </select>
+            <p className={cssStyles.formHelpText}>
+              Linking an assignment to a subject allows automatic syncing of scores to the academic results system.
+            </p>
+          </div>
 
           <div className={cssStyles.formGroup}>
             <label className={cssStyles.formCheckboxLabel}>

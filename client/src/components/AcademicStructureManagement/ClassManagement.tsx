@@ -1,30 +1,37 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { ClassLevelDto, ClassLevelCreateDto } from '../../models/academic';
+import { ClassLevelDto, ClassLevelCreateDto, GradingSchemaDto } from '../../models/academic';
 import { academicStructureService } from '../../services/academicStructureService';
 import { ValidationMessage } from '../Shared/ValidationComponents';
 
 interface ClassFormModalProps {
   isOpen: boolean;
   classLevel?: ClassLevelDto; // Pass classLevel for editing
+  schemas: GradingSchemaDto[];
   onConfirm: (classLevel: ClassLevelCreateDto) => void;
   onCancel: () => void;
   apiError?: string;
 }
 
-const ClassFormModal = ({ isOpen, classLevel, onConfirm, onCancel, apiError }: ClassFormModalProps) => {
+const ClassFormModal = ({ isOpen, classLevel, schemas, onConfirm, onCancel, apiError }: ClassFormModalProps) => {
   const [formData, setFormData] = useState<ClassLevelCreateDto>({
     name: '',
     sectionOrArm: '',
     orderIndex: 0,
+    gradingSchemaId: undefined
   });
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       if (classLevel) {
-        setFormData({ name: classLevel.name, sectionOrArm: classLevel.sectionOrArm || '', orderIndex: classLevel.orderIndex });
+        setFormData({ 
+          name: classLevel.name, 
+          sectionOrArm: classLevel.sectionOrArm || '', 
+          orderIndex: classLevel.orderIndex,
+          gradingSchemaId: classLevel.gradingSchemaId
+        });
       } else {
-        setFormData({ name: '', sectionOrArm: '', orderIndex: 0 });
+        setFormData({ name: '', sectionOrArm: '', orderIndex: 0, gradingSchemaId: undefined });
       }
       setError('');
     }
@@ -75,6 +82,20 @@ const ClassFormModal = ({ isOpen, classLevel, onConfirm, onCancel, apiError }: C
             placeholder="e.g. A"
           />
         </div>
+
+        <div style={styles.formGroup}>
+          <label style={styles.formLabel}>Grading Schema:</label>
+          <select
+            style={styles.formInput}
+            value={formData.gradingSchemaId || ''}
+            onChange={(e) => setFormData({ ...formData, gradingSchemaId: e.target.value || undefined })}
+          >
+            <option value="">-- No Specific Schema --</option>
+            {schemas.map(s => (
+              <option key={s.id} value={s.id}>{s.name} {s.isActive ? '' : '(Inactive)'}</option>
+            ))}
+          </select>
+        </div>
         
         <div style={styles.formGroup}>
           <label style={styles.formLabel}>Sort Order:</label>
@@ -97,6 +118,7 @@ const ClassFormModal = ({ isOpen, classLevel, onConfirm, onCancel, apiError }: C
 
 const ClassManagement = () => {
   const [classes, setClasses] = useState<ClassLevelDto[]>([]);
+  const [schemas, setSchemas] = useState<GradingSchemaDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formModal, setFormModal] = useState<{ isOpen: boolean; apiError: string; classLevel?: ClassLevelDto }>({ isOpen: false, apiError: '' });
@@ -104,12 +126,19 @@ const ClassManagement = () => {
   const loadClasses = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await academicStructureService.getClassLevels();
-      if (response.isSuccess) {
-        setClasses(response.data || []);
+      const [classResp, schemaResp] = await Promise.all([
+        academicStructureService.getClassLevels(),
+        academicStructureService.getGradingSchemas()
+      ]);
+
+      if (classResp.isSuccess) {
+        setClasses(classResp.data || []);
+      }
+      if (schemaResp.isSuccess) {
+        setSchemas(schemaResp.data || []);
       }
     } catch (err: any) {
-      setError('Failed to load classes: ' + err.message);
+      setError('Failed to load classes or schemas: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -158,6 +187,7 @@ const ClassManagement = () => {
       <ClassFormModal 
         isOpen={formModal.isOpen} 
         classLevel={formModal.classLevel}
+        schemas={schemas}
         onConfirm={handleSave} 
         onCancel={() => setFormModal({ isOpen: false, apiError: '', classLevel: undefined })} 
         apiError={formModal.apiError}

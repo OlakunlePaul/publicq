@@ -659,6 +659,19 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
                   </div>
                 </div>
 
+                {/* Proctoring & Focus Metrics */}
+                <div className={styles.performanceSection}>
+                  <h4 className={styles.sectionTitle}>Proctoring & Focus Metrics</h4>
+                  <div className={styles.performanceGrid}>
+                    <div className={styles.performanceItem} style={{ color: report.totalTabSwitchCount > 0 ? '#dc2626' : 'inherit' }}>
+                      <strong>Total Tab Switches:</strong> {report.totalTabSwitchCount ?? 0}
+                    </div>
+                    <div className={styles.performanceItem}>
+                      <strong>Last Focus Loss:</strong> {report.lastTabSwitchAtUtc ? new Date(report.lastTabSwitchAtUtc).toLocaleString() : 'None'}
+                    </div>
+                  </div>
+                </div>
+
                 {/* Assignment Progress */}
                 {report.assignmentProgress && report.assignmentProgress.length > 0 && (
                   <div className={styles.assignmentsSection}>
@@ -667,7 +680,7 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
                     {/* Status Legend Info Box */}
                     <div className={styles.statusLegendBox}>
                       <h5 className={styles.statusLegendTitle}><img src="/images/icons/chart.svg" alt="" style={{width: '16px', height: '16px', marginRight: '6px', verticalAlign: 'middle'}} />Assignment Status Guide</h5>
-                      <div className={styles.statusLegendGrid}>
+                     <div className={styles.statusLegendGrid}>
                         <div className={`${styles.statusLegendItem} ${hoveredStatus === 'completed' ? styles.statusLegendItemHighlighted : ''}`}>
                           <span className={styles.statusLegendBadge} style={{backgroundColor: '#dcfce7', color: '#166534'}}>Completed</span>
                           <span className={styles.statusLegendText}>All modules finished within deadline</span>
@@ -801,8 +814,7 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
             </h3>
             <div className={`${styles.modalHeaderButtons} users-reports-modal-header-buttons`}>
               <button 
-                onClick={handleExportPDF}
-                className={`${styles.exportButtonSmall} users-reports-modal-header-button`}
+                onClick={handleExportPDF}                className={`${styles.exportButtonSmall} users-reports-modal-header-button`}
                 data-export-button
               >
                 <img src="/images/icons/save.svg" alt="" style={{width: '16px', height: '16px', marginRight: '6px', verticalAlign: 'middle'}} />Export PDF
@@ -871,6 +883,19 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
                     </div>
                     <div className={styles.performanceItem}>
                       <strong>Completion Rate:</strong> {((assignment.completedModules / assignment.totalModules) * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Proctoring & Focus Metrics */}
+                <div className={styles.performanceSection}>
+                  <h4 className={styles.sectionTitle}>Proctoring & Focus Metrics</h4>
+                  <div className={styles.performanceGrid}>
+                    <div className={styles.performanceItem} style={{ color: assignment.tabSwitchCount > 0 ? '#dc2626' : 'inherit' }}>
+                      <strong>Tab Switch Count:</strong> {assignment.tabSwitchCount ?? 0}
+                    </div>
+                    <div className={styles.performanceItem}>
+                      <strong>Last Focus Loss:</strong> {assignment.lastTabSwitchAtUtc ? new Date(assignment.lastTabSwitchAtUtc).toLocaleString() : 'None'}
                     </div>
                   </div>
                 </div>

@@ -180,6 +180,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     /// Individual subject scores linked to a student assessment.
     /// </summary>
     public DbSet<SubjectScoreEntity> SubjectScores { get; set; }
+    
+    /// <summary>
+    /// Grading schemas for different classes/levels.
+    /// </summary>
+    public DbSet<GradingSchemaEntity> GradingSchemas { get; set; }
+    
+    /// <summary>
+    /// Individual grade ranges within a grading schema.
+    /// </summary>
+    public DbSet<GradeRangeEntity> GradeRanges { get; set; }
 
     /// <summary>
     /// Available permissions in the system.
@@ -383,6 +393,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         // Prevent duplicate subjects for the same assessment
         modelBuilder.Entity<SubjectScoreEntity>()
             .HasIndex(s => new { s.StudentAssessmentId, s.SubjectId })
+            .IsUnique();
+
+        modelBuilder.Entity<GradingSchemaEntity>()
+            .HasMany(g => g.GradeRanges)
+            .WithOne(r => r.GradingSchema)
+            .HasForeignKey(r => r.GradingSchemaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GradeRangeEntity>()
+            .HasIndex(r => new { r.GradingSchemaId, r.Symbol })
             .IsUnique();
         
         // -----------------------------------------------------------------

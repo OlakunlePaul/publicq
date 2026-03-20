@@ -49,4 +49,14 @@ public class ExamTakerReportDto
     /// Detailed progress for each assignment
     /// </summary>
     public List<ExamTakerAssignmentReportDto> AssignmentProgress { get; set; } = [];
+
+    /// <summary>
+    /// Total number of times the student switched tabs or minimized the browser across all assignments.
+    /// </summary>
+    public int TotalTabSwitchCount { get; set; }
+
+    /// <summary>
+    /// The last time the student switched tabs or lost focus on the browser across any assignment.
+    /// </summary>
+    public DateTime? LastTabSwitchAtUtc { get; set; }
 }

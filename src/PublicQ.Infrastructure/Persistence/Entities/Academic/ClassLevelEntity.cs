@@ -31,4 +31,15 @@ public class ClassLevelEntity
     /// A numerical indicator for relative ordering in UI drop-downs (e.g., Pre-K=0, Primary 1=1).
     /// </summary>
     public int OrderIndex { get; set; }
+
+    /// <summary>
+    /// Optional field to link a class level to a specific grading schema.
+    /// If null, the system default or subject-specific defaults might apply.
+    /// </summary>
+    public Guid? GradingSchemaId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the associated grading schema.
+    /// </summary>
+    public GradingSchemaEntity? GradingSchema { get; set; }
 }

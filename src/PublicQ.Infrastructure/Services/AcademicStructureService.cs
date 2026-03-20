@@ -167,7 +167,7 @@ public class AcademicStructureService(
             .AsNoTracking()
             .OrderBy(c => c.OrderIndex)
             .ThenBy(c => c.Name)
-            .Select(c => new ClassLevelDto(c.Id, c.Name, c.SectionOrArm, c.OrderIndex))
+            .Select(c => new ClassLevelDto(c.Id, c.Name, c.SectionOrArm, c.OrderIndex, c.GradingSchemaId))
             .ToListAsync(cancellationToken);
 
         return Response<IList<ClassLevelDto>, GenericOperationStatuses>.Success(
@@ -188,14 +188,15 @@ public class AcademicStructureService(
             Id = Guid.NewGuid(),
             Name = dto.Name,
             SectionOrArm = dto.SectionOrArm,
-            OrderIndex = dto.OrderIndex
+            OrderIndex = dto.OrderIndex,
+            GradingSchemaId = dto.GradingSchemaId
         };
 
         dbContext.ClassLevels.Add(classLevel);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Response<ClassLevelDto, GenericOperationStatuses>.Success(
-            new ClassLevelDto(classLevel.Id, classLevel.Name, classLevel.SectionOrArm, classLevel.OrderIndex),
+            new ClassLevelDto(classLevel.Id, classLevel.Name, classLevel.SectionOrArm, classLevel.OrderIndex, classLevel.GradingSchemaId),
             GenericOperationStatuses.Completed, "Class level created successfully.");
     }
 
@@ -300,10 +301,10 @@ public class AcademicStructureService(
         classLevel.Name = dto.Name;
         classLevel.SectionOrArm = dto.SectionOrArm;
         classLevel.OrderIndex = dto.OrderIndex;
-
+        classLevel.GradingSchemaId = dto.GradingSchemaId;
         await dbContext.SaveChangesAsync(cancellationToken);
         return Response<ClassLevelDto, GenericOperationStatuses>.Success(
-            new ClassLevelDto(classLevel.Id, classLevel.Name, classLevel.SectionOrArm, classLevel.OrderIndex),
+            new ClassLevelDto(classLevel.Id, classLevel.Name, classLevel.SectionOrArm, classLevel.OrderIndex, classLevel.GradingSchemaId),
             GenericOperationStatuses.Completed, "Class level updated successfully.");
     }
 
@@ -315,5 +316,96 @@ public class AcademicStructureService(
         dbContext.ClassLevels.Remove(classLevel);
         await dbContext.SaveChangesAsync(cancellationToken);
         return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Class level deleted successfully.");
+    }
+
+    // Grading Schemas Implementation
+    public async Task<Response<IList<GradingSchemaDto>, GenericOperationStatuses>> GetGradingSchemasAsync(CancellationToken cancellationToken = default)
+    {
+        var schemas = await dbContext.GradingSchemas
+            .AsNoTracking()
+            .Include(s => s.GradeRanges)
+            .OrderBy(s => s.Name)
+            .Select(s => new GradingSchemaDto(
+                s.Id, 
+                s.Name, 
+                s.IsActive, 
+                s.GradeRanges.Select(r => new GradeRangeDto(r.Id, r.Symbol, r.MinScore, r.MaxScore, r.Remark)).ToList()))
+            .ToListAsync(cancellationToken);
+
+        return Response<IList<GradingSchemaDto>, GenericOperationStatuses>.Success(
+            schemas, GenericOperationStatuses.Completed, "Grading schemas retrieved successfully.");
+    }
+
+    public async Task<Response<GradingSchemaDto, GenericOperationStatuses>> CreateGradingSchemaAsync(GradingSchemaCreateDto dto, CancellationToken cancellationToken = default)
+    {
+        var schema = new GradingSchemaEntity
+        {
+            Id = Guid.NewGuid(),
+            Name = dto.Name,
+            IsActive = dto.IsActive,
+            GradeRanges = dto.GradeRanges.Select(r => new GradeRangeEntity
+            {
+                Id = Guid.NewGuid(),
+                Symbol = r.Symbol,
+                MinScore = r.MinScore,
+                MaxScore = r.MaxScore,
+                Remark = r.Remark
+            }).ToList()
+        };
+
+        dbContext.GradingSchemas.Add(schema);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Response<GradingSchemaDto, GenericOperationStatuses>.Success(
+            new GradingSchemaDto(
+                schema.Id, 
+                schema.Name, 
+                schema.IsActive, 
+                schema.GradeRanges.Select(r => new GradeRangeDto(r.Id, r.Symbol, r.MinScore, r.MaxScore, r.Remark)).ToList()),
+            GenericOperationStatuses.Completed, "Grading schema created successfully.");
+    }
+
+    public async Task<Response<GradingSchemaDto, GenericOperationStatuses>> UpdateGradingSchemaAsync(Guid id, GradingSchemaCreateDto dto, CancellationToken cancellationToken = default)
+    {
+        var schema = await dbContext.GradingSchemas
+            .Include(s => s.GradeRanges)
+            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+
+        if (schema == null) return Response<GradingSchemaDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Schema not found.");
+
+        schema.Name = dto.Name;
+        schema.IsActive = dto.IsActive;
+
+        // Simple approach: clear and re-add ranges for now
+        dbContext.GradeRanges.RemoveRange(schema.GradeRanges);
+        schema.GradeRanges = dto.GradeRanges.Select(r => new GradeRangeEntity
+        {
+            Id = Guid.NewGuid(),
+            GradingSchemaId = schema.Id,
+            Symbol = r.Symbol,
+            MinScore = r.MinScore,
+            MaxScore = r.MaxScore,
+            Remark = r.Remark
+        }).ToList();
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Response<GradingSchemaDto, GenericOperationStatuses>.Success(
+            new GradingSchemaDto(
+                schema.Id, 
+                schema.Name, 
+                schema.IsActive, 
+                schema.GradeRanges.Select(r => new GradeRangeDto(r.Id, r.Symbol, r.MinScore, r.MaxScore, r.Remark)).ToList()),
+            GenericOperationStatuses.Completed, "Grading schema updated successfully.");
+    }
+
+    public async Task<Response<GenericOperationStatuses>> DeleteGradingSchemaAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var schema = await dbContext.GradingSchemas.FindAsync(new object[] { id }, cancellationToken);
+        if (schema == null) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Schema not found.");
+
+        dbContext.GradingSchemas.Remove(schema);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Grading schema deleted successfully.");
     }
 }

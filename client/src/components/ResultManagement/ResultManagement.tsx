@@ -10,6 +10,7 @@ import { ValidationMessage } from '../Shared/ValidationComponents';
 import ReportCardView from './ReportCardView';
 import PrintableReportCard from './PrintableReportCard';
 import ResultUpload from './ResultUpload';
+import BroadsheetView from './BroadsheetView';
 
 const ResultManagement: React.FC = () => {
   const [sessions, setSessions] = useState<SessionDto[]>([]);
@@ -34,7 +35,7 @@ const ResultManagement: React.FC = () => {
   const [showUpload, setShowUpload] = useState(false);
   const [printAssessmentId, setPrintAssessmentId] = useState<string | null>(null);
   const [printAssessmentReport, setPrintAssessmentReport] = useState<AssessmentDetailsDto | null>(null);
-
+  const [showBroadsheet, setShowBroadsheet] = useState(false);
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -194,6 +195,33 @@ const ResultManagement: React.FC = () => {
     }
   };
 
+  const handleSyncOnlineScores = async () => {
+    if (!selectedSession || !selectedTerm || !selectedClass) {
+      setError('Please select Session, Term, and Class to sync online scores.');
+      return;
+    }
+    
+    if (!window.confirm("This will fetch and sync scores from all completed online exams for this class. Existing exam scores for these subjects will be overwritten. Continue?")) return;
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const resp = await resultService.syncOnlineScores(selectedSession, selectedTerm, selectedClass);
+      if (resp.isSuccess) {
+        setSuccess(resp.message || 'Online scores synchronized successfully.');
+        handleFetchStudents(); // Refresh the grid
+      } else {
+        setError(resp.message || 'Failed to sync online scores.');
+      }
+    } catch (err: any) {
+      setError('Error occurred during sync: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePrint = async (id: string) => {
     setLoading(true);
     setError('');
@@ -267,11 +295,26 @@ const ResultManagement: React.FC = () => {
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button 
+            onClick={() => setShowBroadsheet(true)}
+            style={{ padding: '8px 16px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
+            disabled={!selectedClass}
+          >
+            Class Broadsheet
+          </button>
+          <button 
             onClick={() => setShowUpload(true)}
             style={{ padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
             disabled={!selectedClass}
           >
             Bulk Upload CSV
+          </button>
+          <button 
+            onClick={handleSyncOnlineScores}
+            style={{ padding: '8px 16px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
+            disabled={loading || !selectedClass}
+            title="Fetch and sync scores from completed online exams"
+          >
+            {loading ? 'Syncing...' : 'Sync Online Scores'}
           </button>
         </div>
       </div>
@@ -517,6 +560,18 @@ const ResultManagement: React.FC = () => {
           sessionInfo={sessions.find(s => s.id === selectedSession)}
           onClose={() => setPrintAssessmentId(null)} 
         />
+      )}
+
+      {showBroadsheet && (
+        <div style={modalOverlayStyle}>
+          <BroadsheetView 
+            sessionId={selectedSession}
+            termId={selectedTerm}
+            classLevelId={selectedClass}
+            subjects={subjects}
+            onClose={() => setShowBroadsheet(false)}
+          />
+        </div>
       )}
     </div>
   );

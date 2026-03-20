@@ -69,4 +69,9 @@ public interface IResultService
     /// Batch updates the moderation status for an entire class.
     /// </summary>
     Task<Response<GenericOperationStatuses>> BatchUpdateClassStatusAsync(Guid sessionId, Guid termId, Guid classLevelId, ModerationStatus currentStatus, ModerationStatus newStatus, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Synchronizes online exam scores (max 60) for a specific class, session, and term.
+    /// </summary>
+    Task<Response<GenericOperationStatuses>> SyncOnlineScoresAsync(Guid sessionId, Guid termId, Guid classLevelId, CancellationToken cancellationToken);
 }

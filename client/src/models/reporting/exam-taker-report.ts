@@ -48,4 +48,14 @@ export interface ExamTakerReport {
    * Detailed progress for each assignment
    */
   assignmentProgress: ExamTakerAssignmentReport[];
+
+  /**
+   * Total number of times the student switched tabs or minimized the browser across all assignments.
+   */
+  totalTabSwitchCount: number;
+
+  /**
+   * The last time the student switched tabs or lost focus on the browser.
+   */
+  lastTabSwitchAtUtc?: string;
 }

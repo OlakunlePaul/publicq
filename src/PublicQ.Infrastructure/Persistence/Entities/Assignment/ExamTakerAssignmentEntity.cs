@@ -94,7 +94,17 @@ public class ExamTakerAssignmentEntity
     /// creating progress tracking records for all modules they must complete.
     /// </remarks>
     public ICollection<ModuleProgressEntity> ModuleProgress { get; set; } = new List<ModuleProgressEntity>();
-    
+
+    // Proctoring / Browser Lock-down indicators
+    /// <summary>
+    /// Number of times the student switched tabs or minimized the browser during the exam.
+    /// </summary>
+    public int TabSwitchCount { get; set; }
+
+    /// <summary>
+    /// The timestamp of the last recorded browser focus loss.
+    /// </summary>
+    public DateTime? LastTabSwitchAtUtc { get; set; }
     /// <summary>
     /// Converts this entity to a data transfer object (DTO) for reporting purposes.
     /// </summary>
@@ -105,7 +115,9 @@ public class ExamTakerAssignmentEntity
         {
             Id = Id,
             ExamTakerId = ExamTakerId,
-            ExamTakerDisplayName = ExamTakerDisplayName
+            ExamTakerDisplayName = ExamTakerDisplayName,
+            TabSwitchCount = TabSwitchCount,
+            LastTabSwitchAtUtc = LastTabSwitchAtUtc
         };
     }
 }

@@ -59,4 +59,14 @@ export interface ExamTakerAssignmentReport {
    * Progress details for each module
    */
   moduleReports: ExamTakerModuleReport[];
+
+  /**
+   * Number of times the student switched tabs or minimized the browser during this assignment.
+   */
+  tabSwitchCount: number;
+
+  /**
+   * The last time the student switched tabs or lost focus on the browser.
+   */
+  lastTabSwitchAtUtc?: string;
 }

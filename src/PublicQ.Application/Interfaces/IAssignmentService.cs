@@ -133,4 +133,16 @@ public interface IAssignmentService
     /// <returns>A response containing the total count of assignments and operation status.</returns>
     Task<Response<long, GenericOperationStatuses>> GetAssignmentCountAsync(
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Records a browser tab switch or focus loss during an exam.
+    /// </summary>
+    /// <param name="assignmentId">The ID of the assignment.</param>
+    /// <param name="examTakerId">The ID of the student.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>A response containing the operation status.</returns>
+    Task<Response<GenericOperationStatuses>> RecordTabSwitchAsync(
+        Guid assignmentId,
+        string examTakerId,
+        CancellationToken cancellationToken = default);
 }

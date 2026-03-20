@@ -33,7 +33,7 @@ public record BulkScoreEntryDto
     public Guid SessionId { get; init; }
     public Guid TermId { get; init; }
     public Guid ClassLevelId { get; init; }
-    public Guid SubjectId { get; init; }
+    public Guid? SubjectId { get; init; } // Optional if present in individual scores
     
     public List<StudentSubjectScoreDto> Scores { get; init; } = new();
 }
@@ -44,10 +44,12 @@ public record BulkScoreEntryDto
 public record StudentSubjectScoreDto
 {
     public string ExamTakerId { get; init; } = string.Empty;
+    public Guid? SubjectId { get; init; } // Optional if present in root
     public decimal? TestScore { get; init; }
     public decimal? ExamScore { get; init; }
     public string? SubjectRemark { get; init; }
 }
+ bitumen
 
 /// <summary>
 /// Payload to update the non-academic details of a student's assessment (Affective, Psychomotor, Attendance, Remarks).

@@ -291,7 +291,12 @@ const Admin = () => {
 
   const renderContent = () => {
     switch (activeSection) {
-      case 'users': return <UserManagement userManagementData={userManagementData} setUserManagementData={setUserManagementData} currentUserRoles={userRoles} />;
+      case 'users': return (
+        <div>
+          <UserRegistrationManagement userRegistrationConfig={userRegistrationOptions} setUserRegistrationConfig={setUserRegistrationOptions} />
+          <UserManagement userManagementData={userManagementData} setUserManagementData={setUserManagementData} currentUserRoles={userRoles} />
+        </div>
+      );
       case 'groups': return <GroupManagement groupManagementData={groupManagementData} setGroupManagementData={setGroupManagementData} />;
       case 'assignments': return <AssignmentManagement assignmentManagementData={assignmentManagementData} setAssignmentManagementData={setAssignmentManagementData} />;
       case 'assessments': return <ModuleManagement moduleManagementData={moduleManagementData} setModuleManagementData={setModuleManagementData} onNavigateToGroups={() => navigateToSection('groups')} />;
@@ -303,7 +308,6 @@ const Admin = () => {
       case 'admissions': return <AdmissionNumberManagement admissionConfig={admissionNumberOptions} setAdmissionConfig={setAdmissionNumberOptions} />;
       case 'security': return (
         <div>
-          <UserRegistrationManagement userRegistrationConfig={userRegistrationOptions} setUserRegistrationConfig={setUserRegistrationOptions} />
           <TokenManagement tokenConfig={tokenOptions} setTokenConfig={setTokenOptions} />
           <PasswordManagement passwordConfig={passwordOptions} setPasswordConfig={setPasswordOptions} />
           <IpRateLimiting />

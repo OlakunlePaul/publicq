@@ -57,6 +57,12 @@ export interface AssignmentBase {
    * Gets or sets the foreign key reference to the group containing the assessment modules.
    */
   groupId: string;
+
+  /**
+   * Gets or sets the foreign key reference to the subject.
+   * This links the online exam assignment to a specific academic subject for result syncing.
+   */
+  subjectId?: string;
 }
 
 /**

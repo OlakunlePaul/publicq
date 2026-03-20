@@ -8,6 +8,7 @@ import { ModuleProgress } from '../../models/module-progress';
 import { ExamTakerModuleVersion } from '../../models/exam-taker-module-version';
 import { ExamTakerPossibleAnswer } from '../../models/exam-taker-possible-answer';
 import { sessionService } from '../../services/sessionService';
+import { assignmentService } from '../../services/assignmentService';
 import { FilePreview } from '../Shared/FilePreview';
 import { StaticFileDto } from '../../models/static-file';
 import { QuestionResponseOperation } from '../../models/question-response-operation';
@@ -794,6 +795,26 @@ const Questions: React.FC<QuestionsProps> = ({
   useEffect(() => {
     initializeAnswers();
   }, [initializeAnswers]);
+
+  // Add visibilitychange listener to record tab switches
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.hidden && !demoMode) {
+        // Tab was switched or browser minimized - record this event
+        if (state?.assignment?.id && state?.user?.id) {
+          try {
+            await assignmentService.recordTabSwitch(state.assignment.id, state.user.id);
+            // Optionally show a notification/warning here
+          } catch (error) {
+            console.error('Failed to record tab switch:', error);
+          }
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [demoMode, state]);
 
   // Prevent text copying via keyboard shortcuts and context menu
   useEffect(() => {

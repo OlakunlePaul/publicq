@@ -99,5 +99,26 @@ export const academicStructureService = {
     async deleteClassLevel(id: string): Promise<Response<GenericOperationStatuses>> {
         const response = await api.delete(`${API_BASE_URL}/classes/${id}`);
         return response.data;
+    },
+
+    // Grading Schemas
+    async getGradingSchemas(): Promise<ResponseWithData<any[], GenericOperationStatuses>> {
+        const response = await api.get(`${API_BASE_URL}/grading-schemas`);
+        return response.data;
+    },
+
+    async createGradingSchema(data: any): Promise<ResponseWithData<any, GenericOperationStatuses>> {
+        const response = await api.post(`${API_BASE_URL}/grading-schemas`, data);
+        return response.data;
+    },
+
+    async updateGradingSchema(id: string, data: any): Promise<ResponseWithData<any, GenericOperationStatuses>> {
+        const response = await api.put(`${API_BASE_URL}/grading-schemas/${id}`, data);
+        return response.data;
+    },
+
+    async deleteGradingSchema(id: string): Promise<Response<GenericOperationStatuses>> {
+        const response = await api.delete(`${API_BASE_URL}/grading-schemas/${id}`);
+        return response.data;
     }
 };

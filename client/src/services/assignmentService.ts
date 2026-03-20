@@ -65,5 +65,10 @@ export const assignmentService = {
   getTotalAssignments: async (): Promise<ResponseWithData<number, GenericOperationStatuses>> => {
     const response = await axios.get<ResponseWithData<number, GenericOperationStatuses>>('assignments/total');
     return response.data;
+  },
+
+  recordTabSwitch: async (assignmentId: string, examTakerId: string): Promise<Response<GenericOperationStatuses>> => {
+    const response = await axios.post<Response<GenericOperationStatuses>>(`assignments/${assignmentId}/proctoring/tab-switch/${examTakerId}`);
+    return response.data;
   }
 };

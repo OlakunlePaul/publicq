@@ -82,7 +82,8 @@ public class AssignmentService(
                 CreatedByUser = createdByUserId,
                 RandomizeQuestions = assignmentCreateDto.RandomizeQuestions,
                 RandomizeAnswers = assignmentCreateDto.RandomizeAnswers,
-                ShowResultsImmediately = assignmentCreateDto.ShowResultsImmediately
+                ShowResultsImmediately = assignmentCreateDto.ShowResultsImmediately,
+                SubjectId = assignmentCreateDto.SubjectId
             };
 
             logger.LogDebug("Adding new assignment to the database: {@AssignmentEntity}", assignmentToCreate);
@@ -214,6 +215,7 @@ public class AssignmentService(
         assignmentToUpdate.RandomizeQuestions = updateDto.RandomizeQuestions;
         assignmentToUpdate.RandomizeAnswers = updateDto.RandomizeAnswers;
         assignmentToUpdate.ShowResultsImmediately = updateDto.ShowResultsImmediately;
+        assignmentToUpdate.SubjectId = updateDto.SubjectId;
         assignmentToUpdate.UpdatedAtUtc = DateTime.UtcNow;
         assignmentToUpdate.UpdatedByUser = updatedByUser;
 
@@ -673,7 +675,32 @@ public class AssignmentService(
             GenericOperationStatuses.Completed,
             $"Total assignments count: '{count}' found.");
     }
-    
+
+    /// <inheritdoc cref="IAssignmentService.RecordTabSwitchAsync"/>
+    public async Task<Response<GenericOperationStatuses>> RecordTabSwitchAsync(
+        Guid assignmentId,
+        string examTakerId,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Recording tab switch for assignment {AssignmentId}, student {ExamTakerId}", assignmentId, examTakerId);
+
+        var assignment = await dbContext.ExamTakerAssignments
+            .FirstOrDefaultAsync(eta => eta.AssignmentId == assignmentId && eta.ExamTakerId == examTakerId, cancellationToken);
+
+        if (assignment == null)
+        {
+            logger.LogWarning("Record tab switch failed. No assignment found for student {ExamTakerId} in assignment {AssignmentId}", examTakerId, assignmentId);
+            return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assignment tracking record not found.");
+        }
+
+        assignment.TabSwitchCount++;
+        assignment.LastTabSwitchAtUtc = DateTime.UtcNow;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Tab switch recorded.");
+    }
+   
     /// <summary>
     /// This service method validates that all provided exam taker IDs exist in the system.
     /// </summary>

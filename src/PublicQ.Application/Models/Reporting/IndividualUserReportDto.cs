@@ -28,4 +28,14 @@ public class IndividualUserReportDto
     /// even if the user's name changes later or in case of user deletion in the identity system.
     /// </summary>
     public string ExamTakerDisplayName { get; set; }
+
+    /// <summary>
+    /// Number of times the student switched tabs or minimized the browser during the exam.
+    /// </summary>
+    public int TabSwitchCount { get; set; }
+
+    /// <summary>
+    /// The timestamp of the last recorded browser focus loss.
+    /// </summary>
+    public DateTime? LastTabSwitchAtUtc { get; set; }
 }

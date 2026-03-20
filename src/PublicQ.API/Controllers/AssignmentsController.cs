@@ -295,4 +295,26 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
         
         return response.ToActionResult();
     }
+
+    /// <summary>
+    /// Records a browser tab switch or focus loss during an exam.
+    /// </summary>
+    /// <param name="id">The assignment ID.</param>
+    /// <param name="examTakerId">The student ID.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>An <see cref="IActionResult"/> with the operation status.</returns>
+    [Authorize]
+    [HttpPost("{id:guid}/proctoring/tab-switch/{examTakerId}")]
+    public async Task<IActionResult> RecordTabSwitchAsync(Guid id, string examTakerId, CancellationToken cancellationToken)
+    {
+        if (id == Guid.Empty || string.IsNullOrWhiteSpace(examTakerId))
+        {
+            return Response<GenericOperationStatuses>
+                .Failure(GenericOperationStatuses.BadRequest, "Assignment ID and Exam Taker ID are required.")
+                .ToActionResult();
+        }
+
+        var response = await assignmentService.RecordTabSwitchAsync(id, examTakerId, cancellationToken);
+        return response.ToActionResult();
+    }
 }

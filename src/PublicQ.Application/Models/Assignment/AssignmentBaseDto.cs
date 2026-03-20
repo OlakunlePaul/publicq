@@ -80,6 +80,12 @@ public abstract class AssignmentBaseDto
     public bool RandomizeAnswers { get; set; }
     
     /// <summary>
+    /// Gets or sets the foreign key reference to the subject.
+    /// This links the online exam assignment to a specific academic subject for result syncing.
+    /// </summary>
+    public Guid? SubjectId { get; set; }
+
+    /// <summary>
     /// Gets the server's current UTC time.
     /// Used by clients to make date comparisons without relying on potentially manipulated local clocks.
     /// </summary>

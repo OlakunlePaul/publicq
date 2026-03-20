@@ -22,4 +22,14 @@ export interface IndividualUserReport {
    * even if the user's name changes later or in case of user deletion in the identity system.
    */
   examTakerDisplayName: string;
+
+  /**
+   * Number of times the student switched tabs or minimized the browser during the exam.
+   */
+  tabSwitchCount: number;
+
+  /**
+   * The timestamp of the last recorded browser focus loss.
+   */
+  lastTabSwitchAtUtc?: string;
 }

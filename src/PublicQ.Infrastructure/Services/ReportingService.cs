@@ -513,6 +513,13 @@ public class ReportingService(
                 .Select(e => e.ExamTakerDisplayName)
                 .FirstOrDefault();
             
+            var totalTabSwitches = examTakerSpecificAssignments.Sum(eta => eta.TabSwitchCount);
+            var lastTabSwitch = examTakerSpecificAssignments
+                .Where(eta => eta.LastTabSwitchAtUtc.HasValue)
+                .OrderByDescending(eta => eta.LastTabSwitchAtUtc)
+                .Select(eta => eta.LastTabSwitchAtUtc)
+                .FirstOrDefault();
+
             var report = new ExamTakerReportDto
             {
                 StudentId = examTaker,
@@ -529,9 +536,11 @@ public class ReportingService(
                         .Average(mr => mr.Score!.Value)
                     : null,
                 TotalTimeSpentMinutes = assignmentReports.Sum(ar => ar.TimeSpentMinutes),
-                AssignmentProgress = assignmentReports
+                AssignmentProgress = assignmentReports,
+                TotalTabSwitchCount = totalTabSwitches,
+                LastTabSwitchAtUtc = lastTabSwitch
             };
-            
+           
             reports.Add(report);
         }
         
@@ -565,9 +574,13 @@ public class ReportingService(
                 TimeSpentMinutes = kvp.Value.Sum(mr => mr.TimeSpentMinutes),
                 CompletedModules = kvp.Value.Count(mr => mr.Status == ModuleStatus.Completed),
                 TotalModules = kvp.Value.Count,
-                ModuleReports = kvp.Value
+                ModuleReports = kvp.Value,
+                TabSwitchCount = kvp.Key.ExamTakerAssignments
+                    .FirstOrDefault(eta => eta.AssignmentId == kvp.Key.Id)?.TabSwitchCount ?? 0,
+                LastTabSwitchAtUtc = kvp.Key.ExamTakerAssignments
+                    .FirstOrDefault(eta => eta.AssignmentId == kvp.Key.Id)?.LastTabSwitchAtUtc
             };
-            assignmentReports.Add(assignmentReport);
+           assignmentReports.Add(assignmentReport);
         }
 
         return assignmentReports;

@@ -146,6 +146,12 @@ public class AssignmentEntity
     [Required]
     [MaxLength(256)]
     public string CreatedByUser { get; set; } = default!;
+
+    /// <summary>
+    /// Gets or sets the foreign key reference to the subject.
+    /// This links the online exam assignment to a specific academic subject for result syncing.
+    /// </summary>
+    public Guid? SubjectId { get; set; }
     
     /// <summary>
     /// Gets or sets the user username of the administrator who updated this assignment.
@@ -189,6 +195,11 @@ public class AssignmentEntity
     public GroupEntity? Group { get; set; }
     
     /// <summary>
+    /// Gets or sets the subject associated with this assignment.
+    /// </summary>
+    public Persistence.Entities.Academic.SubjectEntity? Subject { get; set; }
+    
+    /// <summary>
     /// Gets or sets the collection of student assignments linking specific exam takers to this assignment.
     /// Represents which students have been assigned to complete this assessment.
     /// </summary>
@@ -221,6 +232,7 @@ public class AssignmentEntity
             IsPublished = IsPublished,
             GroupId = GroupId,
             GroupTitle = Group?.Title ?? string.Empty,
+            SubjectId = SubjectId,
             CreatedByUser = CreatedByUser,
             UpdatedByUser = UpdatedByUser,
             CreatedAtUtc = CreatedAtUtc,

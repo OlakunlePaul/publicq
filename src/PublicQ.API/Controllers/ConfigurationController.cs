@@ -325,6 +325,7 @@ public class ConfigurationController(
     /// Gets whether self-service user registration is enabled.
     /// </summary>
     /// <returns>True if registration is enabled, otherwise, false.</returns>
+    [AllowAnonymous]
     [HttpGet("security/user/registration")]
     public IActionResult IsSelfServiceRegistrationEnabled()
     {
@@ -340,7 +341,7 @@ public class ConfigurationController(
     /// <param name="enableSelfServiceRegistration">Enable or disable self service user registration</param>
     /// <returns>Returns <see cref="GenericOperationStatuses"/> wrapped into <see cref="Response{TStatus}"/></returns>
     [HttpPost("security/user/registration")]
-    [Authorize(Constants.AdminsPolicy)]
+    [Authorize(Constants.ManagersPolicy)]
     public IActionResult IsSelfServiceRegistrationEnabled(
         [FromBody] bool enableSelfServiceRegistration)
     {

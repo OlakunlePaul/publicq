@@ -8,6 +8,7 @@ import { GroupMemberState } from '../../models/group-member-state';
 import { ModuleStatus } from '../../models/module-status';
 import { groupService } from '../../services/groupService';
 import { sessionService } from '../../services/sessionService';
+import { assignmentService } from '../../services/assignmentService';
 import { FilePreview } from '../Shared/FilePreview';
 import { StaticFileDto } from '../../models/static-file';
 
@@ -279,9 +280,18 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
 
   // Refresh data when page becomes visible (user returns from another tab)
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && groupMemberStates.length > 0) {
-        // Check if any running modules might have expired while tab was hidden
+    const handleVisibilityChange = async () => {
+      if (document.hidden) {
+        // Tab was switched or browser minimized - record this event
+        if (assignment && user && user.id) {
+          try {
+            await assignmentService.recordTabSwitch(assignment.id, user.id);
+          } catch (error) {
+            console.error('Failed to record tab switch:', error);
+          }
+        }
+      } else if (groupMemberStates.length > 0) {
+        // Tab became visible again - check if any running modules might have expired while tab was hidden
         const hasRunningModules = groupMemberStates.some(memberState => {
           const timeInfo = getModuleTimeInfo(memberState);
           return memberState.startedAtUtc && !memberState.completedAtUtc && timeInfo?.remainingMinutes;
@@ -295,7 +305,7 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [groupMemberStates, getModuleTimeInfo, loadAssignmentData]);
+  }, [groupMemberStates, getModuleTimeInfo, loadAssignmentData, assignment, user]);
 
   useEffect(() => {
     loadAssignmentData();
