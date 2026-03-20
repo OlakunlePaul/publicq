@@ -755,20 +755,20 @@ const GroupManagement = ({ groupManagementData, setGroupManagementData }: GroupM
         <div style={styles.infoSection}>
           <div style={styles.infoHeader}>
             <span style={styles.infoIcon}><img src="/images/icons/information.svg" alt="" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} /></span>
-            <span style={styles.infoTitle}>Group Settings Information</span>
+            <span style={styles.infoTitle}>Subject Folder Information</span>
           </div>
           <div style={styles.infoContent}>
             <p style={styles.infoText}>
-              <strong>Progression Control:</strong> When enabled, students must wait for the full duration of each module to elapse before they can start the next module, even if they complete it early.
+              <strong>Step-by-Step Exams:</strong> When enabled, candidates must wait for the full duration of each question paper to elapse before they can start the next one in the folder, mirroring a physical timed exam room.
             </p>
             <p style={styles.infoText}>
-              <strong>Order Lock:</strong> When enabled, exam takers cannot launch modules out of order and must complete them sequentially based on the group member arrangement.
+              <strong>Fixed Sequence:</strong> When enabled, candidates cannot jump between papers and must complete them in the exact order you've arranged them in this folder.
             </p>
             <p style={styles.infoText}>
-              These settings help ensure students spend adequate time on learning material and maintain proper learning progression through the curriculum.
+              These settings help maintain the integrity of the examination process and ensure student progression follows your school's curriculum flow.
             </p>
             <p style={styles.infoText}>
-              <strong>Keyboard Shortcut:</strong> Press <kbd style={styles.kbd}>Ctrl+N</kbd> to quickly create a new group.
+              <strong>Keyboard Shortcut:</strong> Press <kbd style={styles.kbd}>Ctrl+N</kbd> to quickly create a new subject folder.
             </p>
           </div>
         </div>

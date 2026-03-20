@@ -288,7 +288,7 @@ const ResultManagement: React.FC = () => {
     <div className={commonStyles.container}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 className={commonStyles.title}>Result Management</h2>
+          <h2 className={commonStyles.title}>Result Office</h2>
           <p className={commonStyles.description}>
             Bulk enter scores, review, and moderate student assessments.
           </p>
@@ -405,10 +405,10 @@ const ResultManagement: React.FC = () => {
       </div>
 
       <div className={commonStyles.card} style={{ marginBottom: '24px', padding: '20px' }}>
-        <h3 style={{ marginTop: 0, fontSize: '16px' }}>Result Moderation & Workflow</h3>
+        <h3 style={{ marginTop: 0, fontSize: '16px' }}>Result Office Moderation & Workflow</h3>
         <p style={{ fontSize: '14px', color: '#4b5563', marginBottom: '16px' }}>
-          Batch update the status of assessments for the selected class to push them through the moderation pipeline.
-          (Draft → Moderated → Approved → Published)
+          Batch update the status of academic results for the selected class to push them through the school's moderation pipeline.
+          (Draft → Vetted → Approved → Finalized for Report Cards)
         </p>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button 

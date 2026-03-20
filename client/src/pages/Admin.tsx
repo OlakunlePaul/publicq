@@ -214,26 +214,26 @@ const Admin = () => {
 
   const getSectionInfo = (section: AdminSection) => {
     const sectionMap = {
-      dashboard: { title: 'Dashboard', icon: <img src="https://cdn-icons-png.flaticon.com/512/1828/1828762.png" alt="Dashboard" style={{width: '24px', height: '24px'}} />, description: 'Overview and school-wide statistics' },
-      users: { title: 'Students', icon: <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="Users" style={{width: '24px', height: '24px'}} />, description: 'Manage student profiles and academic access' },
-      groups: { title: 'Exam Bundles', icon: <img src="https://cdn-icons-png.flaticon.com/512/615/615075.png" alt="Groups" style={{width: '24px', height: '24px'}} />, description: 'Organize your papers into subject folders' },
-      assignments: { title: 'Exam Schedules', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Assignments" style={{width: '24px', height: '24px'}} />, description: 'Set dates and assign students to exams' },
-      assessments: { title: 'Question Papers', icon: <img src="https://cdn-icons-png.flaticon.com/512/3429/3429153.png" alt="Exams" style={{width: '24px', height: '24px'}} />, description: 'Prepare and manage your exam papers' },
-      reports: { title: 'Reports & Analytics', icon: <img src="https://cdn-icons-png.flaticon.com/512/423/423794.png" alt="Reports" style={{width: '24px', height: '24px'}} />, description: 'View student performance insights' },
-      email: { title: 'Communication Settings', icon: <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" alt="Email" style={{width: '24px', height: '24px'}} />, description: 'Configure email and messaging settings' },
-      banners: { title: 'School Notices', icon: <img src="https://cdn-icons-png.flaticon.com/512/1997/1997842.png" alt="Banners" style={{width: '24px', height: '24px'}} />, description: 'Manage site-wide announcements' },
-      pages: { title: 'Platform Pages', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Pages" style={{width: '24px', height: '24px'}} />, description: 'Manage static content pages' },
-      ai: { title: 'AI Settings', icon: <img src="https://cdn-icons-png.flaticon.com/512/2040/2040523.png" alt="AI" style={{width: '24px', height: '24px'}} />, description: 'Configure AI Monkey settings' },
-      'ai-chat': { title: 'AI Assistant', icon: <img src="https://cdn-icons-png.flaticon.com/512/134/134914.png" alt="Chat" style={{width: '24px', height: '24px'}} />, description: 'Chat with your AI teaching assistant' },
-      security: { title: 'Security & Auth', icon: <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="Security" style={{width: '24px', height: '24px'}} />, description: 'Manage security and authentication' },
-      cache: { title: 'System Optimize', icon: <img src="https://cdn-icons-png.flaticon.com/512/2874/2874802.png" alt="Cache" style={{width: '24px', height: '24px'}} />, description: 'Manage application performance' },
-      storage: { title: 'File Storage', icon: <img src="https://cdn-icons-png.flaticon.com/512/2965/2965312.png" alt="Storage" style={{width: '24px', height: '24px'}} />, description: 'Configure file storage settings' },
-      logs: { title: 'System Logs', icon: <img src="https://cdn-icons-png.flaticon.com/512/1069/1069159.png" alt="Logs" style={{width: '24px', height: '24px'}} />, description: 'View system audit logs' },
-      admissions: { title: 'Registration Format', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Admissions" style={{width: '24px', height: '24px'}} />, description: 'Configure student admission number format' },
-      branding: { title: 'School Profile', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Branding" style={{width: '24px', height: '24px'}} />, description: 'Configure school identity' },
-      academic: { title: 'School Structure', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Academic" style={{width: '24px', height: '24px'}} />, description: 'Manage Sessions, Terms, Classes, and Subjects' },
-      results: { title: 'Report Cards', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Results" style={{width: '24px', height: '24px'}} />, description: 'Manage student scores, rankings, and moderation' },
-      permissions: { title: 'Staff Permissions', icon: <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="Permissions" style={{width: '24px', height: '24px'}} />, description: 'Configure role-based access control' }
+      dashboard: { title: 'Dashboard', icon: <img src="https://cdn-icons-png.flaticon.com/512/1828/1828762.png" alt="Dashboard" style={{width: '24px', height: '24px'}} />, description: 'The School Quad – A quick glance at the entire school\'s pulse and statistics.' },
+      users: { title: 'Users', icon: <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="Users" style={{width: '24px', height: '24px'}} />, description: 'The School Registry – Managing the profiles of everyone in the building, from students to staff.' },
+      groups: { title: 'Exam Bundles', icon: <img src="https://cdn-icons-png.flaticon.com/512/615/615075.png" alt="Groups" style={{width: '24px', height: '24px'}} />, description: 'The Subject Folders – Grouping your papers by subject or department for organized distribution.' },
+      assignments: { title: 'Exam Schedules', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Assignments" style={{width: '24px', height: '24px'}} />, description: 'The Examination Timetable – Setting the date, time, and candidate list for your tests.' },
+      assessments: { title: 'Question Papers', icon: <img src="https://cdn-icons-png.flaticon.com/512/3429/3429153.png" alt="Exams" style={{width: '24px', height: '24px'}} />, description: 'The Printing Room – Where you draft and finalize your exam questions before they are bundled.' },
+      reports: { title: 'Reports & Analytics', icon: <img src="https://cdn-icons-png.flaticon.com/512/423/423794.png" alt="Reports" style={{width: '24px', height: '24px'}} />, description: 'The Academic Vault – Detailed records and performance insights for every student.' },
+      email: { title: 'Communication Settings', icon: <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" alt="Email" style={{width: '24px', height: '24px'}} />, description: 'The School PA System – Configuring automated email and messaging channels for the school.' },
+      banners: { title: 'School Notices', icon: <img src="https://cdn-icons-png.flaticon.com/512/1997/1997842.png" alt="Banners" style={{width: '24px', height: '24px'}} />, description: 'The Notice Board – Managing site-wide announcements and critical student alerts.' },
+      pages: { title: 'Platform Pages', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Pages" style={{width: '24px', height: '24px'}} />, description: 'The School Prospectus – Managing the content of static platform pages.' },
+      ai: { title: 'AI Settings', icon: <img src="https://cdn-icons-png.flaticon.com/512/2040/2040523.png" alt="AI" style={{width: '24px', height: '24px'}} />, description: 'The Tech Lab – Configuring the behavior and intelligence of your AI Assistants.' },
+      'ai-chat': { title: 'AI Assistant', icon: <img src="https://cdn-icons-png.flaticon.com/512/134/134914.png" alt="Chat" style={{width: '24px', height: '24px'}} />, description: 'The Teaching Assistant Office – Real-time support and classroom management help from AI.' },
+      security: { title: 'Security & Auth', icon: <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="Security" style={{width: '24px', height: '24px'}} />, description: 'The Gatehouse – Managing login protocols, authentication rules, and system entry.' },
+      cache: { title: 'System Optimize', icon: <img src="https://cdn-icons-png.flaticon.com/512/2874/2874802.png" alt="Cache" style={{width: '24px', height: '24px'}} />, description: 'The Maintenance Shed – Cleaning up system overhead and optimizing performance.' },
+      storage: { title: 'File Storage', icon: <img src="https://cdn-icons-png.flaticon.com/512/2965/2965312.png" alt="Storage" style={{width: '24px', height: '24px'}} />, description: 'The School Archives – Managing digital assets, documents, and student uploads.' },
+      logs: { title: 'System Logs', icon: <img src="https://cdn-icons-png.flaticon.com/512/1069/1069159.png" alt="Logs" style={{width: '24px', height: '24px'}} />, description: 'The Audit Ledger – Continuous monitoring of all administrative actions and system events.' },
+      admissions: { title: 'Registration Format', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Admissions" style={{width: '24px', height: '24px'}} />, description: 'The Admission Desk – Defining how student IDs and admission numbers are formatted.' },
+      branding: { title: 'School Profile', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Branding" style={{width: '24px', height: '24px'}} />, description: 'The School Signage – Configuring your school\'s public identity, logo, and theme.' },
+      academic: { title: 'School Structure', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Academic" style={{width: '24px', height: '24px'}} />, description: 'The Blueprint – Organizing the school\'s Sessions, Terms, Classes, and Subjects.' },
+      results: { title: 'Report Cards', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Results" style={{width: '24px', height: '24px'}} />, description: 'The Result Office – Compiling scores, ranking students, and issuing official reports.' },
+      permissions: { title: 'Staff Permissions', icon: <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="Permissions" style={{width: '24px', height: '24px'}} />, description: 'The Master Keys – Granting and managing access levels for teachers and staff.' }
     };
     return sectionMap[section] || sectionMap.dashboard;
   };
@@ -358,7 +358,7 @@ const Admin = () => {
           )}
           {UserPolicies.hasContributorAccess(userRoles) && (
             <button onClick={() => navigateToSection('users')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'users' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Students
+              <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Users
             </button>
           )}
           {UserPolicies.hasContributorAccess(userRoles) && (
@@ -433,12 +433,38 @@ const Admin = () => {
             </button>
             {isDropdownOpen && (
               <div style={{ position: 'absolute', top: '100%', right: 0, background: 'white', border: '1px solid rgba(226, 232, 240, 0.8)', borderRadius: '16px', marginTop: '12px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', zIndex: 1000, overflow: 'hidden', padding: '8px', minWidth: '220px' }}>
-                {['dashboard', 'users', 'admissions', 'branding', 'permissions', 'groups', 'assignments', 'assessments', 'reports', 'email', 'banners', 'ai', 'ai-chat', 'security', 'logs'].map(section => (
-                  <button key={section} onClick={() => { navigateToSection(section as AdminSection); setIsDropdownOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', width: '100%', border: 'none', background: 'transparent', borderRadius: '8px', cursor: 'pointer', textAlign: 'left', fontWeight: activeSection === section ? 600 : 400, color: activeSection === section ? '#4f46e5' : '#475569' }}>
-                    {getSectionInfo(section as AdminSection).icon}
-                    <span>{getSectionInfo(section as AdminSection).title}</span>
-                  </button>
-                ))}
+                {['dashboard', 'users', 'admissions', 'branding', 'academic', 'results', 'permissions', 'groups', 'assignments', 'assessments', 'reports', 'email', 'banners', 'pages', 'ai', 'ai-chat', 'security', 'logs'].map(section => {
+                  // Filter sections based on permissions
+                  const sec = section as AdminSection;
+                  const isVisible = (
+                    sec === 'dashboard' ||
+                    (sec === 'users' && UserPolicies.hasContributorAccess(userRoles)) ||
+                    (sec === 'admissions' && UserPolicies.hasManagerAccess(userRoles)) ||
+                    (sec === 'branding' && UserPolicies.hasManagerAccess(userRoles)) ||
+                    (sec === 'permissions' && UserPolicies.hasAdminAccess(userRoles)) ||
+                    (sec === 'groups' && UserPolicies.hasContributorAccess(userRoles)) ||
+                    (sec === 'assignments' && UserPolicies.hasContributorAccess(userRoles)) ||
+                    (sec === 'assessments' && UserPolicies.hasContributorAccess(userRoles)) ||
+                    (sec === 'reports' && UserPolicies.hasManagerAccess(userRoles)) ||
+                    (sec === 'email' && UserPolicies.hasAdminAccess(userRoles)) ||
+                    (sec === 'banners' && UserPolicies.hasManagerAccess(userRoles)) ||
+                    (sec === 'ai' && UserPolicies.hasAdminAccess(userRoles)) ||
+                    (sec === 'ai-chat' && UserPolicies.hasContributorAccess(userRoles)) ||
+                    (sec === 'security' && UserPolicies.hasAdminAccess(userRoles)) ||
+                    (sec === 'academic' && UserPolicies.hasContributorAccess(userRoles)) ||
+                    (sec === 'results' && UserPolicies.hasContributorAccess(userRoles)) ||
+                    (sec === 'logs' && UserPolicies.hasManagerAccess(userRoles))
+                  );
+
+                  if (!isVisible) return null;
+
+                  return (
+                    <button key={section} onClick={() => { navigateToSection(sec); setIsDropdownOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', width: '100%', border: 'none', background: 'transparent', borderRadius: '8px', cursor: 'pointer', textAlign: 'left', fontWeight: activeSection === section ? 600 : 400, color: activeSection === section ? '#4f46e5' : '#475569' }}>
+                      {getSectionInfo(sec).icon}
+                      <span>{getSectionInfo(sec).title}</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -273,7 +273,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
           {isExamTaker && (
             <div className={userManagementStyles.infoBox}>
               <p className={userManagementStyles.modalInfoText}>
-                Exam takers don't have passwords and can only access assigned exams. If no Student ID is provided, one will be generated automatically in the format XXXX-XXXX where X is an alphanumeric uppercase character (example: H9LC-4G4L).
+                Candidates (Takers) don't have passwords and can only access assigned exams. If no Admission Number is provided, one will be generated automatically in the format XXXX-XXXX where X is an alphanumeric uppercase character (example: H9LC-4G4L).
               </p>
             </div>
           )}
@@ -393,7 +393,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
                 userManagementStyles.formLabel,
                 userManagementStyles.optionalLabel
               )}>
-                Student ID (optional):
+                Admission Number (optional):
               </label>
               <input
                 type="text"
@@ -401,7 +401,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
                 value={formData.id}
                 onChange={handleInputChange}
                 className={userManagementStyles.formInput}
-                placeholder="Enter student ID (optional)"
+                placeholder="Enter admission number (optional)"
                 maxLength={VALIDATION_CONSTRAINTS.EXAM_TAKER.ID_MAX_LENGTH}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = '#3b82f6';
@@ -1634,20 +1634,20 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
         <div className={userManagementStyles.infoSection}>
           <div className={userManagementStyles.infoHeader}>
             <span className={userManagementStyles.infoIcon}><img src="/images/icons/information.svg" alt="" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} /></span>
-            <span className={userManagementStyles.infoTitle}>User Management Information</span>
+            <span className={userManagementStyles.infoTitle}>School Registry Information</span>
           </div>
           <div className={userManagementStyles.infoContent}>
             <p className={userManagementStyles.infoText}>
-              <strong>User Types:</strong> Regular <span className={userManagementStyles.userBadgeInfo}>users</span> have login credentials and can reset passwords. <span className={userManagementStyles.examTakerBadgeInfo}>Exam takers</span> don't have credentials and cannot reset passwords. Email is optional for exam takers.
+              <strong>Registry Categories:</strong> Regular <strong>Staff (Users)</strong> have full access keys and login credentials. <strong>Candidates (Takers)</strong> are student accounts for exams only; they don't have passwords and access exams via their Admission Number.
             </p>
             <p className={userManagementStyles.infoText}>
-              <strong>User Types:</strong> Regular users have full credentials and can log in normally. Exam takers don't have passwords and can only access assigned exams. <span className={userManagementStyles.badgeUser}>users</span> and <span className={userManagementStyles.badgeTaker}>takers</span> are indicated in the User Type column.
+              <strong>Registry Updates (Actions):</strong> Reissuing an 'Access Key' (Reset Password) generates a secure 8-character temporary password for staff members. Admission Numbers for candidates are permanent once issued.
             </p>
             <p className={userManagementStyles.infoText}>
-              <strong>User Actions:</strong> Reset Password generates a secure 8-character password containing uppercase, lowercase, numbers, and special characters. This option is only available for users with credentials.
+              <strong>Admit Batch (Bulk Import):</strong> Use our 'Admission Register' (Download Sample CSV) to admit multiple candidates at once. The system will automatically generate unique Admission Numbers if you leave the field empty.
             </p>
             <p className={userManagementStyles.infoText}>
-              Use the search functionality to quickly find users by email or ID. The table shows up to 10 users per page with pagination controls when needed.
+              Use the registry search to quickly find staff or candidates by email or Admission Number.
             </p>
             <p className={userManagementStyles.infoText}>
               <strong>Bulk Import:</strong> Use "Download Sample CSV" to get a template with examples, then use "Import CSV" to upload multiple exam takers at once. CSV file should contain columns: id (required but can be empty for auto-generation), name (required), email (optional), date_of_birth (optional, YYYY-MM-DD format), assignment_id (optional).

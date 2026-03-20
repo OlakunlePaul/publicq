@@ -491,11 +491,11 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
         <div style={styles.infoSection}>
           <div style={styles.infoHeader}>
             <span style={styles.infoIcon}><img src="/images/icons/information.svg" alt="" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} /></span>
-            <span style={styles.infoTitle}>Module Data Information</span>
+            <span style={styles.infoTitle}>Printing Room Information</span>
           </div>
           <div style={styles.infoContent}>
             <p style={styles.infoText}>
-              <strong>Module Assignment:</strong> Modules with the latest published version should be grouped together before being assigned to users.{' '}
+              <strong>Bundling into Folders:</strong> Your question papers must be placed into Subject Folders (Exam Bundles) before they can be scheduled for a test.{' '}
               <span 
                 style={styles.linkText}
                 onClick={() => onNavigateToGroups?.()}
@@ -506,27 +506,27 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
                   e.currentTarget.style.color = '#3b82f6';
                 }}
               >
-                Take me to Group Management.
+                Take me to Subject Folders.
               </span>
             </p>
             <p style={styles.infoText}>
-              <strong>Title and Introduction*:</strong> Display data from the latest version of each module.
+              <strong>Cover Sheet Details:</strong> The title and introduction will be displayed on the front page of the student's exam sheet.
             </p>
             <p style={styles.infoText}>
-              <strong>Status:</strong> Shows the overall module publication state across all versions.
+              <strong>Ready for Print (Status):</strong> Shows if the paper is still a draft or finalized and sent to the printing room (Published).
             </p>
             <div style={styles.statusLegend}>
               <div style={styles.legendItem}>
-                <span style={{...styles.badge, backgroundColor: '#dcfce7', color: '#166534'}}>Published</span>
-                <span>Latest version is published and available</span>
+                <span style={{...styles.badge, backgroundColor: '#dcfce7', color: '#166534'}}>Finalized</span>
+                <span>Paper is ready and sent to the printer</span>
               </div>
               <div style={styles.legendItem}>
-                <span style={{...styles.badge, backgroundColor: '#dbeafe', color: '#1e40af'}}>Published (Outdated)</span>
-                <span>Has published versions, but latest is not published</span>
+                <span style={{...styles.badge, backgroundColor: '#dbeafe', color: '#1e40af'}}>Revised</span>
+                <span>A new version exists but is not yet finalized</span>
               </div>
               <div style={styles.legendItem}>
-                <span style={{...styles.badge, backgroundColor: '#fef3c7', color: '#92400e'}}>Not Published</span>
-                <span>No published versions exist</span>
+                <span style={{...styles.badge, backgroundColor: '#fef3c7', color: '#92400e'}}>Draft</span>
+                <span>Still being written; not yet ready for exams</span>
               </div>
             </div>
             <p style={styles.infoText}>

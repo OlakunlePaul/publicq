@@ -1280,17 +1280,20 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
         <div className={cssStyles.infoSection}>
           <div className={cssStyles.infoHeader}>
             <span className={cssStyles.infoIcon}><img src="/images/icons/information.svg" alt="" style={{width: '16px', height: '16px', verticalAlign: 'middle'}} /></span>
-            <span className={cssStyles.infoTitle}>Assignment Settings Information</span>
+            <span className={cssStyles.infoTitle}>Examination Timetable Information</span>
           </div>
           <div className={cssStyles.infoContent}>
             <p className={cssStyles.infoText}>
-              <strong>Randomization:</strong> Question and answer randomization helps reduce cheating by presenting content in different orders to each student.
+              <strong>Paper Shuffling:</strong> Randomizing question and answer order helps ensure exam integrity, similar to having different versions of a physical paper in a classroom.
             </p>
             <p className={cssStyles.infoText}>
-              <strong>Results Display:</strong> Control when students can see their scores and feedback after completing the assignment.
+              <strong>Result Collection:</strong> Control when candidates can see their graded papers and feedback after the examination session concludes.
             </p>
             <p className={cssStyles.infoText}>
-              <strong>Keyboard Shortcut:</strong> Press <kbd className={cssStyles.kbd}>Ctrl+N</kbd> to quickly create a new assignment.
+              <strong>Result Office Sync:</strong> Linking a timetable entry to a subject automatically sends scores to the 'Result Office' for terminal report processing.
+            </p>
+            <p className={cssStyles.infoText}>
+              <strong>Keyboard Shortcut:</strong> Press <kbd className={cssStyles.kbd}>Ctrl+N</kbd> to quickly create a new timetable entry.
             </p>
           </div>
         </div>
