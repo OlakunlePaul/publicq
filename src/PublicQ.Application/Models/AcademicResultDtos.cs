@@ -9,7 +9,7 @@ namespace PublicQ.Application.Models;
 public record AssessmentReportDto
 {
     public Guid Id { get; init; }
-    public string ExamTakerId { get; init; } = string.Empty;
+    public string StudentId { get; init; } = string.Empty;
     public string StudentName { get; init; } = string.Empty;
     public string? AdmissionNumber { get; init; }
     
@@ -43,7 +43,7 @@ public record BulkScoreEntryDto
 /// </summary>
 public record StudentSubjectScoreDto
 {
-    public string ExamTakerId { get; init; } = string.Empty;
+    public string StudentId { get; init; } = string.Empty;
     public Guid? SubjectId { get; init; } // Optional if present in root
     public decimal? TestScore { get; init; }
     public decimal? ExamScore { get; init; }
@@ -86,7 +86,7 @@ public record UpdateAssessmentDetailsDto
 public record AssessmentDetailsDto
 {
     public Guid Id { get; init; }
-    public string ExamTakerId { get; init; } = string.Empty;
+    public string StudentId { get; init; } = string.Empty;
     public string StudentName { get; init; } = string.Empty;
     public string? AdmissionNumber { get; init; }
     public ModerationStatus Status { get; init; }

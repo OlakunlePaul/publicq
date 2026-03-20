@@ -53,7 +53,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             string headTeacherComment = row46[3].Trim();
 
             // Find the student
-            var student = await dbContext.ExamTakers
+            var student = await dbContext.Students
                 .FirstOrDefaultAsync(s => s.FullName == studentName || s.AdmissionNumber == studentName, cancellationToken);
 
             if (student == null)
@@ -63,14 +63,14 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
 
             // Create or update assessment
             var assessment = await dbContext.StudentAssessments
-                .FirstOrDefaultAsync(a => a.ExamTakerId == student.Id && a.SessionId == sessionId && a.TermId == termId, cancellationToken);
+                .FirstOrDefaultAsync(a => a.StudentId == student.Id && a.SessionId == sessionId && a.TermId == termId, cancellationToken);
 
             if (assessment == null)
             {
                 assessment = new StudentAssessmentEntity
                 {
                     Id = Guid.NewGuid(),
-                    ExamTakerId = student.Id,
+                    StudentId = student.Id,
                     SessionId = sessionId,
                     TermId = termId,
                     ClassLevelId = classLevelId
@@ -135,7 +135,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
     public async Task<Response<StudentAssessmentDto, GenericOperationStatuses>> GetStudentAssessmentAsync(Guid assessmentId, CancellationToken cancellationToken)
     {
         var assessment = await dbContext.StudentAssessments
-            .Include(a => a.ExamTaker)
+            .Include(a => a.Student)
             .Include(a => a.Session)
             .Include(a => a.Term)
             .Include(a => a.ClassLevel)
@@ -151,7 +151,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
     public async Task<Response<IEnumerable<StudentAssessmentDto>, GenericOperationStatuses>> GetClassAssessmentsAsync(Guid sessionId, Guid termId, Guid classLevelId, CancellationToken cancellationToken)
     {
         var assessments = await dbContext.StudentAssessments
-            .Include(a => a.ExamTaker)
+            .Include(a => a.Student)
             .Include(a => a.Session)
             .Include(a => a.Term)
             .Include(a => a.ClassLevel)
@@ -172,13 +172,13 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             .ToListAsync(cancellationToken);
 
         var assessments = await dbContext.StudentAssessments
-            .Include(a => a.ExamTaker)
+            .Include(a => a.Student)
             .Include(a => a.Session)
             .Include(a => a.Term)
             .Include(a => a.ClassLevel)
             .Include(a => a.SubjectScores)
                 .ThenInclude(s => s.Subject)
-            .Where(a => studentIds.Contains(a.ExamTakerId) && a.Status == ModerationStatus.Published)
+            .Where(a => studentIds.Contains(a.StudentId) && a.Status == ModerationStatus.Published)
             .Select(a => MapToDto(a))
             .ToListAsync(cancellationToken);
 
@@ -199,7 +199,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
     public async Task<Response<AssessmentDetailsDto, GenericOperationStatuses>> GetAssessmentDetailsAsync(Guid assessmentId, CancellationToken cancellationToken)
     {
         var assessment = await dbContext.StudentAssessments
-            .Include(a => a.ExamTaker)
+            .Include(a => a.Student)
             .Include(a => a.SubjectScores)
                 .ThenInclude(s => s.Subject)
             .FirstOrDefaultAsync(a => a.Id == assessmentId, cancellationToken);
@@ -209,9 +209,9 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
         return Response<AssessmentDetailsDto, GenericOperationStatuses>.Success(new AssessmentDetailsDto
         {
             Id = assessment.Id,
-            ExamTakerId = assessment.ExamTakerId,
-            StudentName = assessment.ExamTaker?.FullName ?? "Unknown",
-            AdmissionNumber = assessment.ExamTaker?.AdmissionNumber,
+            StudentId = assessment.StudentId,
+            StudentName = assessment.Student?.FullName ?? "Unknown",
+            AdmissionNumber = assessment.Student?.AdmissionNumber,
             Status = assessment.Status,
             TotalMarksObtained = assessment.TotalMarksObtained,
             TotalMarksObtainable = assessment.TotalMarksObtainable,
@@ -226,7 +226,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             HeadTeacherComment = assessment.HeadTeacherComment,
             SubjectScores = assessment.SubjectScores.Select(s => new StudentSubjectScoreDto
             {
-                ExamTakerId = assessment.ExamTakerId,
+                StudentId = assessment.StudentId,
                 TestScore = s.TestScore,
                 ExamScore = s.ExamScore,
                 SubjectRemark = s.SubjectRemark
@@ -238,7 +238,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
     {
         foreach (var entry in request.Scores)
         {
-            var student = await dbContext.ExamTakers.FirstOrDefaultAsync(s => s.Id == entry.ExamTakerId || s.AdmissionNumber == entry.ExamTakerId, cancellationToken);
+            var student = await dbContext.Students.FirstOrDefaultAsync(s => s.Id == entry.StudentId || s.AdmissionNumber == entry.StudentId, cancellationToken);
             if (student == null) continue;
 
             // Determine SubjectId
@@ -246,14 +246,14 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             if (subjectId == null || subjectId == Guid.Empty) continue;
 
             var assessment = await dbContext.StudentAssessments
-                .FirstOrDefaultAsync(a => a.ExamTakerId == student.Id && a.SessionId == request.SessionId && a.TermId == request.TermId, cancellationToken);
+                .FirstOrDefaultAsync(a => a.StudentId == student.Id && a.SessionId == request.SessionId && a.TermId == request.TermId, cancellationToken);
 
             if (assessment == null)
             {
                 assessment = new StudentAssessmentEntity
                 {
                     Id = Guid.NewGuid(),
-                    ExamTakerId = student.Id,
+                    StudentId = student.Id,
                     SessionId = request.SessionId,
                     TermId = request.TermId,
                     ClassLevelId = request.ClassLevelId,
@@ -390,10 +390,10 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
 
         if (!assessments.Any()) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "No assessments found for this class.");
 
-        var studentIds = assessments.Select(a => a.ExamTakerId).ToList();
+        var studentIds = assessments.Select(a => a.StudentId).ToList();
 
-        var onlineScores = await dbContext.ExamTakerAssignments
-            .Where(eta => studentIds.Contains(eta.ExamTakerId) && eta.Assignment.IsPublished && eta.Assignment.SubjectId != null)
+        var onlineScores = await dbContext.StudentAssignments
+            .Where(eta => studentIds.Contains(eta.StudentId) && eta.Assignment.IsPublished && eta.Assignment.SubjectId != null)
             .Include(eta => eta.Assignment)
             .Include(eta => eta.ModuleProgress)
                 .ThenInclude(mp => mp.QuestionResponses)
@@ -401,7 +401,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
 
         foreach (var assessment in assessments)
         {
-            var studentScores = onlineScores.Where(s => s.ExamTakerId == assessment.ExamTakerId).ToList();
+            var studentScores = onlineScores.Where(s => s.StudentId == assessment.StudentId).ToList();
             
             foreach (var onlineScore in studentScores)
             {
@@ -446,9 +446,9 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
     {
         return new StudentAssessmentDto(
             a.Id,
-            a.ExamTakerId,
-            a.ExamTaker?.FullName ?? "Unknown",
-            a.ExamTaker?.AdmissionNumber ?? "N/A",
+            a.StudentId,
+            a.Student?.FullName ?? "Unknown",
+            a.Student?.AdmissionNumber ?? "N/A",
             a.Session?.Name ?? "N/A",
             a.Term?.Name ?? "N/A",
             a.ClassLevel?.Name ?? "N/A",

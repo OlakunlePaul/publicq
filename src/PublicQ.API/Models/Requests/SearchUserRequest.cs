@@ -1,4 +1,5 @@
 using PublicQ.Shared;
+using PublicQ.Domain.Enums;
 
 namespace PublicQ.API.Models.Requests;
 

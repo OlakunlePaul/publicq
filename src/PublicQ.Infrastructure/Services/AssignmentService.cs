@@ -767,23 +767,23 @@ public class AssignmentService(
     /// <returns>Returns an array of <see cref="User"/></returns>
     private async Task<List<User>> GetStudentsAsync(HashSet<string> studentIds, CancellationToken cancellationToken)
     {
-        var examTakerIdsUppercase = examTakerIds.Select(id => id.ToUpperInvariant()).ToHashSet();
-        var examTakers = await dbContext.Students
+        var studentIdsUppercase = studentIds.Select(id => id.ToUpperInvariant()).ToHashSet();
+        var students = await dbContext.Students
             .AsNoTracking()
-            .Where(e => examTakerIdsUppercase.Contains(e.Id))
+            .Where(e => studentIdsUppercase.Contains(e.Id))
             .Select(e => e.ConvertToUser())
             .ToListAsync(cancellationToken);
 
         var users = await dbContext.Users
             .AsNoTracking()
-            .Where(e => examTakerIds.Contains(e.Id))
+            .Where(e => studentIds.Contains(e.Id))
             .Select(e => e.ConvertToUser())
             .ToListAsync(cancellationToken);
         
-        var combinedExamTakers = examTakers
+        var combinedStudents = students
             .Concat(users)
             .ToList();
         
-        return combinedExamTakers;
+        return combinedStudents;
     }
 }

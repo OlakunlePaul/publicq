@@ -97,15 +97,15 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
     /// Gets a paginated list of available assignments for a specific exam taker.
     /// Available assignments are those that are published, and the exam taker has associated with their account.
     /// </summary>
-    /// <param name="examTakerId">Exam taker ID</param>
+    /// <param name="StudentId">Exam taker ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns a paginated list of assignments</returns>
-    [HttpGet("available/{examTakerId}")]
+    [HttpGet("available/{StudentId}")]
     public async Task<IActionResult> GetAvailableAssignmentsAsync(
-        string examTakerId,
+        string StudentId,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(examTakerId))
+        if (string.IsNullOrWhiteSpace(StudentId))
         {
             return Response<PaginatedResponse<AssignmentDto>, GenericOperationStatuses>
                 .Failure(GenericOperationStatuses.BadRequest,
@@ -114,7 +114,7 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
         }
         
         var response = await assignmentService.GetAvailableAssignmentsAsync(
-            examTakerId, 
+            StudentId, 
             cancellationToken);
         
         return response.ToActionResult();
@@ -182,7 +182,7 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
     /// <returns>An <see cref="IActionResult"/> containing the exam takers or an error response.</returns>
     [Authorize(Constants.ContributorsPolicy)]
     [HttpGet("{id:guid}/exam-takers")]
-    public async Task<IActionResult> GetExamTakersAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetStudentsAsync(Guid id, CancellationToken cancellationToken)
     {
         if (id == Guid.Empty)
         {
@@ -192,7 +192,7 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
                 .ToActionResult();
         }
         
-        var response = await assignmentService.GetExamTakersAsync(id, cancellationToken);
+        var response = await assignmentService.GetStudentsAsync(id, cancellationToken);
         
         return response.ToActionResult();
     }
@@ -201,14 +201,14 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
     /// Adds exam takers to an assignment.
     /// </summary>
     /// <param name="id">The assignment ID.</param>
-    /// <param name="examTakerIds">The exam taker IDs to add.</param>
+    /// <param name="StudentIds">The exam taker IDs to add.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>An <see cref="IActionResult"/> with the update response.</returns>
     [Authorize(Constants.ContributorsPolicy)]
     [HttpPost("{id:guid}/exam-takers")]
-    public async Task<IActionResult> AddExamTakersAsync(
+    public async Task<IActionResult> AddStudentsAsync(
         Guid id, 
-        [FromBody] HashSet<string> examTakerIds, 
+        [FromBody] HashSet<string> StudentIds, 
         CancellationToken cancellationToken)
     {
         if (id == Guid.Empty)
@@ -220,9 +220,9 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
         }
         
         var fullName = UserClaimParser.GetUserDisplayName(User.Claims);
-        var response = await assignmentService.AddExamTakersAsync(
+        var response = await assignmentService.AddStudentsAsync(
             id, 
-            examTakerIds, 
+            StudentIds, 
             fullName, 
             cancellationToken);
         
@@ -233,12 +233,12 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
     /// Removes exam takers from an assignment.
     /// </summary>
     /// <param name="id">The assignment ID.</param>
-    /// <param name="examTakerIds">The exam taker IDs to remove.</param>
+    /// <param name="StudentIds">The exam taker IDs to remove.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>An <see cref="IActionResult"/> with the update response.</returns>
     [Authorize(Constants.ContributorsPolicy)]
     [HttpDelete("{id:guid}/exam-takers")]
-    public async Task<IActionResult> RemoveExamTakersAsync(Guid id, [FromBody] HashSet<string> examTakerIds, CancellationToken cancellationToken)
+    public async Task<IActionResult> RemoveStudentsAsync(Guid id, [FromBody] HashSet<string> StudentIds, CancellationToken cancellationToken)
     {
         if (id == Guid.Empty)
         {
@@ -249,9 +249,9 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
         }
         
         var fullName = UserClaimParser.GetUserDisplayName(User.Claims);
-        var response = await assignmentService.RemoveExamTakersAsync(
+        var response = await assignmentService.RemoveStudentsAsync(
             id, 
-            examTakerIds, 
+            StudentIds, 
             fullName,
             cancellationToken);
         
@@ -300,21 +300,21 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
     /// Records a browser tab switch or focus loss during an exam.
     /// </summary>
     /// <param name="id">The assignment ID.</param>
-    /// <param name="examTakerId">The student ID.</param>
+    /// <param name="StudentId">The student ID.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>An <see cref="IActionResult"/> with the operation status.</returns>
     [Authorize]
-    [HttpPost("{id:guid}/proctoring/tab-switch/{examTakerId}")]
-    public async Task<IActionResult> RecordTabSwitchAsync(Guid id, string examTakerId, CancellationToken cancellationToken)
+    [HttpPost("{id:guid}/proctoring/tab-switch/{StudentId}")]
+    public async Task<IActionResult> RecordTabSwitchAsync(Guid id, string StudentId, CancellationToken cancellationToken)
     {
-        if (id == Guid.Empty || string.IsNullOrWhiteSpace(examTakerId))
+        if (id == Guid.Empty || string.IsNullOrWhiteSpace(StudentId))
         {
             return Response<GenericOperationStatuses>
                 .Failure(GenericOperationStatuses.BadRequest, "Assignment ID and Exam Taker ID are required.")
                 .ToActionResult();
         }
 
-        var response = await assignmentService.RecordTabSwitchAsync(id, examTakerId, cancellationToken);
+        var response = await assignmentService.RecordTabSwitchAsync(id, StudentId, cancellationToken);
         return response.ToActionResult();
     }
 }

@@ -108,10 +108,10 @@ public class StudentAssignmentEntity
     /// <summary>
     /// Converts this entity to a data transfer object (DTO) for reporting purposes.
     /// </summary>
-    /// <returns>Returns <see cref="IndividualUserReportDto"/></returns>
-    public IndividualUserReportDto ConvertToDto()
+    /// <returns>Returns <see cref="IndividualStudentReportDto"/></returns>
+    public IndividualStudentReportDto ConvertToDto()
     {
-        return new IndividualUserReportDto
+        return new IndividualStudentReportDto
         {
             Id = Id,
             StudentId = StudentId,

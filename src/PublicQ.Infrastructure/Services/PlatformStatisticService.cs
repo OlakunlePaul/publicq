@@ -22,7 +22,7 @@ public class PlatformStatisticService(
         var assessmentCountTask = await assessmentService.GetTotalAssessmentModulesAsync(cancellationToken);
         var groupCountTask = await groupService.GetTotalGroupsAsync(cancellationToken);
         var assignmentCountTask = await assignmentService.GetAssignmentCountAsync(cancellationToken);
-        var userCountTask = await userService.GetUserCountAsync(cancellationToken);
+        var userCountTask = await userService.GetUserCountAsync(cancellationToken: cancellationToken);
         var questionCountTask = await questionService.GetQuestionCountAsync(cancellationToken);
         
         var response = new PlatformStatisticDto

@@ -247,7 +247,7 @@ public class UsersController(
         // Email is optional for exam takers
         var mailAddress = string.IsNullOrEmpty(dto.Email) ? null : new MailAddress(dto.Email);
 
-        var result = await userService.RegisterExamTakerAsync(
+        var result = await userService.RegisterStudentAsync(
             mailAddress,
             dto.Id,
             dto.DateOfBirth,
@@ -349,7 +349,7 @@ public class UsersController(
                 .ToActionResult();
         }
 
-        var result = await userService.GetExamTakerByIdAsync(id, cancellationToken);
+        var result = await userService.GetStudentByIdAsync(id, cancellationToken);
 
         return result.ToActionResult();
     }
@@ -381,6 +381,8 @@ public class UsersController(
         var currentUserId = UserClaimParser.GetUserId(User.Claims);
         var isSuperAdmin = UserClaimParser.IsAdministrator(User.Claims);
 
+        var result = await userService.GetUsersAsync(
+            request.PageNumber,
             request.PageSize,
             currentUserId,
             isSuperAdmin,
@@ -404,6 +406,9 @@ public class UsersController(
         var currentUserId = UserClaimParser.GetUserId(User.Claims);
         var isSuperAdmin = UserClaimParser.IsAdministrator(User.Claims);
 
+        var result = await userService.GetUsersByFilter(
+            request.EmailPart,
+            request.IdPart,
             request.PageNumber,
             request.PageSize,
             currentUserId,

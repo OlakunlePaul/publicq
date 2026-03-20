@@ -154,10 +154,10 @@ public class ReportingService(
             assignmentId);
 
         var assignment = await dbContext.Assignments
-            .Include(a => a.ExamTakerAssignments)
+            .Include(a => a.StudentAssignments)
                 .ThenInclude(eta => eta.ModuleProgress)
                     .ThenInclude(mp => mp.AssessmentModuleVersion)
-            .Include(a => a.ExamTakerAssignments)
+            .Include(a => a.StudentAssignments)
                 .ThenInclude(eta => eta.ModuleProgress)
                     .ThenInclude(mp => mp.QuestionResponses)
             .Include(a => a.Group!)
@@ -185,26 +185,26 @@ public class ReportingService(
                                                               DateTime.UtcNow);
 
         // Get completed assignments (students who completed ALL modules)
-        var completedAssignments = assignment.ExamTakerAssignments
+        var completedAssignments = assignment.StudentAssignments
             .Where(eta => eta.ModuleProgress.Count > 0 && 
                           assignment.Group != null && 
                           eta.ModuleProgress.Count(isModuleCompleted) == assignment.Group.GroupMemberEntities.Count)
             .ToList();
 
         // Get in-progress assignments  
-        var inProgressAssignments = assignment.ExamTakerAssignments
+        var inProgressAssignments = assignment.StudentAssignments
             .Where(eta => eta.ModuleProgress.Any(mp => mp.StartedAtUtc != null) &&
                           assignment.Group != null &&
                           eta.ModuleProgress.Count(isModuleCompleted) != assignment.Group.GroupMemberEntities.Count)
             .ToList();
 
         // Get not-started assignments
-        var notStartedAssignments = assignment.ExamTakerAssignments
+        var notStartedAssignments = assignment.StudentAssignments
             .Where(eta => !eta.ModuleProgress.Any()) // No progress records at all
             .ToList();
 
         // Calculate average score across all completed modules
-        var averageScore = assignment.ExamTakerAssignments
+        var averageScore = assignment.StudentAssignments
             .SelectMany(eta => eta.ModuleProgress)
             .Where(isModuleCompleted)
             .Average(mp => (double?)mp.ScorePercentage) ?? 0;
@@ -218,7 +218,7 @@ public class ReportingService(
                 var module = groupMember.AssessmentModule;
                 
                 // Find progress records for THIS specific module across all students
-                var moduleProgresses = assignment.ExamTakerAssignments
+                var moduleProgresses = assignment.StudentAssignments
                     .SelectMany(eta => eta.ModuleProgress)
                     .Where(mp => mp.AssessmentModuleVersion.AssessmentModuleId == module.Id)
                     .ToList();
@@ -244,8 +244,8 @@ public class ReportingService(
                     TotalQuestions = latestVersion?.Questions.Count ?? 0,
                     
                     // Handle case where no one started this module
-                    CompletionRate = assignment.ExamTakerAssignments.Any() 
-                        ? (double)completedModules.Count / assignment.ExamTakerAssignments.Count * 100 
+                    CompletionRate = assignment.StudentAssignments.Any() 
+                        ? (double)completedModules.Count / assignment.StudentAssignments.Count * 100 
                         : 0,
                     
                     // Scores - could be null if no one completed
@@ -284,13 +284,13 @@ public class ReportingService(
             AssignmentId = assignment.Id,
             AssignmentTitle = assignment.Title,
             AssignmentDescription = assignment.Description ?? string.Empty,
-            TotalStudents = assignment.ExamTakerAssignments.Count,
+            TotalStudents = assignment.StudentAssignments.Count,
             AverageScore = averageScore,
 
             // Fixed missing properties:
             CompletedStudents = completedAssignments.Count,
-            CompletionRate = assignment.ExamTakerAssignments.Any()
-                ? (double)completedAssignments.Count / assignment.ExamTakerAssignments.Count * 100
+            CompletionRate = assignment.StudentAssignments.Any()
+                ? (double)completedAssignments.Count / assignment.StudentAssignments.Count * 100
                 : 0,
             InProgressStudents = inProgressAssignments.Count,
             NotStartedStudents = notStartedAssignments.Count,

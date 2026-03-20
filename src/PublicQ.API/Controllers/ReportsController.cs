@@ -108,7 +108,7 @@ public class ReportsController(IReportingService reportingService) : ControllerB
     /// </summary>
     /// <param name="assignmentId">Assignment ID</param>
     /// <param name="cancellationToken">Cancellation ID</param>
-    /// <returns>Returns a list of <see cref="ExamTakerAssignmentReportDto"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
+    /// <returns>Returns a list of <see cref="StudentAssignmentReportDto"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
     [HttpGet("assignments/{assignmentId:guid}")]
     public async Task<IActionResult> GetAssignmentReport(Guid assignmentId, CancellationToken cancellationToken)
     {

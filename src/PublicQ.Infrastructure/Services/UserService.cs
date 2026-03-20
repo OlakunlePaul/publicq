@@ -10,6 +10,7 @@ using PublicQ.Domain.Models;
 using PublicQ.Infrastructure.Options;
 using PublicQ.Infrastructure.Persistence;
 using PublicQ.Infrastructure.Persistence.Entities;
+using PublicQ.Infrastructure.Persistence.Entities.Academic;
 using PublicQ.Shared;
 using PublicQ.Shared.Enums;
 
@@ -740,13 +741,13 @@ public class UserService(
 
         if (!isSuperAdmin)
         {
-            // Managers see themselves, teachers, students (ExamTakers), and parents
+            // Managers see themselves, teachers, students, and parents
             usersQ = usersQ.Where(u =>
                 u.Id == currentUserId ||
                 dbContext.UserRoles.Any(ur => ur.UserId == u.Id && 
                     (dbContext.Roles.Any(r => r.Id == ur.RoleId && 
                         (r.Name == UserRolesNames.Teacher || 
-                         r.Name == UserRolesNames.ExamTaker || 
+                         r.Name == UserRolesNames.Student || 
                          r.Name == UserRolesNames.Parent)))));
         }
 
@@ -770,38 +771,29 @@ public class UserService(
                 HasCredential = true
             });
 
-        // Only include ExamTakers (students from the separate table) if no specific role is requested 
-        // OR if the requested role is EXAM_TAKER
-        IQueryable<ExamTakerEntity>? examTakersSourceQ = null;
-        if (role == null || role == UserRole.EXAM_TAKER)
+        // Only include Students if no specific role is requested 
+        // OR if the requested role is STUDENT
+        IQueryable<StudentEntity>? studentsSourceQ = null;
+        if (role == null || role == UserRole.Student)
         {
-            examTakersSourceQ = dbContext.ExamTakers.AsNoTracking();
+            studentsSourceQ = dbContext.Students.AsNoTracking();
         }
 
-        var examTakersQ = examTakersSourceQ?
+        var studentsQ = studentsSourceQ?
             .Select(e => new
             {
                 e.Id,
                 Email = e.Email,
                 FullName = e.FullName,
                 DateOfBirth = e.DateOfBirth,
-                CreatedAtUtc = e.CreatedAt,
+                CreatedAtUtc = e.CreatedAtUtc,
                 HasCredential = false
             });
 
         var unifiedQ = projectedUsersQ;
-        if (examTakersQ != null)
+        if (studentsQ != null)
         {
-            unifiedQ = unifiedQ.Concat(examTakersQ.Select(et => new User
-            {
-                Id = et.Id,
-                Email = et.Email,
-                FullName = et.FullName,
-                DateOfBirth = et.DateOfBirth,
-                CreatedAt = et.CreatedAt,
-                IsExamTaker = true,
-                AdmissionNumber = et.AdmissionNumber,
-            }));
+            unifiedQ = unifiedQ.Concat(studentsQ);
         }
 
         var totalCount = await unifiedQ.LongCountAsync(cancellationToken);
@@ -949,13 +941,13 @@ public class UserService(
 
         if (!isSuperAdmin)
         {
-            // Managers see themselves, teachers, students (ExamTakers), and parents
+            // Managers see themselves, teachers, students, and parents
             queryIdentityUsers = queryIdentityUsers.Where(u =>
                 u.Id == currentUserId ||
                 dbContext.UserRoles.Any(ur => ur.UserId == u.Id && 
                     (dbContext.Roles.Any(r => r.Id == ur.RoleId && 
                         (r.Name == UserRolesNames.Teacher || 
-                         r.Name == UserRolesNames.ExamTaker || 
+                         r.Name == UserRolesNames.Student || 
                          r.Name == UserRolesNames.Parent)))));
         }
 
@@ -979,47 +971,47 @@ public class UserService(
         }
 
         var projectedUsersQ = queryIdentityUsers
-            .Select(u => new User
+            .Select(u => new
             {
                 Id = u.Id,
                 Email = u.Email,
                 FullName = u.FullName,
                 DateOfBirth = u.DateOfBirth,
                 CreatedAtUtc = u.CreatedAtUtc,
-                IsExamTaker = false,
+                AdmissionNumber = u.AdmissionNumber,
                 HasCredential = true
             });
 
-        // Only include ExamTakers (students from the separate table) if no specific role is requested 
-        // OR if the requested role is EXAM_TAKER
-        IQueryable<User> unifiedQ = projectedUsersQ;
+        // Only include Students if no specific role is requested 
+        // OR if the requested role is STUDENT
+        var unifiedQ = projectedUsersQ;
 
-        if (role == null || role == UserRole.EXAM_TAKER)
+        if (role == null || role == UserRole.Student)
         {
-            var queryExamTakers = dbContext.ExamTakers.AsNoTracking();
+            var queryStudents = dbContext.Students.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(email))
             {
                 var norm = email!.ToUpperInvariant();
                 var pattern = $"%{norm.EscapeLike()}%";
-                queryExamTakers = queryExamTakers.Where(e => EF.Functions.Like(e.NormalizedEmail, pattern));
+                queryStudents = queryStudents.Where(e => EF.Functions.Like(e.NormalizedEmail, pattern));
             }
 
             if (!string.IsNullOrWhiteSpace(id))
             {
                 var idPattern = $"%{id}%";
-                queryExamTakers = queryExamTakers.Where(u => EF.Functions.Like(u.Id, idPattern));
+                queryStudents = queryStudents.Where(u => EF.Functions.Like(u.Id, idPattern));
             }
 
-            unifiedQ = unifiedQ.Concat(queryExamTakers.Select(et => new User
+            unifiedQ = unifiedQ.Concat(queryStudents.Select(et => new
             {
                 Id = et.Id,
                 Email = et.Email,
                 FullName = et.FullName,
                 DateOfBirth = et.DateOfBirth,
-                CreatedAt = et.CreatedAt,
-                IsExamTaker = true,
+                CreatedAtUtc = et.CreatedAtUtc,
                 AdmissionNumber = et.AdmissionNumber,
+                HasCredential = false
             }));
         }
 
@@ -1029,11 +1021,26 @@ public class UserService(
             .OrderByDescending(x => x.CreatedAtUtc)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
+            .Select(x => new User
+            {
+                Id = x.Id,
+                Email = x.Email!,
+                FullName = x.FullName,
+                DateOfBirth = x.DateOfBirth,
+                AdmissionNumber = x.AdmissionNumber,
+                HasCredential = x.HasCredential
+            })
             .ToListAsync(cancellationToken);
 
         await PopulateUserRolesAsync(pageItems, cancellationToken);
 
-        var response = new PaginatedResponse<User>(pageItems, totalCount, pageNumber, pageSize);
+        var response = new PaginatedResponse<User>
+        {
+            Data = pageItems,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
         return Response<PaginatedResponse<User>, GenericOperationStatuses>.Success(response, GenericOperationStatuses.Completed);
     }
 
@@ -1099,7 +1106,7 @@ public class UserService(
                 $"Some users were not found. Requested IDs: '{string.Join(", ", userIds)}', Found IDs: '{foundUserIdsStr}', Not Found IDs: '{notFoundUserIdsStr}'.");
         }
         
-        var allUsers = identityUsers.Concat(students).ToList();
+        var allUsers = identityUsers.ToList();
         await PopulateUserRolesAsync(allUsers, cancellationToken);
         
         return Response<IList<User>, GenericOperationStatuses>.Success(allUsers,GenericOperationStatuses.Completed);
@@ -1113,12 +1120,12 @@ public class UserService(
         logger.LogDebug("Retrieving total user count from the database. Role filter: {Role}", role);
 
         long identityUsersCount = 0;
-        long examTakersCount = 0;
+        long studentsCount = 0;
 
         if (role == null)
         {
             identityUsersCount = await dbContext.Users.LongCountAsync(cancellationToken);
-            examTakersCount = await dbContext.ExamTakers.LongCountAsync(cancellationToken);
+            studentsCount = await dbContext.Students.LongCountAsync(cancellationToken);
         }
         else
         {
@@ -1129,13 +1136,13 @@ public class UserService(
                 .Distinct()
                 .LongCountAsync(cancellationToken);
 
-            if (role == UserRole.EXAM_TAKER)
+            if (role == UserRole.Student)
             {
-                examTakersCount = await dbContext.ExamTakers.LongCountAsync(cancellationToken);
+                studentsCount = await dbContext.Students.LongCountAsync(cancellationToken);
             }
         }
 
-        var totalUsers = identityUsersCount + examTakersCount;
+        var totalUsers = identityUsersCount + studentsCount;
         
         logger.LogDebug("Retrieved total user count from the database: {Count}", totalUsers);
 
@@ -1179,16 +1186,16 @@ public class UserService(
             GenericOperationStatuses.Completed);
     }
 
-    /// <inheritdoc cref="IUserService.ImportExamTakers"/>
-    public async Task<Response<IList<User>, GenericOperationStatuses>> ImportExamTakers(
-        IList<ExamTakerImportDto> examTakers,
+    /// <inheritdoc cref="IUserService.ImportStudents"/>
+    public async Task<Response<IList<User>, GenericOperationStatuses>> ImportStudents(
+        IList<StudentImportDto> students,
         string importedByUser,
         CancellationToken cancellationToken)
     {
-        logger.LogDebug("Import exam takers request received.");
-        Guard.AgainstNull(examTakers, nameof(examTakers));
+        logger.LogDebug("Import students request received.");
+        Guard.AgainstNull(students, nameof(students));
         
-        var validationResponse = await ValidateExamTakerBeforeImportAsync(examTakers, cancellationToken);
+        var validationResponse = await ValidateStudentBeforeImportAsync(students, cancellationToken);
         
         if (validationResponse.IsFailed)
         {
@@ -1198,36 +1205,37 @@ public class UserService(
                 validationResponse.Errors);
         }
         
-        logger.LogDebug("Creating new exam takers.");
+        logger.LogDebug("Creating new students.");
         var errorMessages = new List<string>();
 
         var groupedUsersWithAssignments = new Dictionary<Guid, IList<User>>();
         var usersWithNoAssignment = new List<User>();
         
-        foreach (var examTaker in examTakers)
+        foreach (var student in students)
         {
-            var email = examTaker.Email is not null ? 
-                new MailAddress(examTaker.Email) : 
+            var email = student.Email is not null ? 
+                new MailAddress(student.Email) : 
                 null;
             
-            var userResponse = await RegisterExamTakerAsync(
+            var userResponse = await RegisterStudentAsync(
                 email,
-                examTaker.Id,
-                examTaker.DateOfBirth,
-                examTaker.Name, 
-                examTaker.AdmissionNumber,
+                student.Id,
+                student.DateOfBirth,
+                student.Name, 
+                student.AdmissionNumber,
+                null,
                 cancellationToken);
 
             if (userResponse.IsSuccess)
             {
-                if (examTaker.AssignmentId.HasValue && 
-                    groupedUsersWithAssignments.TryGetValue(examTaker.AssignmentId.Value, out var users))
+                if (student.AssignmentId.HasValue && 
+                    groupedUsersWithAssignments.TryGetValue(student.AssignmentId.Value, out var users))
                 {
                     users.Add(userResponse.Data!);
                 }
-                else if (examTaker.AssignmentId.HasValue)
+                else if (student.AssignmentId.HasValue)
                 {
-                    groupedUsersWithAssignments[examTaker.AssignmentId.Value] = new List<User> { userResponse.Data! };
+                    groupedUsersWithAssignments[student.AssignmentId.Value] = new List<User> { userResponse.Data! };
                 }
                 else
                 {
@@ -1249,15 +1257,15 @@ public class UserService(
                 .Select(u => u.Id)
                 .ToHashSet();
             
-            var assignExamTakersResult = await assignmentService.AddExamTakersAsync(
+            var assignStudentsResult = await assignmentService.AddStudentsAsync(
                 group.Key, 
                 userIds, 
                 importedByUser, 
                 cancellationToken);
 
-            if (assignExamTakersResult.IsFailed)
+            if (assignStudentsResult.IsFailed)
             {
-                errorMessages.Add($"Unable to assign exam takers to assignment '{group.Key}' ID. Errors:  {string.Join(",", assignExamTakersResult.Errors)}");
+                errorMessages.Add($"Unable to assign students to assignment '{group.Key}' ID. Errors:  {string.Join(",", assignStudentsResult.Errors)}");
             }
         }
 
@@ -1270,17 +1278,17 @@ public class UserService(
         if (errorMessages.Count > 0)
         {
             var errorMessagesString = string.Join("; ", errorMessages);
-            logger.LogWarning("Import exam takers completed with some errors. {ErrorMessages}", errorMessagesString);
+            logger.LogWarning("Import students completed with some errors. {ErrorMessages}", errorMessagesString);
             return Response<IList<User>, GenericOperationStatuses>.Success(
                 createdUsers,
                 GenericOperationStatuses.PartiallyCompleted,
-                $"Import exam takers completed with some errors. Error messages: '{errorMessagesString}'");
+                $"Import students completed with some errors. Error messages: '{errorMessagesString}'");
         }
         
         return Response<IList<User>, GenericOperationStatuses>.Success(
             createdUsers,
             GenericOperationStatuses.Completed,
-            "Import exam takers completed successfully.");
+            "Import students completed successfully.");
     }
 
     /// <inheritdoc cref="IUserService.ForgetPasswordAsync"/>

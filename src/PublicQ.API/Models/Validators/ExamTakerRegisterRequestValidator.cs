@@ -11,7 +11,7 @@ public class StudentRegisterRequestValidator : AbstractValidator<StudentRegister
     /// <summary>
     /// Default constructor.
     /// </summary>
-    public ExamTakerRegisterRequestValidator()
+    public StudentRegisterRequestValidator()
     {
         RuleFor(x => x.Id)
             .MinimumLength(4).WithMessage("Id must be at least 4 characters long.")

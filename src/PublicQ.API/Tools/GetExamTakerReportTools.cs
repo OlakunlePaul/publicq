@@ -11,10 +11,10 @@ namespace PublicQ.API.Tools;
 /// MCP tools for retrieving student/exam taker performance reports
 /// </summary>
 [McpServerToolType]
-public class GetExamTakerReportTools(
+public class GetStudentReportTools(
     IReportingService reportingService, 
     IMcpAuthService mcpAuthService, 
-    ILogger<GetExamTakerReportTools> logger)
+    ILogger<GetStudentReportTools> logger)
 {
     /// <summary>
     /// Retrieves a comprehensive performance report for a specific student/exam taker.
@@ -103,25 +103,25 @@ When asked to analyze a student's performance:
 - Returns failure if userId is null/empty
 - Returns failure if user lacks Analyst permissions
 - Service handles cases where student has no assignments (empty AssignmentProgress array)")]
-    public async Task<Response<ExamTakerReportDto,GenericOperationStatuses>> GetExamTakerReportAsync(
+    public async Task<Response<StudentReportDto,GenericOperationStatuses>> GetStudentReportAsync(
         [Description(@"The unique identifier (user ID) of the student/exam taker to generate the report for. Required.
 Cannot be null or empty. Must be a valid user ID in the system.")]
         string userId, 
         CancellationToken cancellationToken)
     {
-        logger.LogDebug("Starting GetExamTakerReportAsync tool execution.");
+        logger.LogDebug("Starting GetStudentReportAsync tool execution.");
         Guard.AgainstNullOrWhiteSpace(userId, nameof(userId));
         
         var authResponse = mcpAuthService.IsInAnalystPolicy();
         if (authResponse.IsFailed)
         {
-            logger.LogWarning("Authorization failed for GetExamTakerReportAsync: {Message}", authResponse.Message);
-            return Response<ExamTakerReportDto, GenericOperationStatuses>.Failure(
+            logger.LogWarning("Authorization failed for GetStudentReportAsync: {Message}", authResponse.Message);
+            return Response<StudentReportDto, GenericOperationStatuses>.Failure(
                 authResponse.Status,
                 authResponse.Message);
         }
         
-        var reportData = await reportingService.GetExamTakerReportAsync(
+        var reportData = await reportingService.GetStudentReportAsync(
             userId, 
             cancellationToken: cancellationToken);
         logger.LogInformation("Successfully generated exam taker report.");

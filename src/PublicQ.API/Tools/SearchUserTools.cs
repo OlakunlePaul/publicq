@@ -40,7 +40,7 @@ This tool searches for users across the entire system based on partial email or 
 - This tool ONLY retrieves and displays user information
 - It does NOT perform actions like reset password, assign roles, delete users, etc.
 - After finding users, simply present the results to the user
-- If the user is an exam taker who has taken assignments, you CAN offer to get their comprehensive performance report using the GetExamTakerReport tool
+- If the user is an exam taker who has taken assignments, you CAN offer to get their comprehensive performance report using the GetStudentReport tool
 - For other actions (reset password, assign roles, etc.), inform the user to use the web interface
 
 **REQUIRED PERMISSION:**
@@ -86,7 +86,7 @@ Returns a PaginatedResponse<User> containing:
   * Id - Unique user identifier
   * Email - User's email address
   * FullName - User's full name
-  * IsExamTaker - Boolean indicating if user is an exam taker (no password)
+  * IsStudent - Boolean indicating if user is an exam taker (no password)
   * DateOfBirth - Optional date of birth
   * CreatedAt - When the user was created
   * And other user properties...
@@ -124,7 +124,7 @@ When asked to find a user:
 3. Present the results to the user clearly, including the user's ID
 4. If multiple matches, show all matching users
 5. **IMPORTANT**: If user asks for a report for a previously found user, you can use the user ID from the previous search result - you DO NOT need to search again if you already have the ID in the conversation context
-6. If the found user is an exam taker or regular user, you MAY offer to get their comprehensive performance report using GetExamTakerReport tool with their user ID
+6. If the found user is an exam taker or regular user, you MAY offer to get their comprehensive performance report using GetStudentReport tool with their user ID
 7. For other actions (password reset, role management), inform user to use the web interface
 
 **TYPICAL USER REQUESTS:**
@@ -143,9 +143,9 @@ When asked to find a user:
 - Empty search returns all users (useful for listing/browsing)
 - Pagination is **zero-based** (first page = 0)
 - Both regular users and exam takers are included in results
-- Use IsExamTaker property to distinguish user types
+- Use IsStudent property to distinguish user types
 - For exact email match, provide the full email address
-- **Remember user IDs from search results**: If you just searched for a user and have their ID in the conversation, you can use it directly for GetExamTakerReport without searching again
+- **Remember user IDs from search results**: If you just searched for a user and have their ID in the conversation, you can use it directly for GetStudentReport without searching again
 - When presenting user information, ALWAYS show the user ID so it's available for subsequent operations
 
 **ERROR HANDLING:**
@@ -186,6 +186,7 @@ Example: { ""EmailPart"": ""john"", ""IdPart"": """", ""PageNumber"": 0, ""PageS
             request.PageSize,
             currentUserId: null,
             isSuperAdmin: true,
+            role: null,
             cancellationToken);
         
         return result;
