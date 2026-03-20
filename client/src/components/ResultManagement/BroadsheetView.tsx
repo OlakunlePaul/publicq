@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import commonStyles from '../Admin/AdminCommon.module.css';
-import { SubjectDto, StudentSubjectScoreDto, BulkScoreEntryDto } from '../../models/academic';
+
+import { SubjectDto, BulkScoreEntryDto } from '../../models/academic';
 import { resultService, StudentAssessment } from '../../services/resultService';
 import { ValidationMessage } from '../Shared/ValidationComponents';
 
