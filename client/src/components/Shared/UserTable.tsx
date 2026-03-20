@@ -482,7 +482,7 @@ const UserTable: React.FC<UserTableProps> = ({
                           if (roles.includes('Teacher')) {
                             return <span className={userTableStyles.teacherBadge}>Teacher</span>;
                           }
-                          if (roles.includes('ExamTaker')) {
+                          if (roles.includes('Student')) {
                             return <span className={userTableStyles.examTakerBadge}>Exam Taker</span>;
                           }
                           
