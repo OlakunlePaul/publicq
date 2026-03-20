@@ -214,26 +214,26 @@ const Admin = () => {
 
   const getSectionInfo = (section: AdminSection) => {
     const sectionMap = {
-      dashboard: { title: 'Dashboard', icon: <img src="https://cdn-icons-png.flaticon.com/512/1828/1828762.png" alt="Dashboard" style={{width: '24px', height: '24px'}} />, description: 'Overview and statistics' },
-      users: { title: 'User Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="Users" style={{width: '24px', height: '24px'}} />, description: 'Manage users and permissions' },
-      groups: { title: 'Group Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/615/615075.png" alt="Groups" style={{width: '24px', height: '24px'}} />, description: 'Organize users into groups' },
-      assignments: { title: 'Assignment Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Assignments" style={{width: '24px', height: '24px'}} />, description: 'Create and manage assignments' },
-      assessments: { title: 'Exam Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/3429/3429153.png" alt="Exams" style={{width: '24px', height: '24px'}} />, description: 'Create and manage exams' },
-      reports: { title: 'Reports & Analytics', icon: <img src="https://cdn-icons-png.flaticon.com/512/423/423794.png" alt="Reports" style={{width: '24px', height: '24px'}} />, description: 'View reports and analytics' },
-      email: { title: 'Email Configuration', icon: <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" alt="Email" style={{width: '24px', height: '24px'}} />, description: 'Configure email settings' },
-      banners: { title: 'Banner Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/1997/1997842.png" alt="Banners" style={{width: '24px', height: '24px'}} />, description: 'Manage site-wide banners' },
-      pages: { title: 'Page Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Pages" style={{width: '24px', height: '24px'}} />, description: 'Manage static pages' },
+      dashboard: { title: 'Dashboard', icon: <img src="https://cdn-icons-png.flaticon.com/512/1828/1828762.png" alt="Dashboard" style={{width: '24px', height: '24px'}} />, description: 'Overview and school-wide statistics' },
+      users: { title: 'Students', icon: <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="Users" style={{width: '24px', height: '24px'}} />, description: 'Manage student profiles and academic access' },
+      groups: { title: 'Exam Bundles', icon: <img src="https://cdn-icons-png.flaticon.com/512/615/615075.png" alt="Groups" style={{width: '24px', height: '24px'}} />, description: 'Organize your papers into subject folders' },
+      assignments: { title: 'Exam Schedules', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Assignments" style={{width: '24px', height: '24px'}} />, description: 'Set dates and assign students to exams' },
+      assessments: { title: 'Question Papers', icon: <img src="https://cdn-icons-png.flaticon.com/512/3429/3429153.png" alt="Exams" style={{width: '24px', height: '24px'}} />, description: 'Prepare and manage your exam papers' },
+      reports: { title: 'Reports & Analytics', icon: <img src="https://cdn-icons-png.flaticon.com/512/423/423794.png" alt="Reports" style={{width: '24px', height: '24px'}} />, description: 'View student performance insights' },
+      email: { title: 'Communication Settings', icon: <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" alt="Email" style={{width: '24px', height: '24px'}} />, description: 'Configure email and messaging settings' },
+      banners: { title: 'School Notices', icon: <img src="https://cdn-icons-png.flaticon.com/512/1997/1997842.png" alt="Banners" style={{width: '24px', height: '24px'}} />, description: 'Manage site-wide announcements' },
+      pages: { title: 'Platform Pages', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Pages" style={{width: '24px', height: '24px'}} />, description: 'Manage static content pages' },
       ai: { title: 'AI Settings', icon: <img src="https://cdn-icons-png.flaticon.com/512/2040/2040523.png" alt="AI" style={{width: '24px', height: '24px'}} />, description: 'Configure AI Monkey settings' },
-      'ai-chat': { title: 'AI Chat', icon: <img src="https://cdn-icons-png.flaticon.com/512/134/134914.png" alt="Chat" style={{width: '24px', height: '24px'}} />, description: 'Chat with AI Monkey' },
-      security: { title: 'Security Settings', icon: <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="Security" style={{width: '24px', height: '24px'}} />, description: 'Manage security and authentication' },
-      cache: { title: 'Cache Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/2874/2874802.png" alt="Cache" style={{width: '24px', height: '24px'}} />, description: 'Manage application cache' },
+      'ai-chat': { title: 'AI Assistant', icon: <img src="https://cdn-icons-png.flaticon.com/512/134/134914.png" alt="Chat" style={{width: '24px', height: '24px'}} />, description: 'Chat with your AI teaching assistant' },
+      security: { title: 'Security & Auth', icon: <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="Security" style={{width: '24px', height: '24px'}} />, description: 'Manage security and authentication' },
+      cache: { title: 'System Optimize', icon: <img src="https://cdn-icons-png.flaticon.com/512/2874/2874802.png" alt="Cache" style={{width: '24px', height: '24px'}} />, description: 'Manage application performance' },
       storage: { title: 'File Storage', icon: <img src="https://cdn-icons-png.flaticon.com/512/2965/2965312.png" alt="Storage" style={{width: '24px', height: '24px'}} />, description: 'Configure file storage settings' },
-      logs: { title: 'Log Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/1069/1069159.png" alt="Logs" style={{width: '24px', height: '24px'}} />, description: 'View and manage system logs' },
-      admissions: { title: 'Admission Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Admissions" style={{width: '24px', height: '24px'}} />, description: 'Configure student admission number format' },
-      branding: { title: 'School Branding', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Branding" style={{width: '24px', height: '24px'}} />, description: 'Configure school identity' },
-      academic: { title: 'Academic Structure', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Academic" style={{width: '24px', height: '24px'}} />, description: 'Manage Sessions, Terms, Classes, and Subjects' },
-      results: { title: 'Result Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Results" style={{width: '24px', height: '24px'}} />, description: 'Manage bulk scores, ranking, and moderation' },
-      permissions: { title: 'Permission Management', icon: <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="Permissions" style={{width: '24px', height: '24px'}} />, description: 'Configure granular access for each role' }
+      logs: { title: 'System Logs', icon: <img src="https://cdn-icons-png.flaticon.com/512/1069/1069159.png" alt="Logs" style={{width: '24px', height: '24px'}} />, description: 'View system audit logs' },
+      admissions: { title: 'Registration Format', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Admissions" style={{width: '24px', height: '24px'}} />, description: 'Configure student admission number format' },
+      branding: { title: 'School Profile', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Branding" style={{width: '24px', height: '24px'}} />, description: 'Configure school identity' },
+      academic: { title: 'School Structure', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Academic" style={{width: '24px', height: '24px'}} />, description: 'Manage Sessions, Terms, Classes, and Subjects' },
+      results: { title: 'Report Cards', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Results" style={{width: '24px', height: '24px'}} />, description: 'Manage student scores, rankings, and moderation' },
+      permissions: { title: 'Staff Permissions', icon: <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="Permissions" style={{width: '24px', height: '24px'}} />, description: 'Configure role-based access control' }
     };
     return sectionMap[section] || sectionMap.dashboard;
   };
@@ -333,59 +333,45 @@ const Admin = () => {
           <button onClick={() => navigateToSection('dashboard')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'dashboard' })}>
             <img src="https://cdn-icons-png.flaticon.com/512/1828/1828762.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Dashboard
           </button>
-          {UserPolicies.hasAdminAccess(userRoles) && (
-            <button onClick={() => navigateToSection('ai')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'ai' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/2040/2040523.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> AI Settings
-            </button>
-          )}
+          
+          {/* Phase 24: Reordered for Teacher workflow */}
           {UserPolicies.hasContributorAccess(userRoles) && (
-            <button onClick={() => navigateToSection('ai-chat')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'ai-chat' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/134/134914.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> AI Chat
-            </button>
-          )}
-          {UserPolicies.hasManagerAccess(userRoles) && (
-            <button onClick={() => navigateToSection('assignments')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'assignments' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Assignments
-            </button>
-          )}
-          {UserPolicies.hasManagerAccess(userRoles) && (
-            <button onClick={() => navigateToSection('banners')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'banners' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/1997/1997842.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Banners
-            </button>
-          )}
-          {UserPolicies.hasManagerAccess(userRoles) && (
-            <button onClick={() => navigateToSection('pages')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'pages' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Pages
-            </button>
-          )}
-          {UserPolicies.hasAdminAccess(userRoles) && (
-            <button onClick={() => navigateToSection('cache')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'cache' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/2874/2874802.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Cache
-            </button>
-          )}
-          {UserPolicies.hasAdminAccess(userRoles) && (
-            <button onClick={() => navigateToSection('email')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'email' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Email
-            </button>
-          )}
-          {UserPolicies.hasAdminAccess(userRoles) && (
-            <button onClick={() => navigateToSection('storage')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'storage' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/2965/2965312.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> File Storage
+            <button onClick={() => navigateToSection('assessments')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'assessments' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/3429/3429153.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Question Papers
             </button>
           )}
           {UserPolicies.hasContributorAccess(userRoles) && (
             <button onClick={() => navigateToSection('groups')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'groups' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/615/615075.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Groups
+              <img src="https://cdn-icons-png.flaticon.com/512/615/615075.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Exam Bundles
             </button>
           )}
-          {UserPolicies.hasManagerAccess(userRoles) && (
-            <button onClick={() => navigateToSection('logs')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'logs' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/1069/1069159.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Logs
+          {/* Lowered permission to Contributor so Teachers can see schedules */}
+          {UserPolicies.hasContributorAccess(userRoles) && (
+            <button onClick={() => navigateToSection('assignments')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'assignments' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Exam Schedules
             </button>
           )}
           {UserPolicies.hasContributorAccess(userRoles) && (
-            <button onClick={() => navigateToSection('assessments')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'assessments' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/3429/3429153.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Exams
+            <button onClick={() => navigateToSection('results')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'results' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Report Cards
+            </button>
+          )}
+          {UserPolicies.hasManagerAccess(userRoles) && (
+            <button onClick={() => navigateToSection('users')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'users' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Students
+            </button>
+          )}
+          {UserPolicies.hasManagerAccess(userRoles) && (
+            <button onClick={() => navigateToSection('academic')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'academic' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> School Structure
+            </button>
+          )}
+
+          <hr style={{ margin: '12px 16px', border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+
+          {UserPolicies.hasContributorAccess(userRoles) && (
+            <button onClick={() => navigateToSection('ai-chat')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'ai-chat' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/134/134914.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> AI Assistant
             </button>
           )}
           {UserPolicies.hasManagerAccess(userRoles) && (
@@ -393,40 +379,36 @@ const Admin = () => {
               <img src="https://cdn-icons-png.flaticon.com/512/423/423794.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Reports & Analytics
             </button>
           )}
+          
+          {UserPolicies.hasAdminAccess(userRoles) && (
+            <button onClick={() => navigateToSection('ai')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'ai' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/2040/2040523.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> AI Settings
+            </button>
+          )}
+          {UserPolicies.hasAdminAccess(userRoles) && (
+            <button onClick={() => navigateToSection('email')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'email' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Communication
+            </button>
+          )}
           {UserPolicies.hasAdminAccess(userRoles) && (
             <button onClick={() => navigateToSection('security')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'security' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Security
+              <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Security & Auth
             </button>
           )}
           {UserPolicies.hasAdminAccess(userRoles) && (
             <button onClick={() => navigateToSection('permissions')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'permissions' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Permissions
+              <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Staff Permissions
+            </button>
+          )}
+          
+          {UserPolicies.hasManagerAccess(userRoles) && (
+            <button onClick={() => navigateToSection('banners')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'banners' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/1997/1997842.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Notices
             </button>
           )}
           {UserPolicies.hasManagerAccess(userRoles) && (
-            <button onClick={() => navigateToSection('users')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'users' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Users
-            </button>
-          )}
-          {UserPolicies.hasManagerAccess(userRoles) && (
-            <button onClick={() => navigateToSection('admissions')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'admissions' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Admissions
-            </button>
-          )}
-          {UserPolicies.hasManagerAccess(userRoles) && (
-            <button onClick={() => navigateToSection('branding')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'branding' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> School Branding
-            </button>
-          )}
-          {/* Note: In a real system you'd use a specific policy for Academic/Results. Using Contributor/Manager for now */}
-          {UserPolicies.hasManagerAccess(userRoles) && (
-            <button onClick={() => navigateToSection('academic')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'academic' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Academic
-            </button>
-          )}
-          {UserPolicies.hasContributorAccess(userRoles) && (
-            <button onClick={() => navigateToSection('results')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'results' })}>
-              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Results
+            <button onClick={() => navigateToSection('logs')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'logs' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/1069/1069159.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> System Logs
             </button>
           )}
         </nav>
@@ -486,19 +468,19 @@ const DashboardContent = ({ userCount, groupCount, moduleCount, assignmentCount,
     <div className={cssStyles.dashboardContainer}>
       <div className={cssStyles.statsGrid}>
         <div className={cssStyles.statCard} style={{ animationDelay: '0.1s' }}>
-          <h3>Users</h3>
+          <h3>Students</h3>
           <p className={cssStyles.statNumber}><AnimatedCounter target={userCount} delay={100} /></p>
         </div>
         <div className={cssStyles.statCard} style={{ animationDelay: '0.2s' }}>
-          <h3>Groups</h3>
+          <h3>Subject Folders</h3>
           <p className={cssStyles.statNumber}><AnimatedCounter target={groupCount} delay={300} /></p>
         </div>
         <div className={cssStyles.statCard} style={{ animationDelay: '0.3s' }}>
-          <h3>Assignments</h3>
+          <h3>Exam Schedules</h3>
           <p className={cssStyles.statNumber}><AnimatedCounter target={assignmentCount} delay={500} /></p>
         </div>
         <div className={cssStyles.statCard} style={{ animationDelay: '0.4s' }}>
-          <h3>Exams</h3>
+          <h3>Question Papers</h3>
           <p className={cssStyles.statNumber}><AnimatedCounter target={moduleCount} delay={700} /></p>
         </div>
         <div className={cssStyles.statCard} style={{ animationDelay: '0.5s' }}>
@@ -508,11 +490,11 @@ const DashboardContent = ({ userCount, groupCount, moduleCount, assignmentCount,
       </div>
       
       <div className={cssStyles.welcomeMessage}>
-        <p>Welcome to the ExamNova Admin Panel. Your central hub for managing assessments, users, and platform performance.</p>
+        <p>Welcome to the ExamNova Teacher Portal. Your central hub for preparing question papers, scheduling exams, and managing student report cards.</p>
         <div className={cssStyles.statisticsNote}>
           <p className={cssStyles.statisticsNoteText}>
             <img src="https://cdn-icons-png.flaticon.com/512/189/189665.png" alt="Info" style={{width: '18px', height: '18px'}} />
-            Statistics are synchronized with live background indexing.
+            Records are synchronized with the academic database.
           </p>
         </div>
         
@@ -520,9 +502,9 @@ const DashboardContent = ({ userCount, groupCount, moduleCount, assignmentCount,
           <div className={cssStyles.shortcutsHeader}><span className={cssStyles.shortcutsTitle}>Quick Shortcuts</span></div>
           <div className={cssStyles.shortcutsList}>
             <div className={cssStyles.shortcutItem}><span className={cssStyles.shortcutLabel}>Dashboard</span><span className={cssStyles.shortcutKeys}>Ctrl+Shift+D</span></div>
-            {UserPolicies.hasManagerAccess(userRoles) && <div className={cssStyles.shortcutItem}><span className={cssStyles.shortcutLabel}>Users</span><span className={cssStyles.shortcutKeys}>Ctrl+Shift+U</span></div>}
-            {UserPolicies.hasManagerAccess(userRoles) && <div className={cssStyles.shortcutItem}><span className={cssStyles.shortcutLabel}>Assignments</span><span className={cssStyles.shortcutKeys}>Ctrl+Shift+A</span></div>}
-            {UserPolicies.hasContributorAccess(userRoles) && <div className={cssStyles.shortcutItem}><span className={cssStyles.shortcutLabel}>Exams</span><span className={cssStyles.shortcutKeys}>Ctrl+Shift+M</span></div>}
+            {UserPolicies.hasManagerAccess(userRoles) && <div className={cssStyles.shortcutItem}><span className={cssStyles.shortcutLabel}>Students</span><span className={cssStyles.shortcutKeys}>Ctrl+Shift+U</span></div>}
+            {UserPolicies.hasContributorAccess(userRoles) && <div className={cssStyles.shortcutItem}><span className={cssStyles.shortcutLabel}>Exam Schedules</span><span className={cssStyles.shortcutKeys}>Ctrl+Shift+A</span></div>}
+            {UserPolicies.hasContributorAccess(userRoles) && <div className={cssStyles.shortcutItem}><span className={cssStyles.shortcutLabel}>Question Papers</span><span className={cssStyles.shortcutKeys}>Ctrl+Shift+M</span></div>}
           </div>
         </div>
       </div>
