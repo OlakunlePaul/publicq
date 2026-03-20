@@ -1,41 +1,64 @@
-# 👨‍🏫 Teacher Handbook: Exam Management & Marking
+# 👨‍🏫 Teacher Handbook: Setting & Grading Exams
 
-Welcome to the Teacher Dashboard! You manage the "Printing Room," the "Timetable," and the "Result Office."
+Welcome to your **Teacher Dashboard** on ExamNova! As an educator, your tools are focused on creating seamless assessments, setting schedules, and effortlessly compiling grades for your students.
 
----
+This simple, step-by-step guide will help you navigate the system with complete confidence.
 
-## 🖨️ Phase 1: The Printing Room (Question Papers)
-Creating the core content of your assessments.
+<br/>
 
-1.  **Create a Module**: Go to **Question Papers**. Click "Create New Module" (e.g., "English Language Mid-Term").
-2.  **Add Questions**: Type your questions and select the type (Multiple Choice, True/False, etc.).
-    *   *Tip: You can reuse these question papers for different classes later.*
+## 🖨️ Phase 1: The Printing Room (Questions)
+This is where the magic begins. You start by drafting your examination questions without worrying about scheduling them yet.
 
----
+1. **Create a Question Paper**  
+   Navigate to **Question Papers** and click the *"Create New Module"* button. Give it a clear name like *"Basic Science Mid-Term"*.
+   
+2. **Type Out Your Questions**  
+   Add questions inside your module. You can mix and match formats effortlessly—Multiple Choice, True/False, or Essay questions.
 
-## 📁 Phase 2: Subject Folders (Exam Bundles)
-Organizing your papers for distribution.
+> **💡 Pro Tip:**  
+> Once created, **Question Papers are permanent**. This means you can easily reuse the exact same questions for different classes or future terms!
 
-1.  **Create a Bundle**: Go to **Exam Bundles**. Click "Create New Bundle" (e.g., "JS1 First Term Exam").
-2.  **Pack the Folder**: Add one or more **Question Papers** to this bundle. 
-    *   *Note: This allows you to combine multiple topics (e.g., "Algebra" and "Geometry") into a single examination seating.*
+<br/>
 
----
+## 📁 Phase 2: Exam Bundles & Folders
+After drafting your question papers, you need to bundle them up into the actual exam that students will sit for.
 
-## 📅 Phase 3: The Examination Timetable (Exam Schedules)
-Handing out the papers to students.
+1. **Create an Exam Bundle**  
+   Go to **Exam Bundles** and click *"Create New Bundle"* (for example, *"JSS 1 First Term Examinations"*).
+   
+2. **Pack the Folder**  
+   Select the Question Papers you created earlier and drop them into this bundle. This lets you combine multiple topics into one unified exam session if you wish!
 
-1.  **Create a Schedule**: Go to **Exam Schedules**. Click "Create New Schedule."
-2.  **Select Bundle**: Choose the **Exam Bundle** you prepared.
-3.  **Select Candidates**: Pick the **Class** or individual **Students** who are sitting for this exam.
-4.  **Set the Clock**: Define the **Date**, **Start Time**, and **Duration**.
-    *   *Result: The exam will automatically appear in the students' dash at the right time.*
+<br/>
 
----
+## 📅 Phase 3: The Timetable
+Now that the exam is packaged, it is time to schedule when the students can take it.
 
-## 📑 Phase 4: The Result Office (Report Cards)
-MARKING, syncing, and compiling scores.
+1. **Set the Schedule**  
+   Go to **Exam Schedules** and click *"Create New Schedule"*. Find the Exam Bundle you just prepared.
+   
+2. **Select Candidates**  
+   Choose exactly *who* will be sitting for this exam. You can pick an entire **Class** or just individual **Students**.
+   
+3. **Set the Clock**  
+   Define the exact **Date**, the **Starting Time**, and the **Duration**.
 
-1.  **Sync Online Scores**: Go to **Report Cards**. For computer-based exams, click **Sync Online Scores**. This instantly brings marks into the ledger.
-2.  **Manual Marks (Broadsheet)**: For manual tests or class assignments, use the **Broadsheet View** to type scores directly into the grid.
-3.  **Finalize**: Once all scores (CA + Exam) are in, preview the **Individual Report Cards** to ensure accuracy before official approval.
+> **👀 What Happens Next?**  
+> You're done! The exam will automatically pop up on the students' dashboards at the exact time you scheduled. 
+
+<br/>
+
+## 📑 Phase 4: The Result Office
+When exams are over, compiling scores is automatic and stress-free.
+
+1. **Instantly Sync Scores**  
+   Go to **Report Cards**. For computer-based exams, simply click **Sync Online Scores**. The system marks the objective questions and pulls the results into your recording sheet instantly!
+
+2. **Manual grading**  
+   For handwritten assignments or practical scores, use the **Broadsheet View** to type the marks directly into the grid.
+
+3. **Finalize**  
+   Verify that all Continuous Assessment (CA) and Exam scores are correctly captured before the administration locks them in. 
+
+> **🎉 Congratulations!**  
+> You just managed an entire examination lifecycle without touching a physical calculator or ledger. 
