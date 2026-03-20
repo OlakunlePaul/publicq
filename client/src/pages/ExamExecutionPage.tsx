@@ -48,7 +48,7 @@ const AssignmentExecutionPage: React.FC = () => {
       // No assignment ID, redirect to my exams
       navigate('/my-exams');
     }
-  }, [params.assignmentId, loadAssignmentById, navigate]);
+  }, [params.examId, loadAssignmentById, navigate]);
 
   useEffect(() => {
     // Check if userId is provided in the route

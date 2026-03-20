@@ -135,7 +135,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
     }
     setError('');
     return true;
-  }, [formData.title, formData.description, formData.startDateUtc, formData.endDateUtc, formData.groupId]);
+  }, [formData.title, formData.description, formData.startDateUtc, formData.endDateUtc, formData.groupId, formData.classLevelId]);
 
   const handleConfirm = useCallback(() => {
     if (validateForm()) {
