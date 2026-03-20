@@ -5,10 +5,12 @@ import { Assignment } from '../models/assignment';
 import { getUserInformation, type CurrentUser } from '../utils/tokenUtils';
 import { CONSTANTS, ROUTES } from '../constants/contstants';
 import { StudentState } from '../models/student-state';
+import HandbookModal from '../components/Shared/HandbookModal';
 
 const MyAssignments: React.FC = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [isHandbookModalOpen, setIsHandbookModalOpen] = useState(false);
 
   useEffect(() => {
     // First, try to get authenticated user from token
@@ -69,17 +71,16 @@ const MyAssignments: React.FC = () => {
       <div style={styles.content}>
         {/* Student Handbook Link */}
         <div style={{ marginBottom: '1.5rem', textAlign: 'right' }}>
-          <a 
-            href="file:///C:/Users/hp/.gemini/antigravity/brain/3071a572-29b4-4b80-8db9-5dfc5be74ec4/student_handbook.md" 
-            target="_blank" 
-            rel="noopener noreferrer"
+          <button 
+            onClick={() => setIsHandbookModalOpen(true)}
             style={{ 
               display: 'inline-flex', 
               alignItems: 'center', 
               gap: '8px', 
               color: '#4f46e5', 
               fontWeight: 600, 
-              textDecoration: 'none',
+              border: 'none',
+              cursor: 'pointer',
               fontSize: '0.9rem',
               padding: '8px 16px',
               backgroundColor: 'white',
@@ -88,8 +89,16 @@ const MyAssignments: React.FC = () => {
             }}
           >
             <span>📘 View Student Handbook</span>
-          </a>
+          </button>
         </div>
+        
+        {isHandbookModalOpen && (
+          <HandbookModal 
+            url="/handbooks/student_handbook.md" 
+            title="Student Handbook"
+            onClose={() => setIsHandbookModalOpen(false)} 
+          />
+        )}
         <AssignmentAccess 
           onLoginRequest={handleLoginRequest} 
           onAssignmentOpen={handleAssignmentOpen}

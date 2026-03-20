@@ -33,6 +33,7 @@ import { UserRole } from '../models/UserRole';
 import { userService } from '../services/userService';
 import { cn } from '../utils/cn';
 import cssStyles from './Admin.module.css';
+import HandbookModal from '../components/Shared/HandbookModal';
 
 type AdminSection = 'dashboard' | 'users' | 'groups' | 'assignments' | 'assessments' | 'reports' | 'email' | 'banners' | 'pages' | 'ai' | 'ai-chat' | 'security' | 'cache' | 'storage' | 'logs' | 'admissions' | 'branding' | 'academic' | 'results' | 'permissions';
 
@@ -524,8 +525,10 @@ const DashboardContent = ({ userCount, studentCount, teacherCount, groupCount, m
   );
 
   const handbookUrl = UserPolicies.hasManagerAccess(userRoles) 
-    ? 'file:///C:/Users/hp/.gemini/antigravity/brain/3071a572-29b4-4b80-8db9-5dfc5be74ec4/manager_handbook.md' 
-    : 'file:///C:/Users/hp/.gemini/antigravity/brain/3071a572-29b4-4b80-8db9-5dfc5be74ec4/teacher_handbook.md';
+    ? '/handbooks/manager_handbook.md' 
+    : '/handbooks/teacher_handbook.md';
+
+  const [isHandbookModalOpen, setIsHandbookModalOpen] = useState(false);
 
   return (
     <div className={cssStyles.dashboardContainer}>
@@ -538,10 +541,21 @@ const DashboardContent = ({ userCount, studentCount, teacherCount, groupCount, m
             <p style={{ margin: '4px 0 0 0', color: '#1e3a8a', fontSize: '13px' }}>Need help? Follow our step-by-step guide to manage your school tasks efficiently.</p>
           </div>
         </div>
-        <a href={handbookUrl} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#2563eb', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 500, fontSize: '13px', transition: 'background-color 0.2s' }}>
+        <button 
+          onClick={() => setIsHandbookModalOpen(true)}
+          style={{ backgroundColor: '#2563eb', border: 'none', cursor: 'pointer', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 500, fontSize: '13px', transition: 'background-color 0.2s' }}
+        >
           View Handbook
-        </a>
+        </button>
       </div>
+
+      {isHandbookModalOpen && (
+        <HandbookModal 
+          url={handbookUrl} 
+          title={UserPolicies.hasManagerAccess(userRoles) ? "Manager Handbook" : "Teacher Handbook"}
+          onClose={() => setIsHandbookModalOpen(false)} 
+        />
+      )}
 
       <div className={cssStyles.statsGrid}>
         <div className={cssStyles.statCard} style={{ animationDelay: '0.1s' }}>
