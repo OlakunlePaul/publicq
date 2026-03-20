@@ -49,7 +49,8 @@ const ResultManagement: React.FC = () => {
         if (classResp.isSuccess) setClasses(classResp.data || []);
         if (subResp.isSuccess) setSubjects(subResp.data || []);
       } catch (err: any) {
-        setError('Failed to load academic structure: ' + err.message);
+        const serverMsg = err.response?.data?.message || err.response?.data?.errors?.[0] || err.message;
+        setError('Failed to load academic structure: ' + serverMsg);
       } finally {
         setLoadingInitial(false);
       }

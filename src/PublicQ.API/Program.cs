@@ -48,18 +48,31 @@ else
 
 var configContext = new ApplicationDbContext(optionsBuilder.Options);
 
-try
+if (string.IsNullOrEmpty(connectionString))
 {
-    var rawConnectionString = builder.Configuration.GetConnectionString(Constants.DbDefaultConnectionString) ?? "NULL";
-    var safeConnectionString = System.Text.RegularExpressions.Regex.Replace(rawConnectionString, @"Password=[^;]*", "Password=***");
-    Console.WriteLine($"[DEBUG] Resolved Database Connection String (Password Hidden): '{safeConnectionString}'");
-
-    Console.WriteLine("Executing automatic database migration step...");
-    configContext.Database.Migrate();
+    Console.WriteLine("[ERROR] Database connection string is missing. Skipping migration.");
 }
-catch (Exception ex)
+else
 {
-    Console.WriteLine($"Automatic migration failed: {ex.Message}. It usually resolves itself on retries or check your Connection String.");
+    try
+    {
+        var rawConnectionString = builder.Configuration.GetConnectionString(Constants.DbDefaultConnectionString) ?? "NULL";
+        var safeConnectionString = System.Text.RegularExpressions.Regex.Replace(rawConnectionString, @"Password=[^;]*", "Password=***");
+        Console.WriteLine($"[DEBUG] Resolved Database Connection String (Password Hidden): '{safeConnectionString}'");
+
+        Console.WriteLine("Executing automatic database migration step...");
+        configContext.Database.Migrate();
+        Console.WriteLine("Database migration completed successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[CRITICAL] Automatic migration failed: {ex.Message}");
+        Console.WriteLine($"[STACK TRACE] {ex.StackTrace}");
+        if (ex.InnerException != null)
+        {
+            Console.WriteLine($"[INNER EXCEPTION] {ex.InnerException.Message}");
+        }
+    }
 }
 
 // Create the provider instance
