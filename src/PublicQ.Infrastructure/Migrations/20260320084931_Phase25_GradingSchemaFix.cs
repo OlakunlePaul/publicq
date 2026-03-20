@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -73,14 +73,14 @@ namespace PublicQ.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "SystemSettings",
-                columns: new[] { "Name", "Value" },
-                values: new object[,]
-                {
-                    { "EmailOptions:FrontendUrl", "https://examnova.vercel.app" },
-                    { "ResendOptions:ApiKey", "<Your Resend API Key>" }
-                });
+            // Use raw SQL for idempotent insert/upsert to avoid unique constraint violations
+            migrationBuilder.Sql(@"
+                INSERT INTO ""SystemSettings"" (""Name"", ""Value"")
+                VALUES 
+                    ('EmailOptions:FrontendUrl', 'https://examnova.vercel.app'),
+                    ('ResendOptions:ApiKey', '<Your Resend API Key>')
+                ON CONFLICT (""Name"") DO UPDATE SET ""Value"" = EXCLUDED.""Value"";
+            ");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ClassLevels_GradingSchemaId",
