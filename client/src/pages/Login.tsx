@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { UserLoginRequest } from '../models/user-login-request';
 import { userService } from '../services/userService';
 import { cn } from '../utils/cn';
+import { getTokenRoles } from '../utils/tokenUtils';
+import { UserPolicies } from '../models/user-policy';
+import { UserRole } from '../models/UserRole';
 import PasswordInput from '../components/Shared/PasswordInput';
 import loginStyles from './Login.module.css';
 
@@ -80,7 +83,23 @@ const Login = () => {
 
     try {
       await login(loginData);
-      navigate('/', { replace: true });
+      
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirectTo = searchParams.get('redirectTo');
+      
+      if (redirectTo) {
+        navigate(redirectTo, { replace: true });
+        return;
+      }
+
+      const roles = getTokenRoles();
+      if (UserPolicies.hasContributorAccess(roles) || UserPolicies.hasManagerAccess(roles) || UserPolicies.hasAdminAccess(roles)) {
+        navigate('/admin', { replace: true });
+      } else if (roles.includes(UserRole.PARENT)) {
+        navigate('/parent-dashboard', { replace: true });
+      } else {
+        navigate('/my-exams', { replace: true });
+      }
     } catch (err: any) {
       setError('Login failed: ' + (err.response?.data?.message || err.message));
     } finally {

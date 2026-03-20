@@ -8,11 +8,13 @@ import { cn } from '../../utils/cn';
 import { PageService } from '../../services/pageService';
 import { PageType } from '../../models/page-type';
 import { ROUTES } from '../../constants/contstants';
+import ProfileSettingsModal from '../Shared/ProfileSettingsModal';
 import navStyles from './NavBar.module.css';
 
 const NavBar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hasContactPage, setHasContactPage] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const { token, logout } = useAuth();
   const navigate = useNavigate();
@@ -119,6 +121,17 @@ const NavBar = () => {
             <li>
               <button 
                 className={navStyles.navBtn}
+                onClick={() => {
+                  closeMobileMenu();
+                  setIsProfileModalOpen(true);
+                }}
+              >
+                Profile
+              </button>
+            </li>
+            <li>
+              <button 
+                className={navStyles.navBtn}
                 onClick={handleLogout}
               >
                 Logout
@@ -155,6 +168,10 @@ const NavBar = () => {
           </>
         )}
       </ul>
+
+      {isProfileModalOpen && (
+        <ProfileSettingsModal onClose={() => setIsProfileModalOpen(false)} />
+      )}
     </nav>
   );
 };

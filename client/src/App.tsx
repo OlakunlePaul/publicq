@@ -24,7 +24,6 @@ import ParentDashboard from './pages/ParentDashboard';
 
 function HomePage() {
   const { isAuthenticated, userRoles } = useAuth();
-  const isExamTaker = userRoles.includes(UserRole.EXAM_TAKER);
 
   return (
     <div className={homeStyles.homePage}>
@@ -43,17 +42,32 @@ function HomePage() {
             Empower educators with powerful tools to manage exams efficiently.
           </p>
           <div className={homeStyles.heroActions}>
-            <Link to={ROUTES.MY_EXAMS} className={homeStyles.btnPrimary}>
-              Take an Exam →
-            </Link>
             {!isAuthenticated && (
-              <Link to={ROUTES.LOGIN} className={homeStyles.btnSecondary}>
-                Sign In
+              <>
+                <Link to={ROUTES.REGISTER} className={homeStyles.btnPrimary}>
+                  Get Started Free
+                </Link>
+                <Link to={ROUTES.LOGIN} className={homeStyles.btnSecondary}>
+                  Sign In
+                </Link>
+              </>
+            )}
+            
+            {isAuthenticated && (UserPolicies.hasContributorAccess(userRoles) || UserPolicies.hasManagerAccess(userRoles) || UserPolicies.hasAdminAccess(userRoles)) && (
+              <Link to={ROUTES.ADMIN} className={homeStyles.btnPrimary}>
+                Go to Dashboard →
               </Link>
             )}
-            {!isExamTaker && isAuthenticated && (
-              <Link to={ROUTES.MODULE_CREATE} className={homeStyles.btnSecondary}>
-                Create Assessment
+
+            {isAuthenticated && userRoles.includes(UserRole.EXAM_TAKER) && !(UserPolicies.hasContributorAccess(userRoles) || UserPolicies.hasManagerAccess(userRoles) || UserPolicies.hasAdminAccess(userRoles)) && (
+              <Link to={ROUTES.MY_EXAMS} className={homeStyles.btnPrimary}>
+                Go to My Exams →
+              </Link>
+            )}
+            
+            {isAuthenticated && userRoles.includes(UserRole.PARENT) && !userRoles.includes(UserRole.EXAM_TAKER) && !(UserPolicies.hasContributorAccess(userRoles) || UserPolicies.hasManagerAccess(userRoles) || UserPolicies.hasAdminAccess(userRoles)) && (
+              <Link to={ROUTES.PARENT_DASHBOARD} className={homeStyles.btnPrimary}>
+                Go to Parent Dashboard →
               </Link>
             )}
           </div>
