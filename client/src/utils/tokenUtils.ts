@@ -2,9 +2,9 @@ import { CONSTANTS } from '../constants/contstants';
 import { jwtDecode } from 'jwt-decode';
 import { UserRole } from '../models/UserRole';
 import { User } from '../models/user';
-import { ExamTakerState } from '../models/exam-taker-state';
+import { StudentState } from '../models/student-state';
 
-export type CurrentUser = User | ExamTakerState;
+export type CurrentUser = User | StudentState;
 
 interface DecodedToken {
   sub: string;

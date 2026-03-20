@@ -29,6 +29,8 @@ import { AssessmentModuleDto } from '../models/assessment-module';
 import { MessageProvider } from '../models/MessageProvider';
 import { useAuth } from '../context/AuthContext';
 import { UserPolicies } from '../models/user-policy';
+import { UserRole } from '../models/UserRole';
+import { userService } from '../services/userService';
 import { cn } from '../utils/cn';
 import cssStyles from './Admin.module.css';
 
@@ -80,6 +82,8 @@ const Admin = () => {
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [userCount, setUserCount] = useState<number>(0);
+  const [studentCount, setStudentCount] = useState<number>(0);
+  const [teacherCount, setTeacherCount] = useState<number>(0);
   const [groupCount, setGroupCount] = useState<number>(0);
   const [moduleCount, setModuleCount] = useState<number>(0);
   const [assignmentCount, setAssignmentCount] = useState<number>(0);
@@ -213,8 +217,18 @@ const Admin = () => {
   };
 
   const getSectionInfo = (section: AdminSection) => {
+    const getDashboardTitle = (roles: UserRole[]) => {
+      if (UserPolicies.hasAdminAccess(roles)) return 'Admin Dashboard';
+      if (UserPolicies.hasManagerAccess(roles)) return 'Manager Dashboard';
+      return 'Teachers Dashboard';
+    };
+
     const sectionMap = {
-      dashboard: { title: 'Dashboard', icon: <img src="https://cdn-icons-png.flaticon.com/512/1828/1828762.png" alt="Dashboard" style={{width: '24px', height: '24px'}} />, description: 'The School Quad – A quick glance at the entire school\'s pulse and statistics.' },
+      dashboard: { 
+        title: getDashboardTitle(userRoles), 
+        icon: <img src="https://cdn-icons-png.flaticon.com/512/1828/1828762.png" alt="Dashboard" style={{width: '24px', height: '24px'}} />, 
+        description: 'The School Quad – A quick glance at the entire school\'s pulse and statistics.' 
+      },
       users: { title: 'Users', icon: <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="Users" style={{width: '24px', height: '24px'}} />, description: 'The School Registry – Managing the profiles of everyone in the building, from students to staff.' },
       groups: { title: 'Exam Bundles', icon: <img src="https://cdn-icons-png.flaticon.com/512/615/615075.png" alt="Groups" style={{width: '24px', height: '24px'}} />, description: 'The Subject Folders – Grouping your papers by subject or department for organized distribution.' },
       assignments: { title: 'Exam Schedules', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Assignments" style={{width: '24px', height: '24px'}} />, description: 'The Examination Timetable – Setting the date, time, and candidate list for your tests.' },
@@ -268,13 +282,22 @@ const Admin = () => {
         setDashboardLoading(true);
         setDashboardError('');
         try {
-          const response = await PlatformStatisticService.getPlatformStatistics();
-          if (response.isSuccess && response.data) {
-            setUserCount(response.data.totalUsers);
-            setGroupCount(response.data.totalGroups);
-            setModuleCount(response.data.totalModules);
-            setAssignmentCount(response.data.totalAssignments);
-            setQuestionCount(response.data.totalQuestions);
+          const [statsResponse, studentCountResponse, teacherCountResponse] = await Promise.all([
+            PlatformStatisticService.getPlatformStatistics(),
+            userService.getTotalUsers(UserRole.EXAM_TAKER),
+            userService.getTotalUsers(UserRole.TEACHER)
+          ]);
+
+          if (statsResponse.isSuccess && statsResponse.data) {
+            setUserCount(statsResponse.data.totalUsers);
+            setGroupCount(statsResponse.data.totalGroups);
+            setModuleCount(statsResponse.data.totalModules);
+            setAssignmentCount(statsResponse.data.totalAssignments);
+            setQuestionCount(statsResponse.data.totalQuestions);
+            
+            if (studentCountResponse.isSuccess) setStudentCount(studentCountResponse.data);
+            if (teacherCountResponse.isSuccess) setTeacherCount(teacherCountResponse.data);
+
             setDashboardDataLoaded(true);
           } else {
             throw new Error('Failed to fetch platform statistics');
@@ -316,13 +339,13 @@ const Admin = () => {
       case 'cache': return <CacheManagement cacheConfig={cacheOptions} setCacheConfig={setCacheOptions} />;
       case 'storage': return <FileStorageManagement fileStorageConfig={fileStorageOptions} setFileStorageConfig={setFileStorageOptions} />;
       case 'logs': return <LogManagement logConfig={logOptions} setLogConfig={setLogOptions} />;
-      case 'dashboard': return <DashboardContent userCount={userCount} groupCount={groupCount} moduleCount={moduleCount} assignmentCount={assignmentCount} questionCount={questionCount} loading={dashboardLoading} error={dashboardError} onNavigate={navigateToSection} />;
+      case 'dashboard': return <DashboardContent userCount={userCount} studentCount={studentCount} teacherCount={teacherCount} groupCount={groupCount} moduleCount={moduleCount} assignmentCount={assignmentCount} questionCount={questionCount} loading={dashboardLoading} error={dashboardError} onNavigate={navigateToSection} />;
       case 'reports': return <ReportsAnalytics />;
       case 'academic': return <AcademicStructureManagement />;
       case 'results': return <ResultManagement />;
       case 'branding': return <SchoolBrandingManagement />;
       case 'permissions': return <PermissionManagement />;
-      default: return <DashboardContent userCount={userCount} groupCount={groupCount} moduleCount={moduleCount} assignmentCount={assignmentCount} questionCount={questionCount} loading={dashboardLoading} error={dashboardError} onNavigate={navigateToSection} />;
+      default: return <DashboardContent userCount={userCount} studentCount={studentCount} teacherCount={teacherCount} groupCount={groupCount} moduleCount={moduleCount} assignmentCount={assignmentCount} questionCount={questionCount} loading={dashboardLoading} error={dashboardError} onNavigate={navigateToSection} />;
     }
   };
 
@@ -361,7 +384,7 @@ const Admin = () => {
               <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Users
             </button>
           )}
-          {UserPolicies.hasContributorAccess(userRoles) && (
+          {UserPolicies.hasManagerAccess(userRoles) && (
             <button onClick={() => navigateToSection('academic')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'academic' })}>
               <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> School Structure
             </button>
@@ -404,6 +427,16 @@ const Admin = () => {
           {UserPolicies.hasManagerAccess(userRoles) && (
             <button onClick={() => navigateToSection('banners')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'banners' })}>
               <img src="https://cdn-icons-png.flaticon.com/512/1997/1997842.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Notices
+            </button>
+          )}
+          {UserPolicies.hasManagerAccess(userRoles) && (
+            <button onClick={() => navigateToSection('branding')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'branding' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> School Profile
+            </button>
+          )}
+          {UserPolicies.hasManagerAccess(userRoles) && (
+            <button onClick={() => navigateToSection('admissions')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'admissions' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Registration Format
             </button>
           )}
           {UserPolicies.hasManagerAccess(userRoles) && (
@@ -451,7 +484,7 @@ const Admin = () => {
                     (sec === 'ai' && UserPolicies.hasAdminAccess(userRoles)) ||
                     (sec === 'ai-chat' && UserPolicies.hasContributorAccess(userRoles)) ||
                     (sec === 'security' && UserPolicies.hasAdminAccess(userRoles)) ||
-                    (sec === 'academic' && UserPolicies.hasContributorAccess(userRoles)) ||
+                    (sec === 'academic' && UserPolicies.hasManagerAccess(userRoles)) ||
                     (sec === 'results' && UserPolicies.hasContributorAccess(userRoles)) ||
                     (sec === 'logs' && UserPolicies.hasManagerAccess(userRoles))
                   );
@@ -475,7 +508,7 @@ const Admin = () => {
   );
 };
 
-const DashboardContent = ({ userCount, groupCount, moduleCount, assignmentCount, questionCount, loading, error, onNavigate }: any) => {
+const DashboardContent = ({ userCount, studentCount, teacherCount, groupCount, moduleCount, assignmentCount, questionCount, loading, error, onNavigate }: any) => {
   const { userRoles } = useAuth();
   
   if (loading) return (
@@ -490,13 +523,37 @@ const DashboardContent = ({ userCount, groupCount, moduleCount, assignmentCount,
     </div>
   );
 
+  const handbookUrl = UserPolicies.hasManagerAccess(userRoles) 
+    ? 'file:///C:/Users/hp/.gemini/antigravity/brain/3071a572-29b4-4b80-8db9-5dfc5be74ec4/manager_handbook.md' 
+    : 'file:///C:/Users/hp/.gemini/antigravity/brain/3071a572-29b4-4b80-8db9-5dfc5be74ec4/teacher_handbook.md';
+
   return (
     <div className={cssStyles.dashboardContainer}>
+      {/* Handbook Banner */}
+      <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '16px', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '24px' }}>📘</span>
+          <div>
+            <h4 style={{ margin: 0, color: '#1e40af', fontWeight: 600 }}>Physical School Handbook</h4>
+            <p style={{ margin: '4px 0 0 0', color: '#1e3a8a', fontSize: '13px' }}>Need help? Follow our step-by-step guide to manage your school tasks efficiently.</p>
+          </div>
+        </div>
+        <a href={handbookUrl} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: '#2563eb', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 500, fontSize: '13px', transition: 'background-color 0.2s' }}>
+          View Handbook
+        </a>
+      </div>
+
       <div className={cssStyles.statsGrid}>
         <div className={cssStyles.statCard} style={{ animationDelay: '0.1s' }}>
           <h3>Students</h3>
-          <p className={cssStyles.statNumber}><AnimatedCounter target={userCount} delay={100} /></p>
+          <p className={cssStyles.statNumber}><AnimatedCounter target={studentCount} delay={100} /></p>
         </div>
+        {UserPolicies.hasAdminAccess(userRoles) && (
+          <div className={cssStyles.statCard} style={{ animationDelay: '0.15s' }}>
+            <h3>Teachers</h3>
+            <p className={cssStyles.statNumber}><AnimatedCounter target={teacherCount} delay={200} /></p>
+          </div>
+        )}
         <div className={cssStyles.statCard} style={{ animationDelay: '0.2s' }}>
           <h3>Subject Folders</h3>
           <p className={cssStyles.statNumber}><AnimatedCounter target={groupCount} delay={300} /></p>

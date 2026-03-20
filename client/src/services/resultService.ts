@@ -20,7 +20,7 @@ export interface SubjectScore {
 
 export interface StudentAssessment {
   id: string;
-  examTakerId: string;
+  studentId: string;
   studentName: string;
   admissionNumber: string;
   sessionName: string;

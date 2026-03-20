@@ -86,6 +86,11 @@ public abstract class AssignmentBaseDto
     public Guid? SubjectId { get; set; }
 
     /// <summary>
+    /// Gets or sets the foreign key reference to the class level.
+    /// </summary>
+    public Guid? ClassLevelId { get; set; }
+
+    /// <summary>
     /// Gets the server's current UTC time.
     /// Used by clients to make date comparisons without relying on potentially manipulated local clocks.
     /// </summary>

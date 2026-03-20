@@ -62,14 +62,14 @@ const NavBar = () => {
       <ul className={cn(navStyles.navLinks, isMobileMenuOpen && navStyles['navLinks--open'])}>
         <li>
           <NavLink 
-            to="/my-assignments" 
+            to={ROUTES.MY_EXAMS} 
             className={({ isActive }) => cn(
               navStyles.navBtn,
               isActive && navStyles['navBtn--active']
             )}
             onClick={closeMobileMenu}
           >
-            Take Exam
+            My Exams
           </NavLink>
         </li>
         {hasContactPage && (
@@ -91,7 +91,7 @@ const NavBar = () => {
             <RoleGuard requiredRoles={[...UserPolicies.Contributors, ...UserPolicies.Analysts]} redirectTo="/login">
               <li>
                 <NavLink 
-                  to="/admin"
+                  to={ROUTES.ADMIN}
                   className={({ isActive }) => cn(
                     navStyles.navBtn,
                     isActive && navStyles['navBtn--active']
@@ -130,7 +130,7 @@ const NavBar = () => {
           <>
             <li>
               <NavLink 
-                to="/register" 
+                to={ROUTES.REGISTER} 
                 className={({ isActive }) => cn(
                   navStyles.navBtn,
                   isActive && navStyles['navBtn--active']
@@ -142,7 +142,7 @@ const NavBar = () => {
             </li>
             <li>
               <NavLink 
-                to="/login"
+                to={ROUTES.LOGIN}
                 className={({ isActive }) => cn(
                   navStyles.navBtn,
                   isActive && navStyles['navBtn--active']

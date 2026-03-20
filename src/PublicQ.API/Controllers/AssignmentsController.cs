@@ -23,7 +23,7 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
     /// <param name="validator">Validator for <see cref="AssignmentCreateDto"/>.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>An <see cref="IActionResult"/> with the creation response.</returns>
-    [Authorize(Constants.ModeratorsPolicy)]
+    [Authorize(Constants.ContributorsPolicy)]
     [HttpPost]
     public async Task<IActionResult> CreateAssignmentAsync(
         [FromBody] AssignmentCreateDto assignmentCreateDto,
@@ -55,7 +55,7 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
     /// <param name="titleFilter">Optional: Filter on title</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>An <see cref="IActionResult"/> with the list of assignments.</returns>
-    [Authorize(Constants.ModeratorsPolicy)]
+    [Authorize(Constants.ContributorsPolicy)]
     [HttpGet]
     public async Task<IActionResult> GetAssignmentsAsync(
         [FromQuery] int pageNumber = 1,
@@ -127,7 +127,7 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
     /// <param name="validator">Validator for <see cref="AssignmentUpdateDto"/>.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>An <see cref="IActionResult"/> with the update response.</returns>
-    [Authorize(Constants.ModeratorsPolicy)]
+    [Authorize(Constants.ContributorsPolicy)]
     [HttpPut]
     public async Task<IActionResult> UpdateAssignmentAsync(
         [FromBody] AssignmentUpdateDto updateDto,
@@ -157,7 +157,7 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
     /// <param name="id">The assignment ID.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>An <see cref="IActionResult"/> with the delete response.</returns>
-    [Authorize(Constants.ModeratorsPolicy)]
+    [Authorize(Constants.ContributorsPolicy)]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteAssignmentAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -180,7 +180,7 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
     /// <param name="id">The assignment ID.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>An <see cref="IActionResult"/> containing the exam takers or an error response.</returns>
-    [Authorize(Constants.ModeratorsPolicy)]
+    [Authorize(Constants.ContributorsPolicy)]
     [HttpGet("{id:guid}/exam-takers")]
     public async Task<IActionResult> GetExamTakersAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -204,7 +204,7 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
     /// <param name="examTakerIds">The exam taker IDs to add.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>An <see cref="IActionResult"/> with the update response.</returns>
-    [Authorize(Constants.ModeratorsPolicy)]
+    [Authorize(Constants.ContributorsPolicy)]
     [HttpPost("{id:guid}/exam-takers")]
     public async Task<IActionResult> AddExamTakersAsync(
         Guid id, 
@@ -236,7 +236,7 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
     /// <param name="examTakerIds">The exam taker IDs to remove.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>An <see cref="IActionResult"/> with the update response.</returns>
-    [Authorize(Constants.ModeratorsPolicy)]
+    [Authorize(Constants.ContributorsPolicy)]
     [HttpDelete("{id:guid}/exam-takers")]
     public async Task<IActionResult> RemoveExamTakersAsync(Guid id, [FromBody] HashSet<string> examTakerIds, CancellationToken cancellationToken)
     {
@@ -264,7 +264,7 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
     /// <param name="id">The assignment ID.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>An <see cref="IActionResult"/> with the publish response.</returns>
-    [Authorize(Constants.ModeratorsPolicy)]
+    [Authorize(Constants.ContributorsPolicy)]
     [HttpPost("{id:guid}/publish")]
     public async Task<IActionResult> PublishAssignmentAsync(Guid id, CancellationToken cancellationToken)
     {

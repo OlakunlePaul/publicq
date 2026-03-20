@@ -35,17 +35,17 @@ public class UserService(
     /// <summary>
     /// Default user role for new users.
     /// </summary>
-    private UserRole DefaultUserRole => UserRole.ExamTaker;
+    private UserRole DefaultUserRole => UserRole.Student;
     
     /// <summary>
-    /// Maximum attempts to generate a unique ID for exam taker.
+    /// Maximum attempts to generate a unique ID for student.
     /// </summary>
     private const int IdGenerationMaxAttempts = 10;
     
     /// <summary>
-    /// Key name for exam taker with no assignments.
+    /// Key name for student with no exams.
     /// </summary>
-    private const string ExamTakerWithNoAssignmentsKeyName = "empty";
+    private const string StudentWithNoExamsKeyName = "empty";
 
     /// <summary>
     /// <see cref="IUserService.LoginUserAsync"/>
@@ -104,6 +104,7 @@ public class UserService(
         string password,
         DateTime? dateOfBirth,
         string? admissionNumber,
+        Guid? classLevelId,
         CancellationToken cancellationToken)
     {
         if (!userServiceOptions.CurrentValue.SelfServiceRegistrationEnabled)
@@ -125,6 +126,7 @@ public class UserService(
             dateOfBirth,
             admissionNumber,
             baseUrl: default, // Not needed as user registers themselves with a password
+            classLevelId,
             cancellationToken);
 
         if (createdUser.IsFailed)
@@ -173,6 +175,7 @@ public class UserService(
         DateTime? dateOfBirth,
         string? admissionNumber,
         string? baseUrl,
+        Guid? classLevelId,
         CancellationToken cancellationToken)
     {
         logger.LogDebug("Request to register user received.");
@@ -194,6 +197,7 @@ public class UserService(
             dateOfBirth, 
             admissionNumber,
             baseUrl, 
+            classLevelId,
             cancellationToken);
     }
 
@@ -205,6 +209,7 @@ public class UserService(
         DateTime? dateOfBirth,
         string? admissionNumber,
         string? baseUrl,
+        Guid? classLevelId,
         CancellationToken cancellationToken)
     {
         Guard.AgainstNull(email, nameof(email));
@@ -217,6 +222,7 @@ public class UserService(
             dateOfBirth, 
             admissionNumber,
             baseUrl,
+            classLevelId,
             cancellationToken);
     }
 
@@ -236,7 +242,8 @@ public class UserService(
         string? password, 
         DateTime? dateOfBirth,
         string? admissionNumber,
-        string? baseUrl, 
+        string? baseUrl,
+        Guid? classLevelId,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(password) && string.IsNullOrWhiteSpace(baseUrl))
@@ -254,16 +261,16 @@ public class UserService(
         
         var emailAddressUpper = email.Address.ToUpper();
 
-        var examTakerHasThisEmail = await dbContext.ExamTakers
+        var studentHasThisEmail = await dbContext.Students
             .AsNoTracking()
             .AnyAsync(e => e.NormalizedEmail == emailAddressUpper, cancellationToken);
 
-        if (examTakerHasThisEmail)
+        if (studentHasThisEmail)
         {
-            logger.LogInformation("Cannot register user. An exam taker with email {Username} already exists.", 
+            logger.LogInformation("Cannot register user. A student with email {Username} already exists.", 
                 email);
             return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.Conflict,
-                $"Cannot register user. An exam taker with email '{email}' already exists.");
+                $"Cannot register user. A student with email '{email}' already exists.");
         }
         
         var user = new ApplicationUser
@@ -354,6 +361,11 @@ public class UserService(
             logger.LogWarning(ex, "Failed to send welcome message to {Username}. Registration will continue.", email);
         }
         
+        if (classLevelId.HasValue)
+        {
+            await EnrollStudentInClassAsync(user.Id, classLevelId.Value, cancellationToken);
+        }
+        
         var assignDefaultRoleResult = await userManager.AddToRoleAsync(user, DefaultUserRole.ToString());
         if (!assignDefaultRoleResult.Succeeded)
         {
@@ -372,25 +384,20 @@ public class UserService(
             $"User {email} registered successfully.");
     }
 
-    /// <inheritdoc cref="IUserService.RegisterExamTakerAsync"/>
-    public async Task<Response<User, GenericOperationStatuses>> RegisterExamTakerAsync(
+    /// <inheritdoc cref="IUserService.RegisterStudentAsync"/>
+    public async Task<Response<User, GenericOperationStatuses>> RegisterStudentAsync(
         MailAddress? email,
         string? id,
         DateTime? dateOfBirth,
         string fullName,
         string? admissionNumber,
+        Guid? classLevelId,
         CancellationToken cancellationToken)
     {
-        logger.LogDebug("Request to register exam taker received.");
+        logger.LogDebug("Request to register student received.");
         Guard.AgainstNullOrWhiteSpace(fullName, nameof(fullName));
 
-        if (dateOfBirth == null)
-        {
-            logger.LogWarning("Date of birth is required for exam takers.");
-            return Response<User, GenericOperationStatuses>.Failure(
-                GenericOperationStatuses.BadRequest,
-                "Date of birth is required for students.");
-        }
+        // Removed mandatory date of birth check as per user request
 
         if (string.IsNullOrWhiteSpace(admissionNumber))
         {
@@ -402,8 +409,8 @@ public class UserService(
             string? generatedId = null;
             for (var attempt = 1; attempt <= IdGenerationMaxAttempts; attempt++)
             {
-                var candidate = ExamTakerIdGenerator.Generate(); // ensure generator returns uppercase
-                var exists = await CheckIfExamTakerExistsAsync(email, candidate, cancellationToken);
+                var candidate = StudentIdGenerator.Generate(); // ensure generator returns uppercase
+                var exists = await CheckIfStudentExistsAsync(email, candidate, cancellationToken);
                 if (!exists)
                 {
                     generatedId = candidate;
@@ -413,11 +420,11 @@ public class UserService(
 
             if (generatedId is null)
             {
-                logger.LogError("Unable to generate a unique ID for the exam taker after {MaxAttempts} attempts.",
+                logger.LogError("Unable to generate a unique ID for the student after {MaxAttempts} attempts.",
                     IdGenerationMaxAttempts);
                 return Response<User, GenericOperationStatuses>.Failure(
                     GenericOperationStatuses.Failed,
-                    $"Unable to generate a unique ID for the exam taker after '{IdGenerationMaxAttempts}' attempts."); 
+                    $"Unable to generate a unique ID for the student after '{IdGenerationMaxAttempts}' attempts."); 
             }
             
             id = generatedId;
@@ -425,13 +432,13 @@ public class UserService(
         else
         {
             id = id.Trim().ToUpperInvariant();
-            var examTakerExists = await CheckIfExamTakerExistsAsync(email, id, cancellationToken);
-            if (examTakerExists)
+            var studentExists = await CheckIfStudentExistsAsync(email, id, cancellationToken);
+            if (studentExists)
             {
-                logger.LogWarning("Exam taker already exists with given ID or Email");
+                logger.LogWarning("Student already exists with given ID or Email");
                 return Response<User, GenericOperationStatuses>.Failure(
                     GenericOperationStatuses.Conflict,
-                    "Exam taker already exists with given ID or Email");
+                    "Student already exists with given ID or Email");
             }
         }
         
@@ -440,13 +447,13 @@ public class UserService(
             var userWithThisEmail = await userManager.FindByEmailAsync(email.Address);
             if (userWithThisEmail != null)
             {
-                logger.LogWarning("Cannot register exam taker. A user with email {Email} already exists.", 
+                logger.LogWarning("Cannot register student. A user with email {Email} already exists.", 
                     email);
                 return Response<User, GenericOperationStatuses>.Failure(GenericOperationStatuses.Conflict,
-                    $"Cannot register exam taker. A user with email {email} already exists.");
+                    $"Cannot register student. A user with email {email} already exists.");
             }
         }
-        var examTaker = new ExamTakerEntity
+        var student = new StudentEntity
         {
             Id = id,
             Email = email?.Address,
@@ -457,15 +464,20 @@ public class UserService(
             CreatedAtUtc = DateTime.UtcNow
         };
         
-        await dbContext.ExamTakers.AddAsync(examTaker, cancellationToken);
+        await dbContext.Students.AddAsync(student, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
         
-        logger.LogInformation("Exam taker registered successfully. ID: {Id}.", id);
+        if (classLevelId.HasValue)
+        {
+            await EnrollStudentInClassAsync(student.Id, classLevelId.Value, cancellationToken);
+        }
+        
+        logger.LogInformation("Student registered successfully. ID: {Id}.", id);
         
         return Response<User, GenericOperationStatuses>.Success(
-            examTaker.ConvertToUser(),
+            student.ConvertToUser(),
             GenericOperationStatuses.Completed,
-            $"Exam taker registered successfully. ID: '{id}'.");
+            $"Student registered successfully. ID: '{id}'.");
     }
     
     /// <summary>
@@ -582,21 +594,21 @@ public class UserService(
                 $"User with ID '{userId}' deleted successfully.");
         }
         
-        var examTaker = await dbContext.ExamTakers
+        var student = await dbContext.Students
             .FirstOrDefaultAsync(e => e.Id == userId, cancellation);
         
-        // If we reach here, identityUser and examTaker are both null
-        if (examTaker == null)
+        // If we reach here, identityUser and student are both null
+        if (student == null)
         {
             logger.LogWarning("No user with {ID} ID found", userId);
             return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound,
                 $"No user with '{userId}' ID found.");
         }
         
-        dbContext.ExamTakers.Remove(examTaker);
+        dbContext.Students.Remove(student);
         await dbContext.SaveChangesAsync(cancellation);
         
-        logger.LogInformation("Exam taker with '{ID}' deleted successfully", userId);
+        logger.LogInformation("Student with '{ID}' deleted successfully", userId);
         
         return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed,
             $"User with '{userId}' ID deleted successfully.");
@@ -711,6 +723,7 @@ public class UserService(
         int pageSize = 10,
         string? currentUserId = null,
         bool isSuperAdmin = true,
+        UserRole? role = null,
         CancellationToken cancellationToken = default)
     {
         // TODO: Move to a repository pattern
@@ -737,6 +750,15 @@ public class UserService(
                          r.Name == UserRolesNames.Parent)))));
         }
 
+        // Apply explicit role filter if provided
+        if (role != null)
+        {
+            var roleName = role.Value.ToString();
+            usersQ = usersQ.Where(u =>
+                dbContext.UserRoles.Any(ur => ur.UserId == u.Id &&
+                    dbContext.Roles.Any(r => r.Id == ur.RoleId && r.Name == roleName)));
+        }
+
         var projectedUsersQ = usersQ
             .Select(u => new
             {
@@ -748,18 +770,39 @@ public class UserService(
                 HasCredential = true
             });
 
-        var examTakersQ = dbContext.ExamTakers
+        // Only include ExamTakers (students from the separate table) if no specific role is requested 
+        // OR if the requested role is EXAM_TAKER
+        IQueryable<ExamTakerEntity>? examTakersSourceQ = null;
+        if (role == null || role == UserRole.EXAM_TAKER)
+        {
+            examTakersSourceQ = dbContext.ExamTakers.AsNoTracking();
+        }
+
+        var examTakersQ = examTakersSourceQ?
             .Select(e => new
             {
                 e.Id,
-                e.Email,
-                e.FullName,
-                e.DateOfBirth,
-                e.CreatedAtUtc,
+                Email = e.Email,
+                FullName = e.FullName,
+                DateOfBirth = e.DateOfBirth,
+                CreatedAtUtc = e.CreatedAt,
                 HasCredential = false
             });
 
-        var unifiedQ = projectedUsersQ.Concat(examTakersQ!);
+        var unifiedQ = projectedUsersQ;
+        if (examTakersQ != null)
+        {
+            unifiedQ = unifiedQ.Concat(examTakersQ.Select(et => new User
+            {
+                Id = et.Id,
+                Email = et.Email,
+                FullName = et.FullName,
+                DateOfBirth = et.DateOfBirth,
+                CreatedAt = et.CreatedAt,
+                IsExamTaker = true,
+                AdmissionNumber = et.AdmissionNumber,
+            }));
+        }
 
         var totalCount = await unifiedQ.LongCountAsync(cancellationToken);
 
@@ -831,51 +874,51 @@ public class UserService(
             }
         }
 
-        // For Exam Takers (HasCredential = false), ensure they have the ExamTaker role
+        // For Students (HasCredential = false), ensure they have the student role
         foreach (var user in users.Where(u => !u.HasCredential))
         {
-            if (!user.Roles.Contains(UserRolesNames.ExamTaker))
+            if (!user.Roles.Contains(UserRolesNames.Student))
             {
-                user.Roles.Add(UserRolesNames.ExamTaker);
+                user.Roles.Add(UserRolesNames.Student);
             }
         }
     }
 
-    /// <inheritdoc cref="IUserService.GetExamTakerByIdAsync"/>
-    public async Task<Response<User, GenericOperationStatuses>> GetExamTakerByIdAsync(
+    /// <inheritdoc cref="IUserService.GetStudentByIdAsync"/>
+    public async Task<Response<User, GenericOperationStatuses>> GetStudentByIdAsync(
         string id, 
         CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("Get exam taker by id request received.");
+        logger.LogDebug("Get student by id request received.");
         Guard.AgainstNullOrWhiteSpace(id, nameof(id));
         
-        var examTakerId = await dbContext
-            .ExamTakers
+        var studentId = await dbContext
+            .Students
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == id.ToUpperInvariant(), cancellationToken);
 
-        if (examTakerId == null)
+        if (studentId == null)
         {
-            logger.LogDebug("No exam taker found with ID '{Id}'", id);
+            logger.LogDebug("No student found with ID '{Id}'", id);
             return Response<User, GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.NotFound,
-                $"No exam taker found with ID '{id}'.");
+                $"No student found with ID '{id}'.");
         }
         
         var user = new User
         {
-            Id = examTakerId.Id,
-            Email = examTakerId.Email!,
-            FullName = examTakerId.FullName,
-            DateOfBirth = examTakerId.DateOfBirth,
+            Id = studentId.Id,
+            Email = studentId.Email!,
+            FullName = studentId.FullName,
+            DateOfBirth = studentId.DateOfBirth,
             HasCredential = false
         };
         
-        logger.LogDebug("Exam taker with ID '{Id}' retrieved successfully.", id);
+        logger.LogDebug("Student with ID '{Id}' retrieved successfully.", id);
         return Response<User, GenericOperationStatuses>.Success(
             user,
             GenericOperationStatuses.Completed,
-            $"Exam taker with ID '{id}' retrieved successfully.");
+            $"Student with ID '{id}' retrieved successfully.");
     }
 
     /// <summary>
@@ -890,6 +933,7 @@ public class UserService(
         int pageSize = 10,
         string? currentUserId = null,
         bool isSuperAdmin = true,
+        UserRole? role = null,
         CancellationToken cancellationToken = default)
     {
         if (pageNumber < 1)
@@ -900,9 +944,6 @@ public class UserService(
 
         var maxPage = userServiceOptions.CurrentValue.MaxPageSize;
         pageSize = Math.Min(pageSize, maxPage);
-
-        var emailIsEmpty = string.IsNullOrWhiteSpace(email);
-        var idIsEmpty = string.IsNullOrWhiteSpace(id);
 
         var queryIdentityUsers = dbContext.Users.AsNoTracking();
 
@@ -918,91 +959,82 @@ public class UserService(
                          r.Name == UserRolesNames.Parent)))));
         }
 
-        var queryExamTakers = dbContext.ExamTakers
-            .AsNoTracking();
-
-        if (!emailIsEmpty)
+        // Apply explicit role filter if provided
+        if (role != null)
         {
-            var norm = email!.ToUpperInvariant();
-            // Optional literal match: var pattern = "%" + EscapeLike(norm) + "%";
-            var pattern = $"%{norm.EscapeLike()}%";
-            queryIdentityUsers = queryIdentityUsers.Where(u => EF.Functions.Like(u.NormalizedEmail, pattern));
-            queryExamTakers = queryExamTakers.Where(e => EF.Functions.Like(e.NormalizedEmail, pattern));
+            var roleName = role.Value.ToString();
+            queryIdentityUsers = queryIdentityUsers.Where(u =>
+                dbContext.UserRoles.Any(ur => ur.UserId == u.Id &&
+                    dbContext.Roles.Any(r => r.Id == ur.RoleId && r.Name == roleName)));
         }
 
-        if (!idIsEmpty)
+        if (!string.IsNullOrWhiteSpace(email))
         {
-            // If Id is GUID, prefer equality or StartsWith on normalized string.
-            var idPattern = $"%{id}%";
-            queryIdentityUsers = queryIdentityUsers.Where(u => EF.Functions.Like(u.Id, idPattern));
-            queryExamTakers = queryExamTakers.Where(u => EF.Functions.Like(u.Id, idPattern));
+            queryIdentityUsers = queryIdentityUsers.Where(u => u.Email != null && u.Email.Contains(email));
         }
 
-        var totalIdentityUsersCount = await queryIdentityUsers.LongCountAsync(cancellationToken);
-    
-        var identityUsers = new List<User>();
-        if (totalIdentityUsersCount > 0)
+        if (!string.IsNullOrWhiteSpace(id))
         {
-            identityUsers = await queryIdentityUsers
-                .OrderBy(u => u.Email)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(u => new User
-                {
-                    Id = u.Id,
-                    Email = u.Email!,
-                    FullName = u.FullName,
-                    DateOfBirth = u.DateOfBirth,
-                    HasCredential = true
-                })
-                .ToListAsync(cancellationToken);
-        }
-        
-
-        var totalExamTakersCount = await queryExamTakers.LongCountAsync(cancellationToken);
-
-        var examTakers = new List<User>();
-        if (totalExamTakersCount > 0)
-        {
-            examTakers = await queryExamTakers
-                .OrderBy(e => e.Email)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(e => new User
-                {
-                    Id = e.Id,
-                    Email = e.Email,
-                    FullName = e.FullName,
-                    DateOfBirth = e.DateOfBirth,
-                    HasCredential = false
-                })
-                .ToListAsync(cancellationToken);
-        }
-        
-        var page = new PaginatedResponse<User>
-        {
-            PageNumber = pageNumber,
-            PageSize = pageSize,
-            TotalCount = totalIdentityUsersCount + totalExamTakersCount
-        };
-        
-        page.Data.AddRange(identityUsers);
-        page.Data.AddRange(examTakers);
-
-        await PopulateUserRolesAsync(page.Data, cancellationToken);
-
-        if (totalIdentityUsersCount == 0 && totalExamTakersCount == 0)
-        {
-            logger.LogDebug("No users found. Criteria: email='{Email}', id='{Id}'", email, id);
-            return Response<PaginatedResponse<User>, GenericOperationStatuses>
-                .Success(page, GenericOperationStatuses.Completed, "No users found.");
+            queryIdentityUsers = queryIdentityUsers.Where(u => u.Id.Contains(id));
         }
 
-        logger.LogDebug("Retrieved {Count}/{Total} users for email='{Email}', id='{Id}'",
-            page.Data.Count, totalIdentityUsersCount + totalExamTakersCount, email, id);
+        var projectedUsersQ = queryIdentityUsers
+            .Select(u => new User
+            {
+                Id = u.Id,
+                Email = u.Email,
+                FullName = u.FullName,
+                DateOfBirth = u.DateOfBirth,
+                CreatedAtUtc = u.CreatedAtUtc,
+                IsExamTaker = false,
+                HasCredential = true
+            });
 
-        return Response<PaginatedResponse<User>, GenericOperationStatuses>
-            .Success(page, GenericOperationStatuses.Completed, "Users retrieved successfully.");
+        // Only include ExamTakers (students from the separate table) if no specific role is requested 
+        // OR if the requested role is EXAM_TAKER
+        IQueryable<User> unifiedQ = projectedUsersQ;
+
+        if (role == null || role == UserRole.EXAM_TAKER)
+        {
+            var queryExamTakers = dbContext.ExamTakers.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                var norm = email!.ToUpperInvariant();
+                var pattern = $"%{norm.EscapeLike()}%";
+                queryExamTakers = queryExamTakers.Where(e => EF.Functions.Like(e.NormalizedEmail, pattern));
+            }
+
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                var idPattern = $"%{id}%";
+                queryExamTakers = queryExamTakers.Where(u => EF.Functions.Like(u.Id, idPattern));
+            }
+
+            unifiedQ = unifiedQ.Concat(queryExamTakers.Select(et => new User
+            {
+                Id = et.Id,
+                Email = et.Email,
+                FullName = et.FullName,
+                DateOfBirth = et.DateOfBirth,
+                CreatedAt = et.CreatedAt,
+                IsExamTaker = true,
+                AdmissionNumber = et.AdmissionNumber,
+            }));
+        }
+
+        var totalCount = await unifiedQ.LongCountAsync(cancellationToken);
+
+        var pageItems = await unifiedQ
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        await PopulateUserRolesAsync(pageItems, cancellationToken);
+
+        var response = new PaginatedResponse<User>(pageItems, totalCount, pageNumber, pageSize);
+        return Response<PaginatedResponse<User>, GenericOperationStatuses>.Success(response, GenericOperationStatuses.Completed);
     }
 
     /// <inheritdoc cref="IUserService.GetUsersByIdAsync"/>
@@ -1032,7 +1064,7 @@ public class UserService(
             })
             .ToListAsync(cancellationToken);
         
-        var examTakers = await dbContext.ExamTakers
+        var examTakers = await dbContext.Students
             .AsNoTracking()
             .Where(e => userIds.Contains(e.Id))
             .Select(e => new User
@@ -1067,24 +1099,43 @@ public class UserService(
                 $"Some users were not found. Requested IDs: '{string.Join(", ", userIds)}', Found IDs: '{foundUserIdsStr}', Not Found IDs: '{notFoundUserIdsStr}'.");
         }
         
-        var allUsers = identityUsers.Concat(examTakers).ToList();
+        var allUsers = identityUsers.Concat(students).ToList();
         await PopulateUserRolesAsync(allUsers, cancellationToken);
         
         return Response<IList<User>, GenericOperationStatuses>.Success(allUsers,GenericOperationStatuses.Completed);
     }
 
-    /// <inheritdoc cref="IUserService.GetUserCountAsync"/>>
+    /// <inheritdoc cref="IUserService.GetUserCountAsync"/>
     public async Task<Response<long, GenericOperationStatuses>> GetUserCountAsync(
+        UserRole? role = null,
         CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("Retrieving total user count from the database.");
+        logger.LogDebug("Retrieving total user count from the database. Role filter: {Role}", role);
 
-        var identityUsers = await dbContext.Users
-            .LongCountAsync(cancellationToken);
-        var examTakers = await dbContext.ExamTakers
-            .LongCountAsync(cancellationToken);
-        
-        var totalUsers = identityUsers + examTakers;
+        long identityUsersCount = 0;
+        long examTakersCount = 0;
+
+        if (role == null)
+        {
+            identityUsersCount = await dbContext.Users.LongCountAsync(cancellationToken);
+            examTakersCount = await dbContext.ExamTakers.LongCountAsync(cancellationToken);
+        }
+        else
+        {
+            var roleName = role.Value.ToString();
+            identityUsersCount = await dbContext.UserRoles
+                .Where(ur => dbContext.Roles.Any(r => r.Id == ur.RoleId && r.Name == roleName))
+                .Select(ur => ur.UserId)
+                .Distinct()
+                .LongCountAsync(cancellationToken);
+
+            if (role == UserRole.EXAM_TAKER)
+            {
+                examTakersCount = await dbContext.ExamTakers.LongCountAsync(cancellationToken);
+            }
+        }
+
+        var totalUsers = identityUsersCount + examTakersCount;
         
         logger.LogDebug("Retrieved total user count from the database: {Count}", totalUsers);
 
@@ -1356,31 +1407,31 @@ public class UserService(
     }
 
     /// <summary>
-    /// Validates exam takers before import. Checks for existing IDs or Emails and verifies assignments.
+    /// Validates students before import. Checks for existing IDs or Emails and verifies assignments.
     /// </summary>
-    /// <param name="examTakers">Arrays of <see cref="ExamTakerImportDto"/></param>
+    /// <param name="students">Arrays of <see cref="StudentImportDto"/></param>
     /// <param name="cancellationToken">Cancellation Token</param>
     /// <returns>Returns <see cref="GenericOperationStatuses"/> wrapped into <see cref="Response{TStatus}"/></returns>
-    private async Task<Response<GenericOperationStatuses>> ValidateExamTakerBeforeImportAsync(
-        IList<ExamTakerImportDto> examTakers,
+    private async Task<Response<GenericOperationStatuses>> ValidateStudentBeforeImportAsync(
+        IList<StudentImportDto> students,
         CancellationToken cancellationToken)
     {
         logger.LogDebug("Checking for existing users with the same IDs or Emails.");
 
-        if (examTakers.Count > userServiceOptions.CurrentValue.MaxImportSize)
+        if (students.Count > userServiceOptions.CurrentValue.MaxImportSize)
         {
             logger.LogInformation("Max import size exceeded. Max: {MaxImportSize}, Provided: {ProvidedSize}",
                 userServiceOptions.CurrentValue.MaxImportSize,
-                examTakers.Count);
+                students.Count);
             return Response<GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.BadRequest,
-                $"Max import size exceeded. Max: '{userServiceOptions.CurrentValue.MaxImportSize}', Provided: '{examTakers.Count}'");
+                $"Max import size exceeded. Max: '{userServiceOptions.CurrentValue.MaxImportSize}', Provided: '{students.Count}'");
         }
         
         // Extract IDs and emails for efficient querying
-        var examTakerIds = examTakers.Select(e => e.Id).ToList();
-        var examTakerIdsUppercase = examTakers.Select(e => e.Id.ToUpperInvariant()).ToList();
-        var examTakerEmails = examTakers
+        var studentIds = students.Select(e => e.Id).ToList();
+        var studentIdsUppercase = students.Select(e => e.Id.ToUpperInvariant()).ToList();
+        var studentEmails = students
             .Where(e => !string.IsNullOrWhiteSpace(e.Email))
             .Select(e => e.Email!)
             .ToList();
@@ -1388,24 +1439,24 @@ public class UserService(
         var existingUsers = await dbContext
             .Users
             .AsNoTracking()
-            .Where(u => examTakerIds.Contains(u.Id)
-                || (u.Email != null && examTakerEmails.Contains(u.Email)))
+            .Where(u => studentIds.Contains(u.Id)
+                || (u.Email != null && studentEmails.Contains(u.Email)))
             .ToListAsync(cancellationToken);
             
-        var existingExamTakersInDb = await dbContext.ExamTakers
-            .Where(e => examTakerIdsUppercase.Contains(e.Id)
-                || (e.Email != null && examTakerEmails.Contains(e.Email)))
+        var existingStudentsInDb = await dbContext.Students
+            .Where(e => studentIdsUppercase.Contains(e.Id)
+                || (e.Email != null && studentEmails.Contains(e.Email)))
             .ToListAsync(cancellationToken);
         
         var errorMessages = new List<string>();
-        if (existingUsers.Count > 0 || existingExamTakersInDb.Count > 0)
+        if (existingUsers.Count > 0 || existingStudentsInDb.Count > 0)
         {
             var existingIds = existingUsers.Select(u => u.Id)
-                .Concat(existingExamTakersInDb.Select(e => e.Id))
+                .Concat(existingStudentsInDb.Select(e => e.Id))
                 .Distinct()
                 .ToList();
             var existingEmails = existingUsers.Select(u => u.Email)
-                .Concat(existingExamTakersInDb.Select(e => e.Email))
+                .Concat(existingStudentsInDb.Select(e => e.Email))
                 .Where(e => e != null)
                 .Distinct(StringComparer.InvariantCultureIgnoreCase)
                 .ToList();
@@ -1420,17 +1471,17 @@ public class UserService(
             }
             
             var errorMessage = string.Join("; ", errorMessages);
-            logger.LogWarning("Import exam takers failed due to existing IDs or Emails. {ErrorMessage}", errorMessage);
+            logger.LogWarning("Import students failed due to existing IDs or Emails. {ErrorMessage}", errorMessage);
             
             return Response<IList<User>, GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.Conflict,
-                "Import exam takers failed due to existing IDs or Emails.",
+                "Import students failed due to existing IDs or Emails.",
                 errorMessages);
         }
         logger.LogDebug("ID and Email verification completed.");
 
-        logger.LogDebug("Checking for assignments linked to the exam takers.");
-        var assignmentIds = examTakers
+        logger.LogDebug("Checking for assignments linked to the students.");
+        var assignmentIds = students
             .Where(e => e.AssignmentId != null)
             .Select(e => e.AssignmentId!.Value)
             .Distinct()
@@ -1449,7 +1500,7 @@ public class UserService(
                     .Except(existingAssignments.Select(a => a.Id))
                     .ToList();
                 
-                logger.LogWarning("Import exam takers failed due to missing assignments. Missing Assignment IDs: {MissingAssignmentIds}",
+                logger.LogWarning("Import students failed due to missing assignments. Missing Assignment IDs: {MissingAssignmentIds}",
                     string.Join(", ", missingAssignmentIds));
                 
                 errorMessages.Add($"The following Assignment IDs do not exist: {string.Join(", ", missingAssignmentIds)}");
@@ -1462,7 +1513,7 @@ public class UserService(
         {
             return Response<IList<User>, GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.Failed,
-                "Import exam takers failed due to validation issues, check errors for more details.",
+                "Import students failed due to validation issues, check errors for more details.",
                 errorMessages);
         }
         
@@ -1551,19 +1602,19 @@ public class UserService(
     }
     
     /// <summary>
-    /// Returns true if an exam taker with the given email or ID already exists.
+    /// Returns true if a student with the given email or ID already exists.
     /// </summary>
     /// <param name="email">Optional: Email address</param>
     /// <param name="id">User ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    private async Task<bool> CheckIfExamTakerExistsAsync(
+    private async Task<bool> CheckIfStudentExistsAsync(
         MailAddress? email, 
         string id, 
         CancellationToken cancellationToken)
     {
         var hasEmail = email is not null;
         
-        return await dbContext.ExamTakers
+        return await dbContext.Students
             .AsNoTracking()
             .AnyAsync(e => (hasEmail && e.NormalizedEmail == email!.Address.ToUpperInvariant()) 
                              || e.Id == id.ToUpperInvariant(), cancellationToken);
@@ -1604,15 +1655,70 @@ public class UserService(
         
         sequence++;
         
-        if (configResult.IsSuccess && configResult.Data != null)
+        if (configResult.IsSuccess)
         {
-            configResult.Data.LastSequenceNumber = sequence;
-            await userConfigurationProvider.SetConfigurationAsync(configResult.Data, cancellationToken);
+            var configData = configResult.Data;
+            if (configData == null)
+            {
+                // Create new configuration if missing
+                configData = new AdmissionNumberConfiguration
+                {
+                    Format = format,
+                    LastSequenceNumber = sequence
+                };
+            }
+            else
+            {
+                configData.LastSequenceNumber = sequence;
+            }
+            
+            await userConfigurationProvider.SetConfigurationAsync(configData, cancellationToken);
         }
 
         var year = DateTime.UtcNow.Year.ToString();
         var numStr = sequence.ToString("D4"); 
         
         return format.Replace("{YYYY}", year).Replace("{0000}", numStr);
+    }
+
+    private async Task EnrollStudentInClassAsync(string studentId, Guid classLevelId, CancellationToken cancellationToken)
+    {
+        var activeSession = await dbContext.Sessions.FirstOrDefaultAsync(s => s.IsActive, cancellationToken);
+        if (activeSession == null)
+        {
+            logger.LogWarning("Cannot enroll student {StudentId}: No active session found.", studentId);
+            return;
+        }
+
+        var activeTerm = await dbContext.Terms.FirstOrDefaultAsync(t => t.IsActive && t.SessionId == activeSession.Id, cancellationToken);
+        if (activeTerm == null)
+        {
+            logger.LogWarning("Cannot enroll student {StudentId}: No active term found for session {SessionId}.", studentId, activeSession.Id);
+            return;
+        }
+
+        // Check if enrollment already exists to avoid duplicates
+        var exists = await dbContext.StudentAssessments.AnyAsync(a => 
+            a.StudentId == studentId && 
+            a.SessionId == activeSession.Id && 
+            a.TermId == activeTerm.Id, cancellationToken);
+
+        if (!exists)
+        {
+            var assessment = new StudentAssessmentEntity
+            {
+                Id = Guid.NewGuid(),
+                StudentId = studentId,
+                SessionId = activeSession.Id,
+                TermId = activeTerm.Id,
+                ClassLevelId = classLevelId,
+                Status = ModerationStatus.Draft,
+                CreatedAt = DateTime.UtcNow
+            };
+            dbContext.StudentAssessments.Add(assessment);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            logger.LogInformation("Student {StudentId} enrolled in Class {ClassLevelId} for {Session}/{Term}", 
+                studentId, classLevelId, activeSession.Name, activeTerm.Name);
+        }
     }
 }

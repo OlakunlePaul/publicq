@@ -16,9 +16,9 @@ public enum UserRole
     Teacher,
 
     /// <summary>
-    /// The least privileged role, typically for regular users.
+    /// Student role.
     /// </summary>
-    ExamTaker,
+    Student,
     
     /// <summary>
     /// Analyst role, typically for users who can view and analyze data but have limited content management capabilities.

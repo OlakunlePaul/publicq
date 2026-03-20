@@ -15,7 +15,7 @@ public class StudentAssessmentEntity
 
     // Core Identifiers
     [Required]
-    public string ExamTakerId { get; set; } = default!;
+    public string StudentId { get; set; } = default!;
     
     [Required]
     public Guid SessionId { get; set; }
@@ -90,7 +90,7 @@ public class StudentAssessmentEntity
     public SessionEntity Session { get; set; } = default!;
     public TermEntity Term { get; set; } = default!;
     public ClassLevelEntity ClassLevel { get; set; } = default!;
-    public ExamTakerEntity ExamTaker { get; set; } = default!;
+    public StudentEntity Student { get; set; } = default!;
     
     /// <summary>
     /// The individual subject scores that make up this assessment.

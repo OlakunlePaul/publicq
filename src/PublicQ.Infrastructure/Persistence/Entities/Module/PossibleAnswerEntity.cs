@@ -67,12 +67,12 @@ public class PossibleAnswerEntity
     }
     
     /// <summary>
-    /// Converts the possible answer entity to a DTO suitable for exam takers.
+    /// Converts the possible answer entity to a DTO suitable for students.
     /// </summary>
-    /// <returns>Returns <see cref="ExamTakerPossibleAnswersDto"/></returns>
-    public ExamTakerPossibleAnswersDto ConvertToExamTakerDto()
+    /// <returns>Returns <see cref="StudentPossibleAnswersDto"/></returns>
+    public StudentPossibleAnswersDto ConvertToStudentDto()
     {
-        return new ExamTakerPossibleAnswersDto
+        return new StudentPossibleAnswersDto
         {
             Id = Id,
             Text = Text,

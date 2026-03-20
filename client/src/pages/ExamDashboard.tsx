@@ -4,9 +4,9 @@ import AssignmentAccess from '../components/AssignmentAccess/AssignmentAccess';
 import { Assignment } from '../models/assignment';
 import { getUserInformation, type CurrentUser } from '../utils/tokenUtils';
 import { CONSTANTS } from '../constants/contstants';
-import { ExamTakerState } from '../models/exam-taker-state';
+import { StudentState } from '../models/student-state';
 
-const AssignmentDashboard: React.FC = () => {
+const ExamDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
@@ -24,7 +24,7 @@ const AssignmentDashboard: React.FC = () => {
     try {
       const examTakerFromStorageJson = localStorage.getItem(CONSTANTS.EXAM_TAKER);
       if (examTakerFromStorageJson) {
-        const examTakerFromStorage = JSON.parse(examTakerFromStorageJson) as ExamTakerState;
+        const examTakerFromStorage = JSON.parse(examTakerFromStorageJson) as StudentState;
         
         if (examTakerFromStorage && examTakerFromStorage.id) {
           setCurrentUser(examTakerFromStorage);
@@ -36,12 +36,12 @@ const AssignmentDashboard: React.FC = () => {
   }, []);
   
   const handleLoginRequest = () => {
-    navigate('/login?redirectTo=/assignment-dashboard');
+    navigate('/login?redirectTo=/exam-dashboard');
   };
 
   const handleAssignmentOpen = (assignment: Assignment) => {
-    // Navigate to the dedicated assignment execution page
-    navigate(`/assignment/${assignment.id}`);
+    // Navigate to the dedicated exam execution page
+    navigate(`/exam/${assignment.id}`);
   };
 
   // Function to refresh user info - can be called when exam taker logs in
@@ -53,7 +53,7 @@ const AssignmentDashboard: React.FC = () => {
       try {
         const examTakerFromStorageJson = localStorage.getItem(CONSTANTS.EXAM_TAKER);
         if (examTakerFromStorageJson) {
-          const examTakerFromStorage = JSON.parse(examTakerFromStorageJson) as ExamTakerState;
+          const examTakerFromStorage = JSON.parse(examTakerFromStorageJson) as StudentState;
           if (examTakerFromStorage && examTakerFromStorage.id) {
             setCurrentUser(examTakerFromStorage);
           }
@@ -90,4 +90,4 @@ const styles: Record<string, React.CSSProperties> = {
   },
 };
 
-export default AssignmentDashboard;
+export default ExamDashboard;

@@ -4,7 +4,7 @@ using PublicQ.Application.Models.Assignment;
 namespace PublicQ.Application.Interfaces;
 
 /// <summary>
-/// Defines operations for managing assignments and their exam takers.
+/// Defines operations for managing assignments and their students.
 /// </summary>
 public interface IAssignmentService
 {
@@ -43,40 +43,40 @@ public interface IAssignmentService
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Adds exam takers to an assignment.
+    /// Adds students to an assignment.
     /// </summary>
     /// <param name="assignmentId">The ID of the assignment.</param>
-    /// <param name="examTakerIds">The set of exam taker IDs to add.</param>
+    /// <param name="studentIds">The set of student IDs to add.</param>
     /// <param name="updatedByUser">Updated by username</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>A response containing the updated assignment and operation status.</returns>
-    Task<Response<AssignmentDto, GenericOperationStatuses>> AddExamTakersAsync(
+    Task<Response<AssignmentDto, GenericOperationStatuses>> AddStudentsAsync(
         Guid assignmentId,
-        HashSet<string> examTakerIds,
+        HashSet<string> studentIds,
         string updatedByUser,
         CancellationToken cancellationToken);
     
     /// <summary>
-    /// Retrieves exam takers for a given assignment.
+    /// Retrieves students for a given assignment.
     /// </summary>
     /// <param name="assignmentId">The ID of the assignment.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A response containing the list of exam takers and operation status.</returns>
-    Task<Response<IList<User>, GenericOperationStatuses>> GetExamTakersAsync(
+    /// <returns>A response containing the list of students and operation status.</returns>
+    Task<Response<IList<User>, GenericOperationStatuses>> GetStudentsAsync(
         Guid assignmentId,
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Removes exam takers from an assignment.
+    /// Removes students from an assignment.
     /// </summary>
     /// <param name="assignmentId">The ID of the assignment.</param>
-    /// <param name="examTakerIds">The set of exam taker IDs to remove.</param>
+    /// <param name="studentIds">The set of student IDs to remove.</param>
     /// <param name="updatedByUser">Updated by username</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>A response containing the updated assignment and operation status.</returns>
-    Task<Response<AssignmentDto, GenericOperationStatuses>> RemoveExamTakersAsync(
+    Task<Response<AssignmentDto, GenericOperationStatuses>> RemoveStudentsAsync(
         Guid assignmentId,
-        HashSet<string> examTakerIds,
+        HashSet<string> studentIds,
         string updatedByUser,
         CancellationToken cancellationToken);
 
@@ -117,13 +117,13 @@ public interface IAssignmentService
         CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Gets a list of available assignments for a specific exam taker.
+    /// Gets a list of available assignments for a specific student.
     /// </summary>
-    /// <param name="examTakerId">Exam taker ID</param>
+    /// <param name="studentId">Student ID</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>A response containing a list of assignments and operation status.</returns>
-    Task<Response<IList<ExamTakerAssignmentDto>, GenericOperationStatuses>> GetAvailableAssignmentsAsync(
-        string examTakerId,
+    Task<Response<IList<StudentAssignmentDto>, GenericOperationStatuses>> GetAvailableAssignmentsAsync(
+        string studentId,
         CancellationToken cancellationToken = default);
     
     /// <summary>
@@ -143,6 +143,6 @@ public interface IAssignmentService
     /// <returns>A response containing the operation status.</returns>
     Task<Response<GenericOperationStatuses>> RecordTabSwitchAsync(
         Guid assignmentId,
-        string examTakerId,
+        string studentId,
         CancellationToken cancellationToken = default);
 }

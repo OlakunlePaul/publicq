@@ -3,7 +3,7 @@
  * This interface is intended for use by exam takers and excludes any sensitive information
  * like whether the answer is correct or not.
  */
-export interface ExamTakerPossibleAnswer {
+export interface StudentPossibleAnswer {
   /**
    * Question possible answer identifier.
    * @maxLength 50 characters (aligned with backend constraint)

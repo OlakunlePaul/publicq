@@ -4,17 +4,15 @@ using PublicQ.Application.Models;
 namespace PublicQ.Infrastructure.Persistence.Entities;
 
 /// <summary>
-/// Exam taker (user) entity.
+/// Student (user) entity.
 /// It must have at least 4 characters in its Id.
-/// Why 4 characters? I don't know, just a random choice to enforce a minimum length.
-/// Convince me otherwise :).
 /// </summary>
 /// <remarks>
-/// ExamTakerEntity represents a user who takes exams within the system.
+/// StudentEntity represents a user who takes exams within the system.
 /// This entity doesn't have password or authentication details,
 /// and cannot perform any operation except taking exams.
 /// </remarks>
-public class ExamTakerEntity
+public class StudentEntity
 {
     [Key]
     [MinLength(4)]
@@ -56,7 +54,7 @@ public class ExamTakerEntity
     public DateTime CreatedAtUtc { get; set; }
     
     /// <summary>
-    /// Helper method to convert ExamTakerEntity to User model.
+    /// Helper method to convert StudentEntity to User model.
     /// </summary>
     /// <returns>Returns <see cref="User"/></returns>
     public User ConvertToUser()

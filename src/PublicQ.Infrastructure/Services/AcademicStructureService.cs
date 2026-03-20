@@ -21,10 +21,8 @@ public class AcademicStructureService(
     public async Task<Response<IList<SubjectDto>, GenericOperationStatuses>> GetSubjectsAsync(CancellationToken cancellationToken = default)
     {
         var subjects = await dbContext.Subjects
-            .AsNoTracking()
-            .OrderBy(s => s.DisplayOrder)
-            .ThenBy(s => s.Name)
-            .Select(s => new SubjectDto(s.Id, s.Name, s.Code, s.DisplayOrder))
+            .Include(s => s.ClassLevels)
+            .Select(s => new SubjectDto(s.Id, s.Name, s.Code, s.DisplayOrder, s.ClassLevels.Select(cl => cl.Id).ToList()))
             .ToListAsync(cancellationToken);
 
         return Response<IList<SubjectDto>, GenericOperationStatuses>.Success(
@@ -48,11 +46,19 @@ public class AcademicStructureService(
             DisplayOrder = dto.DisplayOrder
         };
 
+        if (dto.ClassLevelIds != null && dto.ClassLevelIds.Any())
+        {
+            var classLevels = await dbContext.ClassLevels
+                .Where(cl => dto.ClassLevelIds.Contains(cl.Id))
+                .ToListAsync(cancellationToken);
+            foreach (var cl in classLevels) subject.ClassLevels.Add(cl);
+        }
+
         dbContext.Subjects.Add(subject);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Response<SubjectDto, GenericOperationStatuses>.Success(
-            new SubjectDto(subject.Id, subject.Name, subject.Code, subject.DisplayOrder),
+            new SubjectDto(subject.Id, subject.Name, subject.Code, subject.DisplayOrder, subject.ClassLevels.Select(cl => cl.Id).ToList()),
             GenericOperationStatuses.Completed, "Subject created successfully.");
     }
 
@@ -164,10 +170,8 @@ public class AcademicStructureService(
     public async Task<Response<IList<ClassLevelDto>, GenericOperationStatuses>> GetClassLevelsAsync(CancellationToken cancellationToken = default)
     {
         var classLevels = await dbContext.ClassLevels
-            .AsNoTracking()
-            .OrderBy(c => c.OrderIndex)
-            .ThenBy(c => c.Name)
-            .Select(c => new ClassLevelDto(c.Id, c.Name, c.SectionOrArm, c.OrderIndex, c.GradingSchemaId))
+            .Include(c => c.Subjects)
+            .Select(c => new ClassLevelDto(c.Id, c.Name, c.SectionOrArm, c.OrderIndex, c.GradingSchemaId, c.Subjects.Select(s => s.Id).ToList()))
             .ToListAsync(cancellationToken);
 
         return Response<IList<ClassLevelDto>, GenericOperationStatuses>.Success(
@@ -192,26 +196,46 @@ public class AcademicStructureService(
             GradingSchemaId = dto.GradingSchemaId
         };
 
+        if (dto.SubjectIds != null && dto.SubjectIds.Any())
+        {
+            var subjects = await dbContext.Subjects
+                .Where(s => dto.SubjectIds.Contains(s.Id))
+                .ToListAsync(cancellationToken);
+            foreach (var s in subjects) classLevel.Subjects.Add(s);
+        }
+
         dbContext.ClassLevels.Add(classLevel);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Response<ClassLevelDto, GenericOperationStatuses>.Success(
-            new ClassLevelDto(classLevel.Id, classLevel.Name, classLevel.SectionOrArm, classLevel.OrderIndex, classLevel.GradingSchemaId),
+            new ClassLevelDto(classLevel.Id, classLevel.Name, classLevel.SectionOrArm, classLevel.OrderIndex, classLevel.GradingSchemaId, classLevel.Subjects.Select(s => s.Id).ToList()),
             GenericOperationStatuses.Completed, "Class level created successfully.");
     }
 
     public async Task<Response<SubjectDto, GenericOperationStatuses>> UpdateSubjectAsync(Guid id, SubjectCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var subject = await dbContext.Subjects.FindAsync(new object[] { id }, cancellationToken);
+        var subject = await dbContext.Subjects
+            .Include(s => s.ClassLevels)
+            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+            
         if (subject == null) return Response<SubjectDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Subject not found.");
 
         subject.Name = dto.Name;
         subject.Code = dto.Code;
         subject.DisplayOrder = dto.DisplayOrder;
 
+        if (dto.ClassLevelIds != null)
+        {
+            subject.ClassLevels.Clear();
+            var classLevels = await dbContext.ClassLevels
+                .Where(cl => dto.ClassLevelIds.Contains(cl.Id))
+                .ToListAsync(cancellationToken);
+            foreach (var cl in classLevels) subject.ClassLevels.Add(cl);
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
         return Response<SubjectDto, GenericOperationStatuses>.Success(
-            new SubjectDto(subject.Id, subject.Name, subject.Code, subject.DisplayOrder),
+            new SubjectDto(subject.Id, subject.Name, subject.Code, subject.DisplayOrder, subject.ClassLevels.Select(cl => cl.Id).ToList()),
             GenericOperationStatuses.Completed, "Subject updated successfully.");
     }
 
@@ -295,16 +319,29 @@ public class AcademicStructureService(
 
     public async Task<Response<ClassLevelDto, GenericOperationStatuses>> UpdateClassLevelAsync(Guid id, ClassLevelCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var classLevel = await dbContext.ClassLevels.FindAsync(new object[] { id }, cancellationToken);
+        var classLevel = await dbContext.ClassLevels
+            .Include(c => c.Subjects)
+            .FirstOrDefaultAsync(cl => cl.Id == id, cancellationToken);
+            
         if (classLevel == null) return Response<ClassLevelDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Class level not found.");
 
         classLevel.Name = dto.Name;
         classLevel.SectionOrArm = dto.SectionOrArm;
         classLevel.OrderIndex = dto.OrderIndex;
         classLevel.GradingSchemaId = dto.GradingSchemaId;
+
+        if (dto.SubjectIds != null)
+        {
+            classLevel.Subjects.Clear();
+            var subjects = await dbContext.Subjects
+                .Where(s => dto.SubjectIds.Contains(s.Id))
+                .ToListAsync(cancellationToken);
+            foreach (var s in subjects) classLevel.Subjects.Add(s);
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
         return Response<ClassLevelDto, GenericOperationStatuses>.Success(
-            new ClassLevelDto(classLevel.Id, classLevel.Name, classLevel.SectionOrArm, classLevel.OrderIndex, classLevel.GradingSchemaId),
+            new ClassLevelDto(classLevel.Id, classLevel.Name, classLevel.SectionOrArm, classLevel.OrderIndex, classLevel.GradingSchemaId, classLevel.Subjects.Select(s => s.Id).ToList()),
             GenericOperationStatuses.Completed, "Class level updated successfully.");
     }
 

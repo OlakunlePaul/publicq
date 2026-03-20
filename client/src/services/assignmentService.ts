@@ -40,20 +40,20 @@ export const assignmentService = {
     return response.data;
   },
 
-  getExamTakers: async (id: string): Promise<ResponseWithData<User[], GenericOperationStatuses>> => {
+  getStudents: async (id: string): Promise<ResponseWithData<User[], GenericOperationStatuses>> => {
     const response = await axios.get<ResponseWithData<User[], GenericOperationStatuses>>(`assignments/${id}/exam-takers`);
     return response.data;
   },
 
-  addExamTakers: async (id: string, examTakerIds: string[]): Promise<ResponseWithData<Assignment, GenericOperationStatuses>> => {
+  addStudents: async (id: string, studentIds: string[]): Promise<ResponseWithData<Assignment, GenericOperationStatuses>> => {
     const response = await axios.post<ResponseWithData<Assignment, GenericOperationStatuses>>(`assignments/${id}/exam-takers`,
-      examTakerIds);
+      studentIds);
     return response.data;
   },
 
-  deleteExamTakers: async (id: string, examTakerIds: string[]): Promise<ResponseWithData<Assignment, GenericOperationStatuses>> => {
+  deleteStudents: async (id: string, studentIds: string[]): Promise<ResponseWithData<Assignment, GenericOperationStatuses>> => {
     const response = await axios.delete<ResponseWithData<Assignment, GenericOperationStatuses>>(`assignments/${id}/exam-takers`,
-      { data: examTakerIds });
+      { data: studentIds });
     return response.data;
   },
 
@@ -67,8 +67,8 @@ export const assignmentService = {
     return response.data;
   },
 
-  recordTabSwitch: async (assignmentId: string, examTakerId: string): Promise<Response<GenericOperationStatuses>> => {
-    const response = await axios.post<Response<GenericOperationStatuses>>(`assignments/${assignmentId}/proctoring/tab-switch/${examTakerId}`);
+  recordTabSwitch: async (assignmentId: string, studentId: string): Promise<Response<GenericOperationStatuses>> => {
+    const response = await axios.post<Response<GenericOperationStatuses>>(`assignments/${assignmentId}/proctoring/tab-switch/${studentId}`);
     return response.data;
   }
 };

@@ -18,17 +18,17 @@ namespace PublicQ.API.Controllers;
 public class SessionsController(ISessionService sessionService) : ControllerBase
 {
     /// <summary>
-    /// Fetches the list of group members along with their current module statuses for a specific user and group.
+    /// Fetches the list of group members along with their current module statuses for a specific student and group.
     /// </summary>
-    /// <param name="examTakerAssignmentId">Exam Taker Assignment ID</param>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="studentAssignmentId">Student Assignment ID</param>
     /// <param name="groupId">Group ID</param>
-    /// <param name="userId">User ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns list of <see cref="GroupMemberStateWithUserProgressDto"/> wrapped in <see cref="Response{TData, TStatus}"/></returns>
-    [HttpGet("{userId}/assignment/{examTakerAssignmentId:guid}/group/{groupId:guid}/members")]
+    [HttpGet("{studentId}/assignment/{studentAssignmentId:guid}/group/{groupId:guid}/members")]
     public async Task<IActionResult> GetGroupMembersAsync(
-        [FromRoute] string userId,
-        [FromRoute] Guid examTakerAssignmentId,
+        [FromRoute] string studentId,
+        [FromRoute] Guid studentAssignmentId,
         [FromRoute] Guid groupId, 
         CancellationToken cancellationToken)
     {
@@ -41,8 +41,8 @@ public class SessionsController(ISessionService sessionService) : ControllerBase
         }
         
         var response = await sessionService.GetGroupMemberStatesAsync(
-            userId, 
-            examTakerAssignmentId, 
+            studentId, 
+            studentAssignmentId, 
             groupId, 
             cancellationToken);
         
@@ -50,20 +50,20 @@ public class SessionsController(ISessionService sessionService) : ControllerBase
     }
     
     /// <summary>
-    /// Gets the overall state of a group for a specific user and assignment.
+    /// Gets the overall state of a group for a specific student and assignment.
     /// </summary>
-    /// <param name="userId">User ID</param>
+    /// <param name="studentId">Student ID</param>
     /// <param name="assignmentId">Assignment ID</param>
     /// <param name="cancellationToken">Cancellation Token</param>
     /// <returns></returns>
-    [HttpGet("{userId}/assignment/{assignmentId:guid}/group/state")]
+    [HttpGet("{studentId}/assignment/{assignmentId:guid}/group/state")]
     public async Task<IActionResult> GetGroupStateAsync(
-        [FromRoute] string userId,
+        [FromRoute] string studentId,
         [FromRoute] Guid assignmentId,
         CancellationToken cancellationToken)
     {
         if (assignmentId == Guid.Empty || 
-            string.IsNullOrWhiteSpace(userId))
+            string.IsNullOrWhiteSpace(studentId))
         {
             return Response<GroupStateDto, GenericOperationStatuses>
                 .Failure(GenericOperationStatuses.BadRequest,
@@ -72,7 +72,7 @@ public class SessionsController(ISessionService sessionService) : ControllerBase
         }
         
         var response = await sessionService.GetGroupStateAsync(
-            userId, 
+            studentId, 
             assignmentId, 
             cancellationToken);
 
@@ -87,21 +87,21 @@ public class SessionsController(ISessionService sessionService) : ControllerBase
     /// <summary>
     /// This endpoint retrieves student-safe module version
     /// </summary>
-    /// <param name="userId">User ID</param>
+    /// <param name="studentId">Student ID</param>
     /// <param name="assignmentId">Assignment ID</param>
     /// <param name="moduleVersionId">Module Version ID</param>
     /// <param name="cancellationToken">Cancellation Token</param>
-    /// <returns>Returns <see cref="ExamTakerModuleVersionDto"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
-    [HttpGet("{userId}/assignment/{assignmentId:guid}/module/version/{moduleVersionId:guid}")]
+    /// <returns>Returns <see cref="StudentModuleVersionDto"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
+    [HttpGet("{studentId}/assignment/{assignmentId:guid}/module/version/{moduleVersionId:guid}")]
     public async Task<IActionResult> GetModuleVersionAsync(
-        [FromRoute] string userId,
+        [FromRoute] string studentId,
         [FromRoute] Guid assignmentId,
         [FromRoute] Guid moduleVersionId,
         CancellationToken cancellationToken)
     {
         if (moduleVersionId == Guid.Empty || 
             assignmentId == Guid.Empty || 
-            string.IsNullOrWhiteSpace(userId))
+            string.IsNullOrWhiteSpace(studentId))
         {
             return Response<IList<GroupMemberStateWithUserProgressDto>, GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.BadRequest,
@@ -110,7 +110,7 @@ public class SessionsController(ISessionService sessionService) : ControllerBase
         }
         
         var response = await sessionService.GetModuleVersionAsync(
-            userId, 
+            studentId, 
             assignmentId, 
             moduleVersionId, 
             cancellationToken);
@@ -119,23 +119,23 @@ public class SessionsController(ISessionService sessionService) : ControllerBase
     }
 
     /// <summary>
-    /// Gets module progress for a user in a specific assignment and module.
+    /// Gets module progress for a student in a specific assignment and module.
     /// </summary>
-    /// <param name="userId">User ID</param>
+    /// <param name="studentId">Student ID</param>
     /// <param name="assignmentId">Assignment ID</param>
     /// <param name="moduleId">Module Id</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns <see cref="ModuleProgressDto"/> wrapped in <see cref="Response{TData, TStatus}"/></returns>
-    [HttpGet("{userId}/assignment/{assignmentId:guid}/module/{moduleId:guid}/progress")]
+    [HttpGet("{studentId}/assignment/{assignmentId:guid}/module/{moduleId:guid}/progress")]
     public async Task<IActionResult> GetModuleProgressAsync(
-        string userId,
+        string studentId,
         Guid assignmentId,
         Guid moduleId,
         CancellationToken cancellationToken)
     {
         if (assignmentId == Guid.Empty || 
             moduleId == Guid.Empty ||
-            string.IsNullOrWhiteSpace(userId))
+            string.IsNullOrWhiteSpace(studentId))
         {
             return Response<ModuleProgressDto, GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.BadRequest,
@@ -144,7 +144,7 @@ public class SessionsController(ISessionService sessionService) : ControllerBase
         }
         
         var response = await sessionService.GetModuleProgressAsync(
-            userId, 
+            studentId, 
             assignmentId,
             moduleId,
             cancellationToken);
@@ -153,23 +153,23 @@ public class SessionsController(ISessionService sessionService) : ControllerBase
     }
     
     /// <summary>
-    /// Creates module progress for a user in a specific assignment and module.
+    /// Creates module progress for a student in a specific assignment and module.
     /// </summary>
-    /// <param name="userId">User ID</param>
+    /// <param name="studentId">Student ID</param>
     /// <param name="assignmentId">Assignment ID</param>
     /// <param name="moduleId">Module ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns <see cref="ModuleProgressDto"/> wrapped in <see cref="Response{TData, TStatus}"/></returns>
-    [HttpPost("{userId}/assignment/{assignmentId:guid}/module/{moduleId:guid}/progress")]
+    [HttpPost("{studentId}/assignment/{assignmentId:guid}/module/{moduleId:guid}/progress")]
     public async Task<IActionResult> CreateModuleProgressAsync(
-        string userId,
+        string studentId,
         Guid assignmentId,
         Guid moduleId,
         CancellationToken cancellationToken)
     {
         if (moduleId == Guid.Empty || 
             assignmentId == Guid.Empty || 
-            string.IsNullOrWhiteSpace(userId))
+            string.IsNullOrWhiteSpace(studentId))
         {
             return Response<ModuleProgressDto, GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.BadRequest,
@@ -178,7 +178,7 @@ public class SessionsController(ISessionService sessionService) : ControllerBase
         }
         
         var response = await sessionService.CreateModuleProgressAsync(
-            userId, 
+            studentId, 
             assignmentId, 
             moduleId, 
             cancellationToken);

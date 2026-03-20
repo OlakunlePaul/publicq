@@ -6,10 +6,10 @@ namespace PublicQ.Application.Models.Assignment;
 public class AssignmentCreateDto : AssignmentBaseDto
 {
     /// <summary>
-    /// Gets or sets the collection of student assignments linking specific exam takers to this assignment.
+    /// Gets or sets the collection of student identifiers linking specific students to this assignment.
     /// Represents which students have been assigned to complete this assessment.
     /// </summary>
-    public HashSet<string> ExamTakerIds { get; set; } = [];
+    public HashSet<string> StudentIds { get; set; } = [];
     
     /// <summary>
     /// Gets or sets the foreign key reference to the group containing the assessment modules.

@@ -1,15 +1,15 @@
 namespace PublicQ.Shared;
 
 /// <summary>
-/// Service for generating unique exam taker IDs.
+/// Service for generating unique student IDs.
 /// </summary>
-public static class ExamTakerIdGenerator
+public static class StudentIdGenerator
 {
     private const string Alphanumeric = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static readonly Random Random = new Random();
 
     /// <summary>
-    /// Generates a new unique exam taker ID in the format "XXXX-XXXX", where X is an alphanumeric character (in UpperCase).
+    /// Generates a new unique student ID in the format "XXXX-XXXX", where X is an alphanumeric character (in UpperCase).
     /// </summary>
     public static string Generate()
     {
@@ -20,4 +20,3 @@ public static class ExamTakerIdGenerator
         return $"{new string(chars, 0, 4)}-{new string(chars, 4, 4)}";
     }
 }
-    

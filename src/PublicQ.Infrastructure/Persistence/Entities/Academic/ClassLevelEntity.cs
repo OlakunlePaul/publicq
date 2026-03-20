@@ -39,6 +39,11 @@ public class ClassLevelEntity
     public Guid? GradingSchemaId { get; set; }
 
     /// <summary>
+    /// Navigation property: the subjects taught in this class level.
+    /// </summary>
+    public ICollection<SubjectEntity> Subjects { get; set; } = new List<SubjectEntity>();
+
+    /// <summary>
     /// Navigation property to the associated grading schema.
     /// </summary>
     public GradingSchemaEntity? GradingSchema { get; set; }

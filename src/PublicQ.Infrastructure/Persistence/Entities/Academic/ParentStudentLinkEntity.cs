@@ -34,6 +34,6 @@ public class ParentStudentLinkEntity
     // Using ApplicationUser for Parent (since they need login credentials to access the portal)
     public ApplicationUser Parent { get; set; } = default!;
     
-    // Using ExamTakerEntity for the Student
-    public ExamTakerEntity Student { get; set; } = default!;
+    // Using StudentEntity for the Student
+    public StudentEntity Student { get; set; } = default!;
 }

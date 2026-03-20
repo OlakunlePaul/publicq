@@ -100,12 +100,12 @@ public class ReportingService(
             Guid assignmentId,
             CancellationToken cancellation)
     {
-        logger.LogDebug("GetExamTakersAssignmentReportAsync request received for AssignmentId: {AssignmentId}",
+        logger.LogDebug("GetStudentsAssignmentReportAsync request received for AssignmentId: {AssignmentId}",
             assignmentId);
         
         var assignment = await dbContext.Assignments
             .AsNoTracking()
-            .Include(assignmentEntity => assignmentEntity.ExamTakerAssignments)
+            .Include(assignmentEntity => assignmentEntity.StudentAssignments)
             .FirstOrDefaultAsync(a => a.Id == assignmentId, cancellation);
 
         if (assignment == null)
@@ -116,33 +116,33 @@ public class ReportingService(
                 $"Assignment with ID {assignmentId} not found.");
         }
         
-        // Get all exam taker IDs for batch processing
-        var examTakerIds = assignment.ExamTakerAssignments.Select(eta => eta.ExamTakerId).ToList();
+        // Get all student IDs for batch processing
+        var studentIds = assignment.StudentAssignments.Select(eta => eta.StudentId).ToList();
         
-        var examTakerReportsResponse = await GetExamTakerReportsAsync(
-            examTakerIds, 
+        var studentReportsResponse = await GetStudentReportsAsync(
+            studentIds, 
             assignmentId, 
             cancellation);
 
-        if (examTakerReportsResponse.IsFailed)
+        if (studentReportsResponse.IsFailed)
         {
             logger.LogError("Failed to get reports for assignment {AssignmentId}. Errors: {Errors}",
                 assignmentId,
-                string.Join(", ", examTakerReportsResponse.Errors));
+                string.Join(", ", studentReportsResponse.Errors));
             return Response<AssignmentReportDto, GenericOperationStatuses>.Failure(
-                examTakerReportsResponse.Status,
-                examTakerReportsResponse.Message,
-                examTakerReportsResponse.Errors);
+                studentReportsResponse.Status,
+                studentReportsResponse.Message,
+                studentReportsResponse.Errors);
         }
 
         var fullAssignmentReport = AssignmentReportDto.CreateReportFromData(
             assignment.ConvertToDto(),
-            examTakerReportsResponse.Data!);
+            studentReportsResponse.Data!);
         
         return Response<AssignmentReportDto, GenericOperationStatuses>.Success(
             fullAssignmentReport,
             GenericOperationStatuses.Completed,
-            $"Exam taker assignment reports retrieved successfully for AssignmentId: {assignmentId}");
+            $"Student assignment reports retrieved successfully for AssignmentId: {assignmentId}");
     }
 
     /// <inheritdoc cref="IReportingService.GetAssignmentSummaryReportAsync"/>
@@ -310,43 +310,43 @@ public class ReportingService(
             $"Report generated successfully for AssignmentId: {assignmentId}");
     }
 
-    /// <inheritdoc cref="IReportingService.GetExamTakerReportAsync"/>
-    public async Task<Response<ExamTakerReportDto, GenericOperationStatuses>> GetExamTakerReportAsync(
-        string examTakerId, 
+    /// <inheritdoc cref="IReportingService.GetStudentReportAsync"/>
+    public async Task<Response<StudentReportDto, GenericOperationStatuses>> GetStudentReportAsync(
+        string studentId, 
         Guid? assignmentId = null,
         CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("GetExamTakerReportAsync request received.");
-        Guard.AgainstNullOrWhiteSpace(examTakerId, nameof(examTakerId));
+        logger.LogDebug("GetStudentReportAsync request received.");
+        Guard.AgainstNullOrWhiteSpace(studentId, nameof(studentId));
         
-        var response = await GetExamTakerReportsAsync(
-            new List<string> { examTakerId }, 
+        var response = await GetStudentReportsAsync(
+            new List<string> { studentId }, 
             assignmentId, 
             cancellationToken);
 
         if (response.IsFailed)
         {
-            return Response<ExamTakerReportDto, GenericOperationStatuses>.Failure(
+            return Response<StudentReportDto, GenericOperationStatuses>.Failure(
                 response.Status, 
                 response.Message, 
                 response.Errors);
         }
         
-        return Response<ExamTakerReportDto, GenericOperationStatuses>.Success(
+        return Response<StudentReportDto, GenericOperationStatuses>.Success(
             response.Data!.First(), 
             response.Status, 
             response.Message);
     }
 
-    /// <inheritdoc cref="IReportingService.GetAllExamTakersAsync"/>
-    public async Task<Response<PaginatedResponse<IndividualUserReportDto>, GenericOperationStatuses>> GetAllExamTakersAsync(
+    /// <inheritdoc cref="IReportingService.GetAllStudentsAsync"/>
+    public async Task<Response<PaginatedResponse<IndividualStudentReportDto>, GenericOperationStatuses>> GetAllStudentsAsync(
         string? idFilter,
         string? nameFilter,
         int pageNumber,
         int pageSize,
         CancellationToken cancellationToken)
     {
-        logger.LogDebug("GetAllExamTakerAssignmentsAsync request received.");
+        logger.LogDebug("GetAllStudentAssignmentsAsync request received.");
         if (pageNumber < 1)
         {
             logger.LogInformation("Page number {PageNumber} is less than 1. Defaulting to 1", pageNumber);
@@ -360,12 +360,12 @@ public class ReportingService(
             pageSize = options.CurrentValue.MaxPageSize;
         }
         
-        // Get distinct exam taker assignments
-        var uniqueIds = dbContext.ExamTakerAssignments
-            .GroupBy(eta => eta.ExamTakerId)
+        // Get distinct student assignments
+        var uniqueIds = dbContext.StudentAssignments
+            .GroupBy(eta => eta.StudentId)
             .Select(g => g.First().Id); // Any record
 
-        var query = dbContext.ExamTakerAssignments
+        var query = dbContext.StudentAssignments
             .AsNoTracking()
             .Where(eta => uniqueIds.Contains(eta.Id))
             .AsQueryable();
@@ -375,79 +375,79 @@ public class ReportingService(
         if (!string.IsNullOrWhiteSpace(idFilter))
         {
             query = query.Where(eta => EF.Functions.Like(
-                eta.ExamTakerId.ToUpper(), 
+                eta.StudentId.ToUpper(), 
                 $"%{idFilter.ToUpper()}%"));
         }
         
         if (!string.IsNullOrWhiteSpace(nameFilter))
         {
             query = query.Where(eta => EF.Functions.Like(
-                eta.ExamTakerDisplayName.ToUpper(), 
+                eta.StudentDisplayName.ToUpper(), 
                 $"%{nameFilter.ToUpper()}%"));
         }
         
         var assignments = await query
-            .OrderBy(eta => eta.ExamTakerDisplayName)
+            .OrderBy(eta => eta.StudentDisplayName)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
         
-        var paginatedResponse = new PaginatedResponse<IndividualUserReportDto>
+        var paginatedResponse = new PaginatedResponse<IndividualStudentReportDto>
         {
             Data = assignments.Select(eta => eta.ConvertToDto()).ToList(),
             TotalCount = totalCount,
             PageSize = assignments.Count
         };
         
-        logger.LogDebug("Assembled {Count} exam taker assignments", assignments.Count);
+        logger.LogDebug("Assembled {Count} student assignments", assignments.Count);
         
-        return Response<PaginatedResponse<IndividualUserReportDto>, GenericOperationStatuses>.Success(
+        return Response<PaginatedResponse<IndividualStudentReportDto>, GenericOperationStatuses>.Success(
             paginatedResponse, 
             GenericOperationStatuses.Completed,
-            "Exam taker assignments retrieved successfully.");
+            "Student assignments retrieved successfully.");
     }
 
-    /// <inheritdoc cref="IReportingService.GetExamTakerReportsAsync"/>
-    public async Task<Response<IList<ExamTakerReportDto>, GenericOperationStatuses>> GetExamTakerReportsAsync(
-        IList<string> examTakerIds,
+    /// <inheritdoc cref="IReportingService.GetStudentReportsAsync"/>
+    public async Task<Response<IList<StudentReportDto>, GenericOperationStatuses>> GetStudentReportsAsync(
+        IList<string> studentIds,
         Guid? assignmentId = null,
         CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("GetExamTakerReports call received.");
-        Guard.AgainstNull(examTakerIds, nameof(examTakerIds));
-        logger.LogDebug("GetExamTakerReportsAsync request received for {Count} ExamTakerIds: {ExamTakerIds}", 
-            examTakerIds.Count, string.Join(", ", examTakerIds));
+        logger.LogDebug("GetStudentReports call received.");
+        Guard.AgainstNull(studentIds, nameof(studentIds));
+        logger.LogDebug("GetStudentReportsAsync request received for {Count} StudentIds: {StudentIds}", 
+            studentIds.Count, string.Join(", ", studentIds));
         
-        // Get exam taker assignments
-        var examTakerAssignments = await dbContext.ExamTakerAssignments
+        // Get student assignments
+        var studentAssignments = await dbContext.StudentAssignments
             .AsNoTracking()
-            .Where(eta => examTakerIds.Contains(eta.ExamTakerId) && 
+            .Where(eta => studentIds.Contains(eta.StudentId) && 
                           (!assignmentId.HasValue || eta.AssignmentId == assignmentId.Value))
             .Include(eta => eta.Assignment)
             .ToListAsync(cancellationToken);
         
-        // Get existing user progresses
-        var userProgresses = await dbContext.ModuleProgress
-            .Where(mp => examTakerIds.Contains(mp.ExamTakerId) && 
-                         (!assignmentId.HasValue || mp.ExamTakerAssignment.AssignmentId == assignmentId.Value))
+        // Get existing student progresses
+        var studentProgresses = await dbContext.ModuleProgress
+            .Where(mp => studentIds.Contains(mp.StudentId) && 
+                         (!assignmentId.HasValue || mp.StudentAssignment.AssignmentId == assignmentId.Value))
             .Include(mp => mp.QuestionResponses)
-            .Include(mp => mp.ExamTakerAssignment)
+            .Include(mp => mp.StudentAssignment)
                 .ThenInclude(eta => eta.Assignment)
             .Include(moduleProgressEntity => moduleProgressEntity.AssessmentModuleVersion)
                 .ThenInclude(assessmentModuleVersionEntity => assessmentModuleVersionEntity.Questions)
             .ToListAsync(cancellationToken);
         
-        // Get all assignment modules that this exam taker should have
+        // Get all assignment modules that this student should have
         var expectedModules = await dbContext.Groups
             .AsNoTracking()
-            .Where(g => examTakerAssignments.Select(eta => eta.Assignment.GroupId).Contains(g.Id))
+            .Where(g => studentAssignments.Select(eta => eta.Assignment.GroupId).Contains(g.Id))
             .SelectMany(g => g.GroupMemberEntities!)
             .Include(gm => gm.AssessmentModule)
                 .ThenInclude(am => am.Versions)
             .ToListAsync(cancellationToken);
 
-        // Create missing user progresses for modules without progress
-        var existingProgressModuleKeys = userProgresses
+        // Create missing student progresses for modules without progress
+        var existingProgressModuleKeys = studentProgresses
             .Select(up => up.AssessmentModuleVersionId)
             .ToHashSet();
 
@@ -455,7 +455,7 @@ public class ReportingService(
             .SelectMany(em => 
             {
                 // If user already has progress for this module, skip
-                if (userProgresses.Any(up => 
+                if (studentProgresses.Any(up => 
                         up.AssessmentModuleVersion.AssessmentModuleId == em.AssessmentModuleId))
                 {
                     return [];
@@ -470,62 +470,62 @@ public class ReportingService(
                     return [];
                 }
                     
-                return examTakerAssignments
+                return studentAssignments
                     .Where(eta => eta.Assignment.GroupId == em.GroupId)
                     .Select(eta => new ModuleProgressEntity
                     {
-                        ExamTakerId = eta.ExamTakerId,
+                        StudentId = eta.StudentId,
                         AssessmentModuleVersionId = latestVersion.Id,
                         StartedAtUtc = null,
                         CompletedAtUtc = null,
                         DurationInMinutes = 0,
                         AssessmentModuleVersion = latestVersion,
-                        ExamTakerAssignment = eta,
+                        StudentAssignment = eta,
                         QuestionResponses = new List<QuestionResponseEntity>()
                     });
             })
             .ToList();
 
         // Combine existing and missing progresses
-        var completeUserProgresses = userProgresses.Concat(missingProgresses).ToList();
+        var completeStudentProgresses = studentProgresses.Concat(missingProgresses).ToList();
 
-        logger.LogDebug("Found {ExistingCount} existing progresses and created {MissingCount} missing progresses for ExamTakerIds: {ExamTakerIds}", 
-            userProgresses.Count, missingProgresses.Count, string.Join(", ", examTakerIds));
+        logger.LogDebug("Found {ExistingCount} existing progresses and created {MissingCount} missing progresses for StudentIds: {StudentIds}", 
+            studentProgresses.Count, missingProgresses.Count, string.Join(", ", studentIds));
         
-        // Create reports for each exam taker
-        var reports = new List<ExamTakerReportDto>();
+        // Create reports for each student
+        var reports = new List<StudentReportDto>();
         
-        foreach (var examTaker in examTakerIds!)
+        foreach (var studentId in studentIds!)
         {
-            // Filter data for this specific exam taker
-            var examTakerSpecificAssignments = examTakerAssignments.Where(eta => eta.ExamTakerId == examTaker).ToList();
-            var examTakerSpecificProgresses = completeUserProgresses.Where(up => up.ExamTakerId == examTaker).ToList();
+            // Filter data for this specific student
+            var studentSpecificAssignments = studentAssignments.Where(eta => eta.StudentId == studentId).ToList();
+            var studentSpecificProgresses = completeStudentProgresses.Where(up => up.StudentId == studentId).ToList();
             
-            // Generate module and assignment reports for this exam taker
-            var moduleReports = GetModuleReports(examTakerSpecificProgresses);
+            // Generate module and assignment reports for this student
+            var moduleReports = GetModuleReports(studentSpecificProgresses);
             var assignmentReports = GetAssignmentReports(moduleReports);
 
-            var totalAssignments = examTakerSpecificAssignments.Count;
+            var totalAssignments = studentSpecificAssignments.Count;
             var inProgressAssignments = assignmentReports.Count(ar => ar.CompletedModules > 0 && ar.CompletedModules < ar.TotalModules);
             var completedAssignments = assignmentReports.Count(ar => ar.CompletedModules == ar.TotalModules && ar.TotalModules > 0);
 
-            var examTakerDisplayName = examTakerSpecificAssignments
-                .Select(e => e.ExamTakerDisplayName)
+            var studentDisplayName = studentSpecificAssignments
+                .Select(e => e.StudentDisplayName)
                 .FirstOrDefault();
             
-            var totalTabSwitches = examTakerSpecificAssignments.Sum(eta => eta.TabSwitchCount);
-            var lastTabSwitch = examTakerSpecificAssignments
+            var totalTabSwitches = studentSpecificAssignments.Sum(eta => eta.TabSwitchCount);
+            var lastTabSwitch = studentSpecificAssignments
                 .Where(eta => eta.LastTabSwitchAtUtc.HasValue)
                 .OrderByDescending(eta => eta.LastTabSwitchAtUtc)
                 .Select(eta => eta.LastTabSwitchAtUtc)
                 .FirstOrDefault();
 
-            var report = new ExamTakerReportDto
+            var report = new StudentReportDto
             {
-                StudentId = examTaker,
-                DisplayName = string.IsNullOrWhiteSpace(examTakerDisplayName) ? 
-                    $"ID '{examTaker}'" : 
-                    examTakerDisplayName,
+                StudentId = studentId,
+                DisplayName = string.IsNullOrWhiteSpace(studentDisplayName) ? 
+                    $"ID '{studentId}'" : 
+                    studentDisplayName,
                 TotalAssignments = totalAssignments,
                 CompletedAssignments = completedAssignments,
                 InProgressAssignments = inProgressAssignments,
@@ -544,26 +544,26 @@ public class ReportingService(
             reports.Add(report);
         }
         
-        logger.LogDebug("Assembling report data completed for {Count} exam takers", reports.Count);
+        logger.LogDebug("Assembling report data completed for {Count} students", reports.Count);
         
-        return Response<IList<ExamTakerReportDto>, GenericOperationStatuses>.Success(
+        return Response<IList<StudentReportDto>, GenericOperationStatuses>.Success(
             reports, 
             GenericOperationStatuses.Completed,
-            $"Reports generated successfully for {reports.Count} exam takers");
+            $"Reports generated successfully for {reports.Count} students");
     }
 
     /// <summary>
     /// Generates assignment reports from module reports
     /// </summary>
     /// <param name="moduleReports">module reports</param>
-    /// <returns>Returns array of <see cref="ExamTakerAssignmentReportDto"/></returns>
-    private static List<ExamTakerAssignmentReportDto> GetAssignmentReports(
-        Dictionary<AssignmentEntity, HashSet<ExamTakerModuleReportDto>> moduleReports)
+    /// <returns>Returns array of <see cref="StudentAssignmentReportDto"/></returns>
+    private static List<StudentAssignmentReportDto> GetAssignmentReports(
+        Dictionary<AssignmentEntity, HashSet<StudentModuleReportDto>> moduleReports)
     {
-        var assignmentReports = new List<ExamTakerAssignmentReportDto>();
+        var assignmentReports = new List<StudentAssignmentReportDto>();
         foreach (var kvp in moduleReports)
         {
-            var assignmentReport = new ExamTakerAssignmentReportDto
+            var assignmentReport = new StudentAssignmentReportDto
             {
                 AssignmentId = kvp.Key.Id,
                 AssignmentStartDateUtc = kvp.Key.StartDateUtc,
@@ -575,9 +575,9 @@ public class ReportingService(
                 CompletedModules = kvp.Value.Count(mr => mr.Status == ModuleStatus.Completed),
                 TotalModules = kvp.Value.Count,
                 ModuleReports = kvp.Value,
-                TabSwitchCount = kvp.Key.ExamTakerAssignments
+                TabSwitchCount = kvp.Key.StudentAssignments
                     .FirstOrDefault(eta => eta.AssignmentId == kvp.Key.Id)?.TabSwitchCount ?? 0,
-                LastTabSwitchAtUtc = kvp.Key.ExamTakerAssignments
+                LastTabSwitchAtUtc = kvp.Key.StudentAssignments
                     .FirstOrDefault(eta => eta.AssignmentId == kvp.Key.Id)?.LastTabSwitchAtUtc
             };
            assignmentReports.Add(assignmentReport);
@@ -587,20 +587,20 @@ public class ReportingService(
     }
 
     /// <summary>
-    /// Gets module reports from user progresses
+    /// Gets module reports from student progresses
     /// </summary>
-    /// <param name="userProgresses">User module progress</param>
+    /// <param name="studentProgresses">Student module progress</param>
     /// <returns>Returns a dictionary where <see cref="AssignmentEntity"/> is a key and
-    /// <see cref="ExamTakerModuleReportDto"/> is a value</returns>
-    private static Dictionary<AssignmentEntity, HashSet<ExamTakerModuleReportDto>> GetModuleReports(
-        List<ModuleProgressEntity> userProgresses)
+    /// <see cref="StudentModuleReportDto"/> is a value</returns>
+    private static Dictionary<AssignmentEntity, HashSet<StudentModuleReportDto>> GetModuleReports(
+        List<ModuleProgressEntity> studentProgresses)
     {
-        var moduleReports = new Dictionary<AssignmentEntity, HashSet<ExamTakerModuleReportDto>>();
-        foreach (var progress in userProgresses)
+        var moduleReports = new Dictionary<AssignmentEntity, HashSet<StudentModuleReportDto>>();
+        foreach (var progress in studentProgresses)
         {
             var moduleStatus = DetermineModuleStatus(progress);
             
-            var moduleReport = new ExamTakerModuleReportDto
+            var moduleReport = new StudentModuleReportDto
             {
                 ModuleId = progress.AssessmentModuleVersion.Id,
                 ModuleTitle = progress.AssessmentModuleVersion.Title,
@@ -615,13 +615,13 @@ public class ReportingService(
                 TotalQuestions = progress.AssessmentModuleVersion.Questions.Count
             };
             
-            if (moduleReports.ContainsKey(progress.ExamTakerAssignment.Assignment))
+            if (moduleReports.ContainsKey(progress.StudentAssignment.Assignment))
             {
-                moduleReports[progress.ExamTakerAssignment.Assignment].Add(moduleReport);
+                moduleReports[progress.StudentAssignment.Assignment].Add(moduleReport);
             }
             else
             {
-                moduleReports[progress.ExamTakerAssignment.Assignment] = [moduleReport];
+                moduleReports[progress.StudentAssignment.Assignment] = [moduleReport];
             }
         }
 

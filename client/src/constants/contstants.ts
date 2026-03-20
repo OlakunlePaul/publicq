@@ -1,7 +1,7 @@
 export const CONSTANTS = {
   TOKEN_VARIABLE_NAME: 'token',
   MODULE_STATE: 'assessment_module_state',
-  EXAM_TAKER: 'exam-taker'
+  EXAM_TAKER: 'student'
 };
 
 /**
@@ -13,8 +13,8 @@ export const ROUTES = {
   RESET_PASSWORD: '/reset-password',
   ADMIN: '/admin',
   LOGIN: '/login',
-  MY_ASSIGNMENTS: '/my-assignments',
-  ASSIGNMENT: '/assignment/:assignmentId/:userId?',
+  MY_EXAMS: '/my-exams',
+  EXAM: '/exam/:examId/:studentId?',
   QUESTIONS: '/questions',
   MODULE_CREATE: '/module/create',
   MODULE_BUILD: '/module/build',
@@ -28,7 +28,7 @@ export const ROUTES = {
  * Validation constraints that align with backend entity MaxLength attributes
  */
 export const VALIDATION_CONSTRAINTS = {
-  ASSIGNMENT: {
+  EXAM: {
     TITLE_MAX_LENGTH: 200,
     DESCRIPTION_MAX_LENGTH: 5000
   },
@@ -51,7 +51,7 @@ export const VALIDATION_CONSTRAINTS = {
     FULL_NAME_MAX_LENGTH: 200,
     PASSWORD_MAX_LENGTH: 100
   },
-  EXAM_TAKER: {
+  STUDENT: {
     ID_MAX_LENGTH: 50,
     NAME_MAX_LENGTH: 200,
     EMAIL_MAX_LENGTH: 254

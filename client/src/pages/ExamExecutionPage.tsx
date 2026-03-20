@@ -4,7 +4,7 @@ import AssignmentExecution from '../components/AssignmentExecution/AssignmentExe
 import { Assignment } from '../models/assignment';
 import { getUserInformation, type CurrentUser } from '../utils/tokenUtils';
 import { CONSTANTS } from '../constants/contstants';
-import { ExamTakerState } from '../models/exam-taker-state';
+import { StudentState } from '../models/student-state';
 import { assignmentService } from '../services/assignmentService';
 import styles from './AssignmentExecutionPage.module.css';
 
@@ -27,12 +27,12 @@ const AssignmentExecutionPage: React.FC = () => {
         setSelectedAssignment(response.data);
         return response.data;
       } else {
-        // If assignment can't be loaded, redirect to my assignments
-        navigate('/my-assignments');
+        // If assignment can't be loaded, redirect to my exams
+        navigate('/my-exams');
         return null;
       }
     } catch (error) {
-      navigate('/my-assignments');
+      navigate('/my-exams');
       return null;
     } finally {
       setIsLoading(false);
@@ -41,12 +41,12 @@ const AssignmentExecutionPage: React.FC = () => {
 
   useEffect(() => {
     // Load assignment when component mounts or assignment ID changes
-    const assignmentId = params.assignmentId;
+    const assignmentId = params.examId;
     if (assignmentId) {
       loadAssignmentById(assignmentId);
     } else {
-      // No assignment ID, redirect to my assignments
-      navigate('/my-assignments');
+      // No assignment ID, redirect to my exams
+      navigate('/my-exams');
     }
   }, [params.assignmentId, loadAssignmentById, navigate]);
 
@@ -61,7 +61,7 @@ const AssignmentExecutionPage: React.FC = () => {
     } catch (error) {
       // If userId provided in route, use it directly
       if (userIdFromRoute) {
-        const examTakerState: ExamTakerState = {
+        const examTakerState: StudentState = {
           id: userIdFromRoute,
           fullName: '',
           email: ''
@@ -75,7 +75,7 @@ const AssignmentExecutionPage: React.FC = () => {
       try {
         const examTakerFromStorageJson = localStorage.getItem(CONSTANTS.EXAM_TAKER);
         if (examTakerFromStorageJson) {
-          const examTakerFromStorage = JSON.parse(examTakerFromStorageJson) as ExamTakerState;
+          const examTakerFromStorage = JSON.parse(examTakerFromStorageJson) as StudentState;
           
           if (examTakerFromStorage && examTakerFromStorage.id) {
             setCurrentUser(examTakerFromStorage);
@@ -100,7 +100,7 @@ const AssignmentExecutionPage: React.FC = () => {
       return;
     }
 
-    const examTakerState: ExamTakerState = {
+    const examTakerState: StudentState = {
       id: examTakerId.trim(),
       fullName: '',
       email: ''
@@ -117,7 +117,7 @@ const AssignmentExecutionPage: React.FC = () => {
   };
 
   const handleBackToDashboard = () => {
-    navigate('/my-assignments');
+    navigate('/my-exams');
   };
 
   // Show exam taker ID prompt if needed
@@ -128,7 +128,7 @@ const AssignmentExecutionPage: React.FC = () => {
           <div className={styles.promptCard}>
             <h2 className={styles.promptTitle}>Enter Your Admission Number / ID</h2>
             <p className={styles.promptText}>
-              Please enter your admission number or exam taker ID to access this assignment.
+              Please enter your admission number or student ID to access this exam.
             </p>
             <div className={styles.inputGroup}>
               <input
@@ -150,10 +150,10 @@ const AssignmentExecutionPage: React.FC = () => {
               Continue
             </button>
             <button 
-              onClick={() => navigate('/my-assignments')}
+              onClick={() => navigate('/my-exams')}
               className={styles.cancelButton}
             >
-              Go to My Assignments
+              Go to My Exams
             </button>
           </div>
         </div>
@@ -169,8 +169,8 @@ const AssignmentExecutionPage: React.FC = () => {
           <div className={styles.loading}>
             <div className={styles.spinner}></div>
             <p>
-              {isLoading ? 'Loading assignment...' : 
-               !selectedAssignment ? 'Assignment not found...' : 
+              {isLoading ? 'Loading exam...' : 
+               !selectedAssignment ? 'Exam not found...' : 
                'Loading user information...'}
             </p>
           </div>

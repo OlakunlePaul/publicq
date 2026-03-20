@@ -39,6 +39,7 @@ public interface IUserService
         string password,
         DateTime? dateOfBirth,
         string? admissionNumber,
+        Guid? classLevelId,
         CancellationToken cancellationToken);
 
     /// <summary>
@@ -65,6 +66,7 @@ public interface IUserService
         DateTime? dateOfBirth,
         string? admissionNumber,
         string? baseUrl,
+        Guid? classLevelId,
         CancellationToken cancellationToken);
 
     /// <summary>
@@ -85,24 +87,26 @@ public interface IUserService
         DateTime? dateOfBirth,
         string? admissionNumber,
         string? baseUrl,
+        Guid? classLevelId,
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Register a new exam taker (user without credentials).
+    /// Register a new student (user without credentials).
     /// </summary>
-    /// <param name="email">Optional: Exam taker email address</param>
-    /// <param name="id">Optional: Exam taker Identifier</param>
+    /// <param name="email">Optional: Student email address</param>
+    /// <param name="id">Optional: Student Identifier</param>
     /// <param name="dateOfBirth">Date of birth</param>
     /// <param name="fullName">Full Name</param>
     /// <param name="admissionNumber">Admission number</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns <see cref="User"/> wrapped in <see cref="Response{TData, TStatus}"/></returns>
-    Task<Response<User, GenericOperationStatuses>> RegisterExamTakerAsync(
+    Task<Response<User, GenericOperationStatuses>> RegisterStudentAsync(
         MailAddress? email,
         string? id,
         DateTime? dateOfBirth,
         string fullName,
         string? admissionNumber,
+        Guid? classLevelId,
         CancellationToken cancellationToken);
     
     /// <summary>
@@ -160,15 +164,16 @@ public interface IUserService
         int pageSize = 10, 
         string? currentUserId = null,
         bool isSuperAdmin = true,
+        UserRole? role = null,
         CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Get exam taker by its unique identifier.
+    /// Get student by its unique identifier.
     /// </summary>
-    /// <param name="id">Exam takers` unique ID</param>
+    /// <param name="id">Students' unique ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns <see cref="User"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
-    Task<Response<User, GenericOperationStatuses>> GetExamTakerByIdAsync(
+    Task<Response<User, GenericOperationStatuses>> GetStudentByIdAsync(
         string id, 
         CancellationToken cancellationToken = default);
 
@@ -188,6 +193,7 @@ public interface IUserService
         int pageSize = 10,
         string? currentUserId = null,
         bool isSuperAdmin = true,
+        UserRole? role = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -206,6 +212,7 @@ public interface IUserService
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns the total number of the users wrapped into <see cref="Response{TData, TStatus}"/></returns>
     Task<Response<long, GenericOperationStatuses>> GetUserCountAsync(
+        UserRole? role = null,
         CancellationToken cancellationToken = default);
     
     /// <summary>
@@ -219,14 +226,14 @@ public interface IUserService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Import exam takers in bulk and assign them an assignment.
+    /// Import students in bulk and assign them an assignment.
     /// </summary>
-    /// <param name="examTakers">A list of <see cref="ExamTakerImportDto"/></param>
+    /// <param name="students">A list of <see cref="StudentImportDto"/></param>
     /// <param name="importedByUser">Imported by username</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Return a list of <see cref="User"/> wrapped into <see cref="Response{TStatus}"/></returns>
-    Task<Response<IList<User>, GenericOperationStatuses>> ImportExamTakers(
-        IList<ExamTakerImportDto> examTakers,
+    Task<Response<IList<User>, GenericOperationStatuses>> ImportStudents(
+        IList<StudentImportDto> students,
         string importedByUser,
         CancellationToken cancellationToken);
 

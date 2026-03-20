@@ -3,12 +3,14 @@ export interface SubjectDto {
     name: string;
     code?: string;
     displayOrder: number;
+    classLevelIds?: string[];
 }
 
 export interface SubjectCreateDto {
     name: string;
     code?: string;
     displayOrder: number;
+    classLevelIds?: string[];
 }
 
 export interface SessionDto {
@@ -52,6 +54,7 @@ export interface ClassLevelDto {
     sectionOrArm?: string;
     orderIndex: number;
     gradingSchemaId?: string;
+    subjectIds?: string[];
 }
 
 export interface ClassLevelCreateDto {
@@ -59,12 +62,13 @@ export interface ClassLevelCreateDto {
     sectionOrArm?: string;
     orderIndex: number;
     gradingSchemaId?: string;
+    subjectIds?: string[];
 }
 
 // Result DTOs
 export interface AssessmentReportDto {
     id: string;
-    examTakerId: string;
+    studentId: string;
     studentName: string;
     admissionNumber?: string;
     status: number; // enum ModertionStatus
@@ -86,7 +90,7 @@ export interface BulkScoreEntryDto {
 }
 
 export interface StudentSubjectScoreDto {
-    examTakerId: string;
+    studentId: string;
     subjectId?: string;
     subjectName?: string;
     testScore?: number;
@@ -126,7 +130,7 @@ export interface UpdateAssessmentDetailsDto {
 
 export interface AssessmentDetailsDto {
     id: string;
-    examTakerId: string;
+    studentId: string;
     studentName: string;
     admissionNumber?: string;
     status: number;

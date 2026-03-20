@@ -74,29 +74,24 @@ public class AssignmentReportDto
     public bool IsActive { get; set; }
     
     /// <summary>
-    /// Exam taker progress details for this assignment
+    /// Student progress details for this assignment
     /// </summary>
-    public IList<ExamTakerReportDto> ExamTakerReports { get; set; } = [];
+    public IList<StudentReportDto> StudentReports { get; set; } = [];
     
     /// <summary>
-    /// Creates an assignment report from the provided data.
-    /// </summary>
-    /// <param name="assignment"><see cref="AssignmentDto"/></param>
-    /// <param name="examTakerReports">Array of <see cref="ExamTakerAssignmentReportDto"/></param>
-    /// <returns>Returns <see cref="AssignmentReportDto"/></returns>
     public static AssignmentReportDto CreateReportFromData(
         AssignmentDto assignment, 
-        IList<ExamTakerReportDto> examTakerReports)
+        IList<StudentReportDto> studentReports)
     {
         Guard.AgainstNull(assignment, nameof(assignment));
-        Guard.AgainstNull(examTakerReports, nameof(examTakerReports));
+        Guard.AgainstNull(studentReports, nameof(studentReports));
         
-        var averageScore = examTakerReports
+        var averageScore = studentReports
             .SelectMany(eta => eta.AssignmentProgress.SelectMany(x => x.ModuleReports))
             .Where(etm => etm.CompletedAtUtc != null)
             .Average(mp => (double?)mp.Score) ?? 0;
         
-        var assignmentCompletionTimes = examTakerReports
+        var assignmentCompletionTimes = studentReports
             .Select(eta => eta.AssignmentProgress
                 .Where(ap => ap.ModuleReports.All(mr => mr.CompletedAtUtc != null))
                 .Select(ap => ap.ModuleReports
@@ -105,7 +100,7 @@ public class AssignmentReportDto
                 .FirstOrDefault())
             .Where(time => time > 0)
             .ToList();
-        var completedStudents = examTakerReports
+        var completedStudents = studentReports
             .Count(eta => eta.AssignmentProgress
                 .All(ap => ap.ModuleReports.All(mr => mr.CompletedAtUtc != null)));
 
@@ -117,19 +112,19 @@ public class AssignmentReportDto
             StartDateUtc = assignment.StartDateUtc,
             EndDateUtc = assignment.EndDateUtc,
             IsActive = assignment.EndDateUtc > DateTime.UtcNow,
-            TotalStudents = examTakerReports.Count,
-            CompletedStudents = examTakerReports.Sum(atr => atr.CompletedAssignments),
-            InProgressStudents = examTakerReports.Sum(atr => atr.InProgressAssignments),
-            NotStartedStudents = examTakerReports.Sum(atr => atr.NotStartedAssignments),
+            TotalStudents = studentReports.Count,
+            CompletedStudents = studentReports.Sum(atr => atr.CompletedAssignments),
+            InProgressStudents = studentReports.Sum(atr => atr.InProgressAssignments),
+            NotStartedStudents = studentReports.Sum(atr => atr.NotStartedAssignments),
             AverageScore = averageScore,
             AverageCompletionTimeMinutes = assignmentCompletionTimes.Any()
             ? assignmentCompletionTimes.Average()
             : null,
 
             CompletionRate = completedStudents > 0
-            ? (double)completedStudents / examTakerReports.Count * 100
+            ? (double)completedStudents / studentReports.Count * 100
             : 0,
-            ExamTakerReports = examTakerReports
+            StudentReports = studentReports
         };
     }
 }

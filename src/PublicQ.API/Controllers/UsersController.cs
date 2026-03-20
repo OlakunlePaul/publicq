@@ -177,6 +177,7 @@ public class UsersController(
             dto.Password,
             dto.DateOfBirth,
             dto.AdmissionNumber,
+            dto.ClassLevelId,
             cancellationToken);
 
         return result.ToActionResult();
@@ -215,22 +216,23 @@ public class UsersController(
             dto.DateOfBirth,
             dto.AdmissionNumber,
             url,
+            dto.ClassLevelId,
             cancellationToken);
 
         return result.ToActionResult();
     }
 
     /// <summary>
-    /// Registers a new exam taker (user without credentials).
+    /// Registers a new student (user without credentials).
     /// </summary>
-    /// <param name="dto"><see cref="ExamTakerRegisterRequest"/></param>
-    /// <param name="validator">Validator <see cref="ExamTakerRegisterRequestValidator"/></param>
+    /// <param name="dto"><see cref="StudentRegisterRequest"/></param>
+    /// <param name="validator">Validator <see cref="StudentRegisterRequestValidator"/></param>
     /// <param name="cancellationToken">Cancellation token</param>
     [Authorize(Constants.ManagersPolicy)]
-    [HttpPost("exam-taker/register-by-admin")]
-    public async Task<IActionResult> RegisterExamTakerAsync(
-        [FromBody] ExamTakerRegisterRequest dto,
-        [FromServices] IValidator<ExamTakerRegisterRequest> validator,
+    [HttpPost("student/register-by-admin")]
+    public async Task<IActionResult> RegisterStudentAsync(
+        [FromBody] StudentRegisterRequest dto,
+        [FromServices] IValidator<StudentRegisterRequest> validator,
         CancellationToken cancellationToken)
     {
         var validationResult = await validator.ValidateAsync(dto, cancellationToken);
@@ -251,23 +253,24 @@ public class UsersController(
             dto.DateOfBirth,
             dto.FullName,
             dto.AdmissionNumber,
+            dto.ClassLevelId,
             cancellationToken);
 
         return result.ToActionResult();
     }
 
     /// <summary>
-    /// Imports multiple exam takers from a list.
+    /// Imports multiple students from a list.
     /// </summary>
-    /// <param name="request">Array of <see cref="ExamTakerImportDto"/></param>
-    /// <param name="validator">Validator <see cref="ExamTakerImportValidator"/></param>
+    /// <param name="request">Array of <see cref="StudentImportDto"/></param>
+    /// <param name="validator">Validator <see cref="StudentImportValidator"/></param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns array of created <see cref="User"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
     [Authorize(Constants.ManagersPolicy)]
-    [HttpPost("exam-taker/import")]
-    public async Task<IActionResult> ImportExamTakersAsync(
-        [FromBody] IList<ExamTakerImportDto> request,
-        [FromServices] IValidator<IList<ExamTakerImportDto>> validator,
+    [HttpPost("student/import")]
+    public async Task<IActionResult> ImportStudentsAsync(
+        [FromBody] IList<StudentImportDto> request,
+        [FromServices] IValidator<IList<StudentImportDto>> validator,
         CancellationToken cancellationToken)
     {
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
@@ -281,7 +284,7 @@ public class UsersController(
         }
 
         var fullName = UserClaimParser.GetUserDisplayName(User.Claims);
-        var result = await userService.ImportExamTakers(
+        var result = await userService.ImportStudents(
             request,
             fullName,
             cancellationToken);
@@ -328,13 +331,13 @@ public class UsersController(
     }
 
     /// <summary>
-    /// Gets an exam taker by its unique identifier.
+    /// Gets a student by its unique identifier.
     /// </summary>
-    /// <param name="id">Exam taker ID</param>
+    /// <param name="id">Student ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns <see cref="User"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
-    [HttpGet("exam-taker/{id}")]
-    public async Task<IActionResult> GetExamTakerByIdAsync(
+    [HttpGet("student/{id}")]
+    public async Task<IActionResult> GetStudentByIdAsync(
         [FromRoute] string id,
         CancellationToken cancellationToken)
     {
@@ -378,11 +381,10 @@ public class UsersController(
         var currentUserId = UserClaimParser.GetUserId(User.Claims);
         var isSuperAdmin = UserClaimParser.IsAdministrator(User.Claims);
 
-        var result = await userService.GetUsersAsync(
-            request.PageNumber,
             request.PageSize,
             currentUserId,
             isSuperAdmin,
+            request.Role,
             cancellationToken);
 
         return result.ToActionResult();
@@ -402,13 +404,11 @@ public class UsersController(
         var currentUserId = UserClaimParser.GetUserId(User.Claims);
         var isSuperAdmin = UserClaimParser.IsAdministrator(User.Claims);
 
-        var result = await userService.GetUsersByFilter(
-            request.EmailPart,
-            request.IdPart,
             request.PageNumber,
             request.PageSize,
             currentUserId,
             isSuperAdmin,
+            request.Role,
             cancellationToken);
 
         return result.ToActionResult();
@@ -452,9 +452,11 @@ public class UsersController(
     /// <param name="cancellationToken">Cancellation token</param>
     [Authorize]
     [HttpGet("total")]
-    public async Task<IActionResult> GetUsersCountAsync(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetUsersCountAsync(
+        [FromQuery] UserRole? role = null,
+        CancellationToken cancellationToken = default)
     {
-        var result = await userService.GetUserCountAsync(cancellationToken);
+        var result = await userService.GetUserCountAsync(role, cancellationToken);
 
         return result.ToActionResult();
     }

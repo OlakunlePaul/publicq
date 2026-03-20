@@ -4,4 +4,5 @@ export interface UserCreateRequest {
   password: string;
   dateOfBirth?: string; // Optional ISO date string
   admissionNumber?: string;
+  classLevelId?: string;
 }

@@ -1,4 +1,4 @@
-export interface ExamTakerCreateRequest {
+export interface StudentCreateRequest {
   /**
    * Optional: Unique identifier for the exam taker
    * If not provided, a new identifier will be generated.
@@ -11,4 +11,5 @@ export interface ExamTakerCreateRequest {
    * Optional: Date of birth in ISO date string format (YYYY-MM-DD)
    */
   dateOfBirth?: string;
+  classLevelId?: string;
 }

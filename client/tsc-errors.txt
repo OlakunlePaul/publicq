@@ -1,0 +1,43 @@
+src/components/AssignmentAccess/AssignmentAccess.tsx(77,42): error TS2339: Property 'getExamTaker' does not exist on type '{ fetchUsers: (pageNumber: number, pageSize: number, role?: UserRole | undefined) => Promise<ResponseWithData<PaginatedResponse<User>, GenericOperationStatuses>>; ... 15 more ...; downloadSampleCsv: () => void; }'.
+src/components/AssignmentExecution/AssignmentExecution.tsx(6,32): error TS2307: Cannot find module '../../models/exam-taker-state' or its corresponding type declarations.
+src/components/AssignmentManagement/AssignmentManagement.tsx(1199,58): error TS2339: Property 'getExamTakers' does not exist on type '{ createAssignment: (assignment: AssignmentCreate) => Promise<ResponseWithData<Assignment, GenericOperationStatuses>>; ... 10 more ...; recordTabSwitch: (assignmentId: string, studentId: string) => Promise<...>; }'.
+src/components/AssignmentManagement/AssignmentManagement.tsx(1201,61): error TS7006: Parameter 'user' implicitly has an 'any' type.
+src/components/AssignmentManagement/AssignmentManagement.tsx(1230,33): error TS2339: Property 'deleteExamTakers' does not exist on type '{ createAssignment: (assignment: AssignmentCreate) => Promise<ResponseWithData<Assignment, GenericOperationStatuses>>; ... 10 more ...; recordTabSwitch: (assignmentId: string, studentId: string) => Promise<...>; }'.
+src/components/AssignmentManagement/AssignmentManagement.tsx(1235,33): error TS2339: Property 'addExamTakers' does not exist on type '{ createAssignment: (assignment: AssignmentCreate) => Promise<ResponseWithData<Assignment, GenericOperationStatuses>>; ... 10 more ...; recordTabSwitch: (assignmentId: string, studentId: string) => Promise<...>; }'.
+src/components/AssignmentManagement/AssignmentManagement.tsx(1261,27): error TS2339: Property 'getExamTakers' does not exist on type '{ createAssignment: (assignment: AssignmentCreate) => Promise<ResponseWithData<Assignment, GenericOperationStatuses>>; ... 10 more ...; recordTabSwitch: (assignmentId: string, studentId: string) => Promise<...>; }'.
+src/components/AssignmentManagement/AssignmentManagement.tsx(1295,35): error TS7006: Parameter 'user' implicitly has an 'any' type.
+src/components/AssignmentManagement/AssignmentManagement.tsx(1310,21): error TS7006: Parameter 'row' implicitly has an 'any' type.
+src/components/AssignmentManagement/AssignmentManagement.tsx(1310,36): error TS7006: Parameter 'cell' implicitly has an 'any' type.
+src/components/DemoExam/mockDemoData.ts(1,40): error TS2307: Cannot find module '../../models/exam-taker-module-version' or its corresponding type declarations.
+src/components/Questions/Questions.tsx(6,32): error TS2307: Cannot find module '../../models/exam-taker-state' or its corresponding type declarations.
+src/components/Questions/Questions.tsx(8,40): error TS2307: Cannot find module '../../models/exam-taker-module-version' or its corresponding type declarations.
+src/components/Questions/Questions.tsx(9,41): error TS2307: Cannot find module '../../models/exam-taker-possible-answer' or its corresponding type declarations.
+src/components/Questions/Questions.tsx(143,58): error TS2339: Property 'getModuleVersionForExamTaker' does not exist on type '{ getGroupState: (studentId: string, studentAssignmentId: string) => Promise<ResponseWithData<GroupState, GenericOperationStatuses>>; ... 5 more ...; completeModule: (userProgressId: string) => Promise<...>; }'.
+src/components/Questions/Questions.tsx(563,52): error TS7006: Parameter 'q' implicitly has an 'any' type.
+src/components/Questions/Questions.tsx(666,44): error TS7006: Parameter 'question' implicitly has an 'any' type.
+src/components/Questions/Questions.tsx(666,54): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/components/Questions/Questions.tsx(1287,41): error TS7006: Parameter 'question' implicitly has an 'any' type.
+src/components/Questions/Questions.tsx(1287,51): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/components/Questions/Questions.tsx(1378,43): error TS7006: Parameter 'answer' implicitly has an 'any' type.
+src/components/Questions/Questions.tsx(1384,47): error TS7006: Parameter 'answer' implicitly has an 'any' type.
+src/components/Questions/Questions.tsx(1420,53): error TS7006: Parameter 'ans' implicitly has an 'any' type.
+src/components/Questions/Questions.tsx(1458,55): error TS7006: Parameter 'ans' implicitly has an 'any' type.
+src/components/Questions/Questions.tsx(1473,57): error TS7006: Parameter 'ans' implicitly has an 'any' type.
+src/components/Questions/Questions.tsx(1500,63): error TS7006: Parameter 'ans' implicitly has an 'any' type.
+src/components/Questions/Questions.tsx(1682,55): error TS7006: Parameter 'question' implicitly has an 'any' type.
+src/components/Questions/Questions.tsx(1682,65): error TS7006: Parameter 'idx' implicitly has an 'any' type.
+src/components/Questions/Questions.tsx(1683,88): error TS7006: Parameter 'q' implicitly has an 'any' type.
+src/components/ResultManagement/BroadsheetView.tsx(35,35): error TS2339: Property 'examTakerId' does not exist on type 'StudentAssessment'.
+src/components/ResultManagement/BroadsheetView.tsx(38,39): error TS2339: Property 'examTakerId' does not exist on type 'StudentAssessment'.
+src/components/ResultManagement/BroadsheetView.tsx(160,72): error TS2339: Property 'examTakerId' does not exist on type 'StudentAssessment'.
+src/components/ResultManagement/BroadsheetView.tsx(161,88): error TS2339: Property 'examTakerId' does not exist on type 'StudentAssessment'.
+src/components/ResultManagement/BroadsheetView.tsx(168,72): error TS2339: Property 'examTakerId' does not exist on type 'StudentAssessment'.
+src/components/ResultManagement/BroadsheetView.tsx(169,88): error TS2339: Property 'examTakerId' does not exist on type 'StudentAssessment'.
+src/components/ResultManagement/ResultManagement.tsx(102,27): error TS2339: Property 'examTakerId' does not exist on type 'StudentAssessment'.
+src/components/ResultManagement/ResultManagement.tsx(150,7): error TS2322: Type '{ examTakerId: any; subjectId: string; testScore: number | undefined; examScore: number | undefined; }[]' is not assignable to type 'StudentSubjectScoreDto[]'.
+  Property 'studentId' is missing in type '{ examTakerId: any; subjectId: string; testScore: number | undefined; examScore: number | undefined; }' but required in type 'StudentSubjectScoreDto'.
+src/models/assignment.ts(2,37): error TS2307: Cannot find module './exam-taker-assignment' or its corresponding type declarations.
+src/models/module-progress.ts(1,37): error TS2307: Cannot find module './exam-taker-assignment' or its corresponding type declarations.
+src/pages/ExamDashboard.tsx(7,32): error TS2307: Cannot find module '../models/exam-taker-state' or its corresponding type declarations.
+src/pages/ExamExecutionPage.tsx(7,32): error TS2307: Cannot find module '../models/exam-taker-state' or its corresponding type declarations.
+src/pages/MyExams.tsx(7,32): error TS2307: Cannot find module '../models/exam-taker-state' or its corresponding type declarations.

@@ -5,29 +5,30 @@ import { ResponseWithData } from '../models/responseWithData';
 import { UserCreateRequest } from '../models/userCreateRequest';
 import { AccessToken } from '../models/accessToken';
 import { GenericOperationStatuses } from '../models/GenericOperationStatuses';
-import { ExamTakerCreateRequest } from '../models/exam-taker-create-request';
+import { StudentCreateRequest } from '../models/student-create-request';
 import { UserRoleAssignmentRequest } from '../models/user-role-assignment-request';
 import { UserRole } from '../models/UserRole';
 import { User } from '../models/user';
-import { ExamTakerImport } from '../models/exam-taker-import';
+import { StudentImport } from '../models/student-import';
 import { ResetPasswordRequest } from '../models/reset-password-request';
 import { CheckPasswordTokenRequest } from '../models/check-password-token-request';
 import { UserCreateByAdminRequest } from '../models/userCreateByAdminRequest';
 
 export const userService = {
-  fetchUsers: async (pageNumber: number, pageSize: number): Promise<ResponseWithData<PaginatedResponse<User>>> => {
+  fetchUsers: async (pageNumber: number, pageSize: number, role?: UserRole): Promise<ResponseWithData<PaginatedResponse<User>>> => {
     const r = await axios.get<ResponseWithData<PaginatedResponse<User>>>('users', {
-      params: { pageNumber, pageSize },
+      params: { pageNumber, pageSize, role },
     });
     return r.data;
   },
 
-  searchUsers: async (emailPart: string, idPart: string, pageNumber: number, pageSize: number): Promise<ResponseWithData<PaginatedResponse<User>>> => {
+  searchUsers: async (emailPart: string, idPart: string, pageNumber: number, pageSize: number, role?: UserRole): Promise<ResponseWithData<PaginatedResponse<User>>> => {
     const params = {
       ...(emailPart ? { emailPart } : {}),
       ...(idPart ? { idPart } : {}),
       pageNumber,
       pageSize,
+      role
     };
     const r = await axios.get<ResponseWithData<PaginatedResponse<User>>>('users/search', {
       params,
@@ -35,8 +36,8 @@ export const userService = {
     return r.data;
   },
 
-  getExamTaker: async (userId: string): Promise<ResponseWithData<User, GenericOperationStatuses>> => {
-    const r = await axios.get<ResponseWithData<User, GenericOperationStatuses>>(`users/exam-taker/${userId}`);
+  getStudent: async (userId: string): Promise<ResponseWithData<User, GenericOperationStatuses>> => {
+    const r = await axios.get<ResponseWithData<User, GenericOperationStatuses>>(`users/student/${userId}`);
     return r.data;
   },
 
@@ -51,8 +52,8 @@ export const userService = {
     return r.data;
   },
 
-  createExamTakerByAdmin: async (request: ExamTakerCreateRequest): Promise<ResponseWithData<User, GenericOperationStatuses>> => {
-    const r = await axios.post<ResponseWithData<User, GenericOperationStatuses>>('users/exam-taker/register-by-admin', request);
+  createStudentByAdmin: async (request: StudentCreateRequest): Promise<ResponseWithData<User, GenericOperationStatuses>> => {
+    const r = await axios.post<ResponseWithData<User, GenericOperationStatuses>>('users/student/register-by-admin', request);
     return r.data;
   },
 
@@ -70,8 +71,10 @@ export const userService = {
     return r.data;
   },
   
-  getTotalUsers: async (): Promise<ResponseWithData<number>> => {
-    const r = await axios.get<ResponseWithData<number>>('users/total');
+  getTotalUsers: async (role?: UserRole): Promise<ResponseWithData<number>> => {
+    const r = await axios.get<ResponseWithData<number>>('users/total', {
+      params: { role }
+    });
     return r.data;
   },
 
@@ -90,8 +93,8 @@ export const userService = {
     return r.data;
   },
 
-  importExamTakers: async (examTakers: ExamTakerImport[]): Promise<ResponseWithData<User[], GenericOperationStatuses>> => {
-    const r = await axios.post<ResponseWithData<User[], GenericOperationStatuses>>('users/exam-taker/import', examTakers);
+  importStudents: async (students: StudentImport[]): Promise<ResponseWithData<User[], GenericOperationStatuses>> => {
+    const r = await axios.post<ResponseWithData<User[], GenericOperationStatuses>>('users/student/import', students);
     return r.data;
   },
 
@@ -133,7 +136,7 @@ export const userService = {
     const url = URL.createObjectURL(blob);
     
     link.setAttribute('href', url);
-    link.setAttribute('download', 'exam_takers_sample.csv');
+    link.setAttribute('download', 'students_sample.csv');
     link.style.visibility = 'hidden';
     
     document.body.appendChild(link);

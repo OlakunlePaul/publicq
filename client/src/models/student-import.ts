@@ -1,17 +1,17 @@
 /**
- * Exam taker import data transfer object.
+ * Student import data transfer object.
  * 
  * This DTO is used to do a bulk import and assign students to assignments.
  */
-export interface ExamTakerImport {
+export interface StudentImport {
   /**
-   * Exam taker ID. Can be empty string - backend will auto-generate if empty.
+   * Student ID. Can be empty string - backend will auto-generate if empty.
    * @maxLength 50 characters (aligned with backend constraint)
    */
   id: string;
 
   /**
-   * Full name of the exam taker.
+   * Full name of the student.
    * @maxLength 200 characters (aligned with backend constraint)
    */
   name: string;
@@ -28,17 +28,17 @@ export interface ExamTakerImport {
   dateOfBirth?: string;
 
   /**
-   * Optional: Assignment ID to assign the exam taker to.
+   * Optional: Assignment ID to assign the student to.
    */
   assignmentId?: string;
 }
 
 /**
- * Request object for importing exam takers.
+ * Request object for importing students.
  */
-export interface ExamTakerImportRequest {
+export interface StudentImportRequest {
   /**
-   * Array of exam takers to import.
+   * Array of students to import.
    */
-  examTakers: ExamTakerImport[];
+  students: StudentImport[];
 }

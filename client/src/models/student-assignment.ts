@@ -1,13 +1,13 @@
 import { Assignment } from "./assignment";
-import { ExamTakerAssignmentBase } from "./exam-taker-assignment-base";
+import { StudentAssignmentBase } from "./student-assignment-base";
 import { ModuleProgress } from "./module-progress";
 
 /**
- * Exam taker assignment data transfer object that represents the assignment of a specific exam taker to a specific assignment.
+ * Student assignment data transfer object that represents the assignment of a specific student to a specific assignment.
  */
-export interface ExamTakerAssignment extends ExamTakerAssignmentBase {
+export interface StudentAssignment extends StudentAssignmentBase {
   /**
-   * Gets or sets the unique identifier of the exam taker assignment.
+   * Gets or sets the unique identifier of the student assignment.
    */
   id: string;
 

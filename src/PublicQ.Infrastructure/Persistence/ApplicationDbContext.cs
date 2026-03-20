@@ -113,22 +113,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<AssignmentEntity> Assignments { get; set; }
     
     /// <summary>
-    /// Exam taker assignment entities that represent the assignment of an exam taker to a specific assignment.
+    /// Student assignment entities that represent the assignment of a student to a specific assignment.
     /// </summary>
-    public DbSet<ExamTakerAssignmentEntity> ExamTakerAssignments { get; set; }
+    public DbSet<StudentAssignmentEntity> StudentAssignments { get; set; }
     
     /// <summary>
-    /// Exam taker entities that represent users who take exams.
+    /// Student entities that represent users who take exams.
     /// </summary>
-    public DbSet<ExamTakerEntity> ExamTakers { get; set; }
+    public DbSet<StudentEntity> Students { get; set; }
     
     /// <summary>
-    /// Module progress entities that represent the progress of an exam taker on a specific module within an assignment.
+    /// Module progress entities that represent the progress of a student on a specific module within an assignment.
     /// </summary>
     public DbSet<ModuleProgressEntity> ModuleProgress { get; set; }
     
     /// <summary>
-    /// Represents the responses given by exam takers to questions in the exam system.
+    /// Represents the responses given by students to questions in the exam system.
     /// </summary>
     public DbSet<QuestionResponseEntity> QuestionResponses { get; set; }
     
@@ -285,16 +285,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasIndex(a => a.Title)
             .IsUnique();
         
-        modelBuilder.Entity<ExamTakerAssignmentEntity>()
+        modelBuilder.Entity<AssignmentEntity>()
+            .HasOne(a => a.ClassLevel)
+            .WithMany()
+            .HasForeignKey(a => a.ClassLevelId)
+            .OnDelete(DeleteBehavior.SetNull);
+            
+        modelBuilder.Entity<StudentAssignmentEntity>()
             .HasOne(a=> a.Assignment)
-            .WithMany(a => a.ExamTakerAssignments)
+            .WithMany(a => a.StudentAssignments)
             .HasForeignKey(a => a.AssignmentId)
             .OnDelete(DeleteBehavior.Cascade);
         
         modelBuilder.Entity<ModuleProgressEntity>()
-            .HasOne(m => m.ExamTakerAssignment)
+            .HasOne(m => m.StudentAssignment)
             .WithMany(m => m.ModuleProgress)
-            .HasForeignKey(m => m.ExamTakerAssignmentId)
+            .HasForeignKey(m => m.StudentAssignmentId)
             .OnDelete(DeleteBehavior.Cascade);
         
         modelBuilder.Entity<QuestionResponseEntity>()
@@ -303,7 +309,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(q => q.ModuleProgressId)
             .OnDelete(DeleteBehavior.Cascade);
         
-        modelBuilder.Entity<ExamTakerEntity>()
+        modelBuilder.Entity<StudentEntity>()
             .HasIndex(e => e.NormalizedEmail)
             .IsUnique();
 
@@ -348,6 +354,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<SubjectEntity>()
             .HasIndex(s => s.Name)
             .IsUnique();
+
+        modelBuilder.Entity<ClassLevelEntity>()
+            .HasMany(c => c.Subjects)
+            .WithMany(s => s.ClassLevels)
+            .UsingEntity(j => j.ToTable("ClassLevelSubjects"));
             
         modelBuilder.Entity<StudentAssessmentEntity>()
             .HasOne(a => a.Session)
@@ -368,14 +379,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .OnDelete(DeleteBehavior.Restrict);
             
         modelBuilder.Entity<StudentAssessmentEntity>()
-            .HasOne(a => a.ExamTaker)
+            .HasOne(a => a.Student)
             .WithMany()
-            .HasForeignKey(a => a.ExamTakerId)
+            .HasForeignKey(a => a.StudentId)
             .OnDelete(DeleteBehavior.Cascade);
             
         // Ensure a student only has one assessment per term/session
         modelBuilder.Entity<StudentAssessmentEntity>()
-            .HasIndex(a => new { a.ExamTakerId, a.SessionId, a.TermId })
+            .HasIndex(a => new { a.StudentId, a.SessionId, a.TermId })
             .IsUnique();
             
         modelBuilder.Entity<SubjectScoreEntity>()

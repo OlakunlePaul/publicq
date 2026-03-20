@@ -12,7 +12,7 @@ using PublicQ.Shared.Enums;
 namespace PublicQ.Infrastructure.Services;
 
 /// <summary>
-/// Implementation of the <see cref="ISessionService"/> interface for managing user exam sessions.
+/// Implementation of the <see cref="ISessionService"/> interface for managing student exam sessions.
 /// </summary>
 public class SessionService(
     ApplicationDbContext dbContext,
@@ -25,7 +25,7 @@ public class SessionService(
     public async Task<Response<IList<GroupMemberStateWithUserProgressDto>, GenericOperationStatuses>> GetGroupMemberStatesAsync
     (
         string userId,
-        Guid examTakerAssignmentId,
+        Guid studentAssignmentId,
         Guid groupId,
         CancellationToken cancellationToken)
     {
@@ -41,37 +41,37 @@ public class SessionService(
                 groupResponse.Errors);
         }
         
-        var examTakerAssignment = await dbContext.ExamTakerAssignments
+        var studentAssignment = await dbContext.StudentAssignments
             .AsNoTracking()
-            .FirstOrDefaultAsync(ea => ea.Id == examTakerAssignmentId && ea.ExamTakerId == userId, cancellationToken);
-        if (examTakerAssignment is null)
+            .FirstOrDefaultAsync(ea => ea.Id == studentAssignmentId && ea.StudentId == userId, cancellationToken);
+        if (studentAssignment is null)
         {
-            logger.LogInformation("Assignment {AssignmentId} not found for user {UserId}.",
-                examTakerAssignmentId, 
+            logger.LogInformation("Assignment {AssignmentId} not found for student {UserId}.",
+                studentAssignmentId, 
                 userId);
             
             return Response<IList<GroupMemberStateWithUserProgressDto>, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound,
-                $"Assignment {examTakerAssignmentId} not found for user {userId}.");
+                $"Assignment {studentAssignmentId} not found for student {userId}.");
         }
         
         logger.LogInformation("Checking if user already launched any assignment");
 
         var assignment = await dbContext.Assignments
             .AsNoTracking()
-            .FirstOrDefaultAsync(ea => ea.Id == examTakerAssignment.AssignmentId, cancellationToken);
+            .FirstOrDefaultAsync(ea => ea.Id == studentAssignment.AssignmentId, cancellationToken);
 
         if (assignment == null)
         {
-            logger.LogError("Assignment {AssignmentId} not found.", examTakerAssignmentId);
+            logger.LogError("Assignment {AssignmentId} not found.", studentAssignmentId);
             return Response<IList<GroupMemberStateWithUserProgressDto>, GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.NotFound,
-                $"Assignment {examTakerAssignmentId} not found.");
+                $"Assignment {studentAssignmentId} not found.");
         }
         
         var userProgress = await dbContext.ModuleProgress
-            .Where(mp => mp.ExamTakerId == userId && 
+            .Where(mp => mp.StudentId == userId && 
                          mp.GroupMember.GroupId == groupId &&
-                         mp.ExamTakerAssignmentId == examTakerAssignment.Id)
+                         mp.StudentAssignmentId == studentAssignment.Id)
             .Include(mp => mp.QuestionResponses)
             .Include(mp => mp.GroupMember)
             .Include(mp => mp.AssessmentModuleVersion)
@@ -112,33 +112,26 @@ public class SessionService(
         logger.LogDebug("Getting assignments request received");
         Guard.AgainstNullOrWhiteSpace(userId, nameof(userId));
         
-        var examAssignment = await dbContext.ExamTakerAssignments
-            .AsNoTracking()
-            .Where(ea => ea.AssignmentId == assignmentId && 
-                         ea.ExamTakerId == userId)
-            .Include(ea => ea.Assignment)
-            .ThenInclude(a => a.Group)
-            .ThenInclude(g => g!.GroupMemberEntities)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (examAssignment is null)
+        var studentAssignment = await EnsureStudentAssignmentAsync(userId, assignmentId, cancellationToken);
+        
+        if (studentAssignment is null)
         {
-            logger.LogInformation("Assignment {AssignmentId} not found for user {UserId}.",
+            logger.LogInformation("Assignment {AssignmentId} not found for student {UserId}.",
                 assignmentId, 
                 userId);
             
             return Response<ModuleProgressDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound,
-                $"Assignment {assignmentId} not found for user {userId}.");
+                $"Assignment {assignmentId} not found for student {userId}.");
         }
         
-        if (examAssignment.Assignment.StartDateUtc > DateTime.UtcNow)
+        if (studentAssignment.Assignment.StartDateUtc > DateTime.UtcNow)
         {
-            logger.LogInformation("Assignment {AssignmentId} for user {UserId} is not yet started.",
+            logger.LogInformation("Assignment {AssignmentId} for student {UserId} is not yet started.",
                 assignmentId, 
                 userId);
             
             return Response<ModuleProgressDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.Conflict,
-                $"Assignment {assignmentId} for user {userId} is not yet started.");
+                $"Assignment {assignmentId} for student {userId} is not yet started.");
         }
 
         // Now get the user progress for this specific module
@@ -146,8 +139,8 @@ public class SessionService(
             .AsNoTracking()
             .Include(mp => mp.QuestionResponses)
             .Include(mp => mp.AssessmentModuleVersion)
-            .Where(mp => mp.ExamTakerId == userId && 
-                         mp.ExamTakerAssignmentId == examAssignment.Id &&
+            .Where(mp => mp.StudentId == userId && 
+                         mp.StudentAssignmentId == studentAssignment.Id &&
                          mp.GroupMember.AssessmentModuleId == moduleId)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -202,24 +195,17 @@ public class SessionService(
                 $"Module {assessmentModuleId} is not accessible. Current status: {groupMemberState.Status}");
         }
         
-        // 3. Get the assignment data
-        var examAssignment = await dbContext.ExamTakerAssignments
-            .AsNoTracking()
-            .Where(ea => ea.AssignmentId == assignmentId && ea.ExamTakerId == userId)
-            .AsQueryable()
-            .Include(ea => ea.Assignment)
-                .ThenInclude(a => a.Group)
-                    .ThenInclude(g => g!.GroupMemberEntities)
-            .FirstOrDefaultAsync(cancellationToken);
+        // 3. Get or ensure the assignment data
+        var studentAssignment = await EnsureStudentAssignmentAsync(userId, assignmentId, cancellationToken);
 
-        if (examAssignment is null)
+        if (studentAssignment is null)
         {
-            logger.LogInformation("Assignment {AssignmentId} not found for user {UserId}.",
+            logger.LogInformation("Assignment {AssignmentId} not found for student {UserId}.",
                 assignmentId, 
                 userId);
             
             return Response<ModuleProgressDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound,
-                $"Assignment {assignmentId} not found for user {userId}.");
+                $"Assignment {assignmentId} not found for student {userId}.");
         }
         
         // 4. Pull the latest published module version
@@ -232,10 +218,10 @@ public class SessionService(
         var moduleProgress = new ModuleProgressEntity
         {
             // Randomization seeds are only generated if randomization is enabled for the assignment
-            AnswerRandomizationSeed = examAssignment.Assignment.RandomizeAnswers ? Guid.NewGuid(): null,
-            QuestionRandomizationSeed = examAssignment.Assignment.RandomizeQuestions ? Guid.NewGuid(): null,
-            ExamTakerId = userId,
-            ExamTakerAssignmentId = examAssignment.Id,
+            AnswerRandomizationSeed = studentAssignment.Assignment.RandomizeAnswers ? Guid.NewGuid(): null,
+            QuestionRandomizationSeed = studentAssignment.Assignment.RandomizeQuestions ? Guid.NewGuid(): null,
+            StudentId = userId,
+            StudentAssignmentId = studentAssignment.Id,
             AssessmentModuleVersionId = latestVersion.Data!.Id,
             GroupMemberId = groupStateResponse.Data.GroupMembers.First(gm =>
                 gm.AssessmentModuleId == assessmentModuleId).Id,
@@ -256,7 +242,7 @@ public class SessionService(
     }
 
     /// <inheritdoc cref="ISessionService.GetModuleVersionAsync"/>
-    public async Task<Response<ExamTakerModuleVersionDto, GenericOperationStatuses>> GetModuleVersionAsync(
+    public async Task<Response<StudentModuleVersionDto, GenericOperationStatuses>> GetModuleVersionAsync(
         string userId,
         Guid assignmentId,
         Guid versionId,
@@ -276,7 +262,7 @@ public class SessionService(
         if (assessmentModuleVersion is null)
         {
             logger.LogInformation("Assessment module version not found for version {VersionId}.", versionId);
-            return Response<ExamTakerModuleVersionDto, GenericOperationStatuses>.Failure(
+            return Response<StudentModuleVersionDto, GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.NotFound,
                 $"Assessment module version not found for version {versionId}.");
         }
@@ -286,8 +272,8 @@ public class SessionService(
         // This check is to avoid exposing module versions to users who haven't started them
         var userProgress = await dbContext.ModuleProgress
             .AsNoTracking()
-            .Where(mp => mp.ExamTakerId == userId && 
-                         mp.ExamTakerAssignment.AssignmentId == assignmentId &&
+            .Where(mp => mp.StudentId == userId && 
+                         mp.StudentAssignment.AssignmentId == assignmentId &&
                          mp.AssessmentModuleVersionId == versionId)
             .FirstOrDefaultAsync(cancellationToken);
         
@@ -295,12 +281,12 @@ public class SessionService(
         {
             logger.LogInformation("No progress found for version {VersionId}. Please create the progress entity first.", 
                 versionId);
-            return Response<ExamTakerModuleVersionDto, GenericOperationStatuses>.Failure(
+            return Response<StudentModuleVersionDto, GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.NotFound,
                 $"No progress found for version {versionId}. Please create the progress entity first.");
         }
 
-        var assessmentModuleVersionDto = assessmentModuleVersion.ConvertToExamTakerDto();
+        var assessmentModuleVersionDto = assessmentModuleVersion.ConvertToStudentDto();
 
         // Shuffle questions and answers if randomization seeds are present,
         // The same seed will always produce the same order
@@ -338,7 +324,7 @@ public class SessionService(
         // Add server-calculated time remaining to prevent client-side clock manipulation
         assessmentModuleVersionDto.TimeRemaining = userProgress.TimeRemaining;
         
-        return Response<ExamTakerModuleVersionDto, GenericOperationStatuses>.Success(
+        return Response<StudentModuleVersionDto, GenericOperationStatuses>.Success(
             assessmentModuleVersionDto, 
             GenericOperationStatuses.Completed);
     }
@@ -351,25 +337,18 @@ public class SessionService(
     {
         logger.LogDebug("Getting group state request received");
         
-        var examTakerAssignment = await dbContext.ExamTakerAssignments
-            .AsNoTracking()
-            .Where(ea => ea.AssignmentId == assignmentId && ea.ExamTakerId == userId)
-            .AsQueryable()
-            .Include(ea => ea.Assignment)
-                .ThenInclude(a => a.Group)
-                    .ThenInclude(g => g!.GroupMemberEntities)
-            .FirstOrDefaultAsync(cancellationToken);
+        var studentAssignment = await EnsureStudentAssignmentAsync(userId, assignmentId, cancellationToken);
         
-        if (examTakerAssignment is null)
+        if (studentAssignment is null)
         {
-            logger.LogInformation("Assignment {AssignmentId} not found for user {UserId}.",
+            logger.LogInformation("Assignment {AssignmentId} not found for student {UserId}.",
                 assignmentId, 
                 userId);
             return Response<GroupStateDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound,
-                $"Assignment {assignmentId} not found for user {userId}.");
+                $"Assignment {assignmentId} not found for student {userId}.");
         }
         
-        var groupId = examTakerAssignment.Assignment.GroupId;
+        var groupId = studentAssignment.Assignment.GroupId;
         var groupResponse = await groupService.GetGroupAsync(groupId, cancellationToken);
         
         if (groupResponse.IsFailed)
@@ -381,8 +360,8 @@ public class SessionService(
         }
         
         var userProgress = await dbContext.ModuleProgress
-            .Where(mp => mp.ExamTakerId == userId &&
-                         mp.ExamTakerAssignmentId == examTakerAssignment.Id &&
+            .Where(mp => mp.StudentId == userId &&
+                         mp.StudentAssignmentId == studentAssignment.Id &&
                          mp.GroupMember.GroupId == groupId)
             .Include(mp => mp.QuestionResponses)
             .Include(mp => mp.GroupMember)
@@ -395,7 +374,7 @@ public class SessionService(
             {
                 var progress = userProgress.FirstOrDefault(up => up.GroupMemberId == g.Id);
                 var status = GetModuleStatus(userProgress, g, groupResponse.Data);
-                var showScore = examTakerAssignment.Assignment.ShowResultsImmediately 
+                var showScore = studentAssignment.Assignment.ShowResultsImmediately 
                                 && status is ModuleStatus.Completed or ModuleStatus.TimeElapsed;
                 
                 return new GroupMemberStateDto
@@ -694,6 +673,72 @@ public class SessionService(
         return ModuleStatus.NotStarted;
     }
     
+    /// <summary>
+    /// Ensures a StudentAssignment record exists for a student and assignment.
+    /// Auto-creates it if the assignment is class-assigned and the student is in that class.
+    /// </summary>
+    private async Task<StudentAssignmentEntity?> EnsureStudentAssignmentAsync(string studentId, Guid assignmentId, CancellationToken cancellationToken)
+    {
+        var studentAssignment = await dbContext.StudentAssignments
+            .Include(ea => ea.Assignment)
+                .ThenInclude(a => a.Group)
+                    .ThenInclude(g => g!.GroupMemberEntities)
+            .FirstOrDefaultAsync(ea => ea.AssignmentId == assignmentId && ea.StudentId == studentId, cancellationToken);
+        
+        if (studentAssignment != null) return studentAssignment;
+
+        // Check if the assignment is published and linked to a class
+        var assignment = await dbContext.Assignments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Id == assignmentId && a.IsPublished, cancellationToken);
+            
+        if (assignment == null) return null;
+
+        if (assignment.ClassLevelId.HasValue)
+        {
+            // Verify student is in this class via StudentAssessments (active session)
+            var activeSession = await dbContext.Sessions.AsNoTracking().FirstOrDefaultAsync(s => s.IsActive, cancellationToken);
+            if (activeSession != null)
+            {
+                var isInClass = await dbContext.StudentAssessments
+                    .AsNoTracking()
+                    .AnyAsync(a => 
+                        a.StudentId == studentId && 
+                        a.SessionId == activeSession.Id && 
+                        a.ClassLevelId == assignment.ClassLevelId.Value, cancellationToken);
+                    
+                if (isInClass)
+                {
+                    var studentName = await dbContext.Students
+                        .AsNoTracking()
+                        .Where(s => s.Id == studentId)
+                        .Select(s => s.FullName)
+                        .FirstOrDefaultAsync(cancellationToken) ?? studentId;
+
+                    studentAssignment = new StudentAssignmentEntity
+                    {
+                        Id = Guid.NewGuid(),
+                        AssignmentId = assignmentId,
+                        StudentId = studentId,
+                        StudentDisplayName = studentName
+                    };
+                    
+                    dbContext.StudentAssignments.Add(studentAssignment);
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                    
+                    // Reload with navigation properties
+                    return await dbContext.StudentAssignments
+                        .Include(ea => ea.Assignment)
+                            .ThenInclude(a => a.Group)
+                                .ThenInclude(g => g!.GroupMemberEntities)
+                        .FirstOrDefaultAsync(ea => ea.Id == studentAssignment.Id, cancellationToken);
+                }
+            }
+        }
+        
+        return null;
+    }
+
     /// <summary>
     /// This method shuffles a list based on a provided GUID seed.
     /// The same seed will always produce the same order.

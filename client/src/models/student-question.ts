@@ -1,10 +1,10 @@
 import { QuestionType } from "./question-types";
-import { ExamTakerPossibleAnswer } from "./exam-taker-possible-answer";
+import { StudentPossibleAnswer } from "./student-possible-answer";
 
 /**
  * Student-safe question representation for exam sessions.
  */
-export interface ExamTakerQuestion {
+export interface StudentQuestion {
   /**
    * Question identifier.
    * @maxLength 50 characters (aligned with backend constraint)
@@ -35,5 +35,5 @@ export interface ExamTakerQuestion {
   /**
    * List of possible answers for the question. Each answer excludes correct answer information.
    */
-  answers: ExamTakerPossibleAnswer[];
+  answers: StudentPossibleAnswer[];
 }

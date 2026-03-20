@@ -1,3 +1,5 @@
+using PublicQ.Shared;
+
 namespace PublicQ.API.Models.Requests;
 
 /// <summary>
@@ -14,4 +16,9 @@ public class GetPaginatedEntitiesRequest
     /// PageNumber
     /// </summary>
     public int PageNumber { get; set; } = 1;
+
+    /// <summary>
+    /// Role to filter by.
+    /// </summary>
+    public UserRole? Role { get; set; }
 }

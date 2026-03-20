@@ -1,19 +1,19 @@
 namespace PublicQ.Application.Models.Assignment;
 
 /// <summary>
-/// Exam taker assignment data transfer object.
+/// Student assignment data transfer object.
 /// </summary>
-public class ExamTakerAssignmentDto : AssignmentBaseDto
+public class StudentAssignmentDto : AssignmentBaseDto
 {
     /// <summary>
-    /// Gets or sets the unique identifier of the exam taker assignment.
+    /// Gets or sets the unique identifier of the student assignment.
     /// </summary>
     public Guid Id { get; set; }
  
     /// <summary>
-    /// Exam taker assignment that associates Assignments and Exam Takers.
+    /// Student assignment that associates Assignments and Students.
     /// </summary>
-    public Guid ExamTakerAssignmentId { get; set; }
+    public Guid StudentAssignmentId { get; set; }
     
     /// <summary>
     /// Indicates whether the assignment is published and visible to students.

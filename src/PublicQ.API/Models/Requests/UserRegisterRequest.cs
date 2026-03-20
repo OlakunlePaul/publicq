@@ -29,4 +29,9 @@ public class UserRegisterRequest
     /// Optional: Student admission number.
     /// </summary>
     public string? AdmissionNumber { get; set; }
+
+    /// <summary>
+    /// Optional: Foreign key reference to the class level.
+    /// </summary>
+    public Guid? ClassLevelId { get; set; }
 }

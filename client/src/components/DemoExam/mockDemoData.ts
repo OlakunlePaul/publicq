@@ -1,4 +1,4 @@
-import { ExamTakerModuleVersion } from '../../models/exam-taker-module-version';
+import { StudentModuleVersion } from '../../models/student-module-version';
 import { QuestionType } from '../../models/question-types';
 import { Assignment } from '../../models/assignment';
 import { User } from '../../models/user';
@@ -31,7 +31,7 @@ export const DEMO_CORRECT_ANSWERS: Record<string, string[]> = {
   'q10-grammar': ['q10-a1', 'q10-a3'] // Multiple correct
 };
 
-export const DEMO_MODULE: ExamTakerModuleVersion = {
+export const DEMO_MODULE: StudentModuleVersion = {
   id: 'demo-module-12345',
   assessmentModuleId: 'demo-parent-module',
   title: 'Professional Skills Demo Assessment',

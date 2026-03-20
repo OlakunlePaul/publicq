@@ -6,7 +6,7 @@ import { assignmentService } from '../../services/assignmentService';
 import { groupService } from '../../services/groupService';
 import { userService } from '../../services/userService';
 import { academicStructureService } from '../../services/academicStructureService';
-import { SubjectDto } from '../../models/academic';
+import { SubjectDto, ClassLevelDto } from '../../models/academic';
 import { formatDateToLocal } from '../../utils/dateUtils';
 import UserTable from '../Shared/UserTable';
 import { VALIDATION_CONSTRAINTS } from '../../constants/contstants';
@@ -39,16 +39,19 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
     randomizeAnswers: false,
     groupId: '',
     subjectId: '',
+    classLevelId: '',
   });
   const [error, setError] = useState('');
   const [groups, setGroups] = useState<Group[]>([]);
   const [subjects, setSubjects] = useState<SubjectDto[]>([]);
+  const [classLevels, setClassLevels] = useState<ClassLevelDto[]>([]);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       loadGroups();
       loadSubjects();
+      loadClassLevels();
       
       if (assignment) {
         // Convert UTC dates to local datetime-local format
@@ -65,6 +68,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           randomizeAnswers: assignment.randomizeAnswers,
           groupId: assignment.groupId,
           subjectId: assignment.subjectId || '',
+          classLevelId: assignment.classLevelId || '',
         });
       } else {
         // Set default dates: start date = today, end date = next week
@@ -82,6 +86,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           randomizeAnswers: false,
           groupId: '',
           subjectId: '',
+          classLevelId: '',
         });
       }
       setError('');
@@ -100,12 +105,16 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
       setError('Title is required');
       return false;
     }
-    if (formData.title.length > VALIDATION_CONSTRAINTS.ASSIGNMENT.TITLE_MAX_LENGTH) {
-      setError(`Title must not exceed ${VALIDATION_CONSTRAINTS.ASSIGNMENT.TITLE_MAX_LENGTH} characters`);
+    if (!formData.classLevelId) {
+      setError('Class selection is required');
       return false;
     }
-    if (formData.description.length > VALIDATION_CONSTRAINTS.ASSIGNMENT.DESCRIPTION_MAX_LENGTH) {
-      setError(`Description must not exceed ${VALIDATION_CONSTRAINTS.ASSIGNMENT.DESCRIPTION_MAX_LENGTH} characters`);
+    if (formData.title.length > VALIDATION_CONSTRAINTS.EXAM.TITLE_MAX_LENGTH) {
+      setError(`Title must not exceed ${VALIDATION_CONSTRAINTS.EXAM.TITLE_MAX_LENGTH} characters`);
+      return false;
+    }
+    if (formData.description.length > VALIDATION_CONSTRAINTS.EXAM.DESCRIPTION_MAX_LENGTH) {
+      setError(`Description must not exceed ${VALIDATION_CONSTRAINTS.EXAM.DESCRIPTION_MAX_LENGTH} characters`);
       return false;
     }
     if (!formData.startDateUtc) {
@@ -160,6 +169,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           randomizeAnswers: formData.randomizeAnswers,
           groupId: formData.groupId,
           subjectId: formData.subjectId || undefined,
+          classLevelId: formData.classLevelId || undefined,
         });
       }
     }
@@ -202,6 +212,15 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
     }
   };
 
+  const loadClassLevels = async () => {
+    try {
+      const { data } = await academicStructureService.getClassLevels();
+      setClassLevels(data || []);
+    } catch (error) {
+      console.error('Failed to load class levels', error);
+    }
+  };
+
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -221,13 +240,57 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
     <div className={cssStyles.modalOverlay}>
       <div className={cssStyles.modal}>
         <h3 className={cssStyles.modalTitle}>
-          {assignment ? 'Edit Assignment' : 'Create New Assignment'}
+          {assignment ? 'Edit Exam' : 'Create New Exam'}
         </h3>
         {apiError && <p className={cssStyles.formError}>{apiError}</p>}
         <div className={cssStyles.formContainer}>
           <div className={cssStyles.formGroup}>
             <label className={cssStyles.formLabel}>
-              Title: <span style={{color: '#dc2626'}}>*</span>
+              Select Class: <span style={{color: '#dc2626'}}>*</span>
+            </label>
+            <select
+              name="classLevelId"
+              value={formData.classLevelId}
+              onChange={handleInputChange}
+              className={cssStyles.formSelect}
+            >
+              <option value="">Select a class</option>
+              {classLevels.map(cl => (
+                <option key={cl.id} value={cl.id}>
+                  {cl.name} {cl.sectionOrArm ? `(${cl.sectionOrArm})` : ''}
+                </option>
+              ))}
+            </select>
+            <p className={cssStyles.formHelpText}>
+              Select the target class for this exam.
+            </p>
+          </div>
+
+          <div className={cssStyles.formGroup}>
+            <label className={cssStyles.formLabel}>
+              Link to Subject:
+            </label>
+            <select
+              name="subjectId"
+              value={formData.subjectId}
+              onChange={handleInputChange}
+              className={cssStyles.formSelect}
+              disabled={!formData.classLevelId}
+            >
+              <option value="">{formData.classLevelId ? 'Select a subject' : 'Please select a class first'}</option>
+              {subjects
+                .filter(s => !formData.classLevelId || (s.classLevelIds && s.classLevelIds.includes(formData.classLevelId)))
+                .map(subject => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={cssStyles.formGroup}>
+            <label className={cssStyles.formLabel}>
+              Exam Title: <span style={{color: '#dc2626'}}>*</span>
             </label>
             <input
               ref={titleInputRef}
@@ -236,13 +299,13 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
               value={formData.title}
               onChange={handleInputChange}
               className={cssStyles.formInput}
-              placeholder="Enter assignment title"
-              maxLength={VALIDATION_CONSTRAINTS.ASSIGNMENT.TITLE_MAX_LENGTH}
+              placeholder="e.g. 1st Term Mathematics Mid-term"
+              maxLength={VALIDATION_CONSTRAINTS.EXAM.TITLE_MAX_LENGTH}
             />
             <div className={cn(cssStyles.characterCounter, {
-              [cssStyles.error]: formData.title.length > VALIDATION_CONSTRAINTS.ASSIGNMENT.TITLE_MAX_LENGTH * 0.9
+              [cssStyles.error]: formData.title.length > VALIDATION_CONSTRAINTS.EXAM.TITLE_MAX_LENGTH * 0.9
             })}>
-              {formData.title.length}/{VALIDATION_CONSTRAINTS.ASSIGNMENT.TITLE_MAX_LENGTH}
+              {formData.title.length}/{VALIDATION_CONSTRAINTS.EXAM.TITLE_MAX_LENGTH}
             </div>
           </div>
           
@@ -257,12 +320,12 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
               className={cssStyles.formTextarea}
               placeholder="Enter assignment description (optional)"
               rows={3}
-              maxLength={VALIDATION_CONSTRAINTS.ASSIGNMENT.DESCRIPTION_MAX_LENGTH}
+              maxLength={VALIDATION_CONSTRAINTS.EXAM.DESCRIPTION_MAX_LENGTH}
             />
             <div className={cn(cssStyles.characterCounter, {
-              [cssStyles.error]: formData.description.length > VALIDATION_CONSTRAINTS.ASSIGNMENT.DESCRIPTION_MAX_LENGTH * 0.9
+              [cssStyles.error]: formData.description.length > VALIDATION_CONSTRAINTS.EXAM.DESCRIPTION_MAX_LENGTH * 0.9
             })}>
-              {formData.description.length}/{VALIDATION_CONSTRAINTS.ASSIGNMENT.DESCRIPTION_MAX_LENGTH}
+              {formData.description.length}/{VALIDATION_CONSTRAINTS.EXAM.DESCRIPTION_MAX_LENGTH}
             </div>
           </div>
 
@@ -292,6 +355,28 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
                 className={cssStyles.formInput}
               />
             </div>
+          </div>
+
+          <div className={cssStyles.formGroup}>
+            <label className={cssStyles.formLabel}>
+              Select Class: <span style={{color: '#dc2626'}}>*</span>
+            </label>
+            <select
+              name="classLevelId"
+              value={formData.classLevelId}
+              onChange={handleInputChange}
+              className={cssStyles.formSelect}
+            >
+              <option value="">Select a class</option>
+              {classLevels.map(cl => (
+                <option key={cl.id} value={cl.id}>
+                  {cl.name} {cl.sectionOrArm ? `(${cl.sectionOrArm})` : ''}
+                </option>
+              ))}
+            </select>
+            <p className={cssStyles.formHelpText}>
+              Selecting a class first will filter the available subjects below.
+            </p>
           </div>
 
           {!assignment && (
@@ -338,9 +423,12 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
               value={formData.subjectId}
               onChange={handleInputChange}
               className={cssStyles.formSelect}
+              disabled={!formData.classLevelId}
             >
-              <option value="">Select a subject (Optional)</option>
-              {subjects.map(subject => (
+              <option value="">{formData.classLevelId ? 'Select a subject' : 'Please select a class first'}</option>
+              {subjects
+                .filter(s => !formData.classLevelId || (s.classLevelIds && s.classLevelIds.includes(formData.classLevelId)))
+                .map(subject => (
                 <option key={subject.id} value={subject.id}>
                   {subject.name}
                 </option>
@@ -424,7 +512,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
               e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.3)';
             }}
           >
-            {assignment ? 'Update Assignment' : 'Create Assignment'}
+            {assignment ? 'Update Exam' : 'Create Exam'}
           </button>
         </div>
       </div>
@@ -490,7 +578,7 @@ const DeleteConfirmationModal = ({ isOpen, assignmentTitle, onConfirm, onCancel 
               boxShadow: '0 4px 6px -1px rgba(220, 38, 38, 0.3)',
             }}
           >
-            Delete Assignment
+            Delete Exam
           </button>
         </div>
       </div>
@@ -695,7 +783,7 @@ const ExamTakerManagementModal: React.FC<ExamTakerManagementModalProps> = ({
     <div className={cssStyles.modalOverlay}>
       <div className={cn(cssStyles.modal, cssStyles.examTakerModal)}>
         <h3 className={cssStyles.modalTitle}>
-          Manage Exam Takers for "{assignmentTitle}"
+          Manage Students for "{assignmentTitle}"
         </h3>
         <div className={cssStyles.examTakerContainer}>
           {/* Available Users Panel */}
@@ -755,8 +843,8 @@ const ExamTakerManagementModal: React.FC<ExamTakerManagementModalProps> = ({
               onUserSelect={handleAssignedUserSelect}
               onUserDeselect={handleAssignedUserDeselect}
               selectionMode="multiple"
-              title={`Assigned Exam Takers (${assignedUsers.length})`}
-              emptyMessage="No exam takers assigned"
+              title={`Assigned Students (${assignedUsers.length})`}
+              emptyMessage="No students assigned"
               searchPlaceholder="Search assigned users..."
               maxHeight="400px"
               enableSearch={true}
@@ -793,7 +881,7 @@ const ExamTakerManagementModal: React.FC<ExamTakerManagementModalProps> = ({
               className={cssStyles.modalConfirmButton}
               disabled={availableUsersLoading}
             >
-              Update Exam Takers
+              Update Students
             </button>
           </div>
         </div>
@@ -1108,7 +1196,7 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
     setLoading(true);
     try {
       // Fetch current exam takers using the API
-      const examTakersResponse = await assignmentService.getExamTakers(assignment.id);
+      const examTakersResponse = await assignmentService.getStudents(assignment.id);
       const currentExamTakerUsers = examTakersResponse.data || [];
       const currentExamTakerIds = currentExamTakerUsers.map(user => user.id);
       
@@ -1139,12 +1227,12 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
       
       // Remove exam takers first if any
       if (toRemove.length > 0) {
-        await assignmentService.deleteExamTakers(examTakerModal.assignmentId, toRemove);
+        await assignmentService.deleteStudents(examTakerModal.assignmentId, toRemove);
       }
       
       // Add new exam takers if any
       if (toAdd.length > 0) {
-        await assignmentService.addExamTakers(examTakerModal.assignmentId, toAdd);
+        await assignmentService.addStudents(examTakerModal.assignmentId, toAdd);
       }
       
       setExamTakerModal({ isOpen: false, assignmentId: '', assignmentTitle: '', currentExamTakers: [], currentAssignedUsers: [] });
@@ -1170,7 +1258,7 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
       // Fetch assignment details and exam takers
       const [assignmentResponse, examTakersResponse] = await Promise.all([
         assignmentService.getAssignmentById(assignmentId),
-        assignmentService.getExamTakers(assignmentId)
+        assignmentService.getStudents(assignmentId)
       ]);
       
       if (!examTakersResponse.isSuccess || !examTakersResponse.data) {

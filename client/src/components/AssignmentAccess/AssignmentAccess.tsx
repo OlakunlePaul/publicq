@@ -55,10 +55,10 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
       if (response.isSuccess && response.data) {
         setAssignments(response.data);
       } else {
-        setError(response.message || 'Failed to load assignments.');
+        setError(response.message || 'Failed to load exams.');
       }
     } catch (err) {
-      setError('An error occurred while fetching assignments.');
+      setError('An error occurred while fetching exams.');
     } finally {
       setLoading(false);
     }
@@ -74,7 +74,7 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
     setUserIdError('');
     try {
       // Use userService instead of assignmentService for exam taker info
-      const response = await userService.getExamTaker(examTakerId);
+      const response = await userService.getStudent(examTakerId);
       if (response.isSuccess && response.data) {
         setExamTakerInfo(response.data);
         localStorage.setItem('exam_taker_info', JSON.stringify(response.data));
@@ -134,7 +134,7 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
         <div style={styles.guestAccess}>
           <h2 style={styles.title}>Access Your Subject Exams</h2>
           <p style={styles.introText}>
-            Select your preferred method to access your assignments today.
+            Select your preferred method to access your exams today.
           </p>
           
           <div style={styles.accessOptions}>
@@ -142,16 +142,16 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
             <div style={styles.examTakerSection}>
               <div style={styles.optionHeader}>
                 <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="" style={{width: '32px', height: '32px'}} />
-                <h3 style={styles.sectionTitle}>Quick Access with Exam Taker ID</h3>
+                <h3 style={styles.sectionTitle}>Quick Access with Student ID</h3>
               </div>
               <p style={styles.sectionDescription}>
-                <strong>For exam takers:</strong> Enter your unique exam taker ID to quickly access your assignments without needing a username or password.
+                <strong>For students:</strong> Enter your unique student ID to quickly access your exams without needing a username or password.
               </p>
               
               <div style={styles.inputGroup}>
                 <input
                   type="text"
-                  placeholder="Enter your exam taker ID"
+                  placeholder="Enter your student ID"
                   value={examTakerId}
                   onChange={(e) => {
                     setExamTakerId(e.target.value.toUpperCase());
@@ -190,7 +190,7 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
                   <h3 style={styles.sectionTitle}>Full Account Access</h3>
                 </div>
                 <p style={styles.sectionDescription}>
-                  <strong>Have username and password?</strong> Log in to your account for full access to assignments, progress tracking, and additional features.
+                  <strong>Have username and password?</strong> Log in to your account for full access to exams, progress tracking, and additional features.
                 </p>
                 <button 
                   onClick={onLoginRequest}
@@ -227,7 +227,7 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
       ) : mode === 'authenticated' ? (
         <div style={styles.authenticatedAccess}>
           <h2 style={styles.title}>
-            Your Assignment Dashboard
+            Your Exam Hall
           </h2>
         </div>
       ) : null}
@@ -257,7 +257,7 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
         <div style={styles.assignmentList}>
           {loading ? (
             <div style={styles.loadingContainer}>
-              <p style={styles.loadingText}>Loading assignments...</p>
+              <p style={styles.loadingText}>Loading exams...</p>
             </div>
           ) : error ? (
             <div style={styles.errorContainer}>
@@ -265,7 +265,7 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
             </div>
           ) : assignments.length === 0 ? (
             <div style={styles.emptyContainer}>
-              <p style={styles.emptyMessage}>No assignments available at this time.</p>
+              <p style={styles.emptyMessage}>No exams available at this time.</p>
             </div>
           ) : (
             <div style={styles.cardsGrid}>
@@ -309,7 +309,7 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
                         style={styles.startButton}
                         onClick={() => onAssignmentOpen && onAssignmentOpen(assignment)}
                       >
-                        {status === 'ended' ? 'View Results' : 'Open Assignment'}
+                        {status === 'ended' ? 'View Results' : 'Open Exam'}
                       </button>
                     )}
                     {assignment.isPublished && status === 'scheduled' && (

@@ -1,11 +1,11 @@
-import { ExamTakerQuestion } from "./exam-taker-question";
+import { StudentQuestion } from "./student-question";
 
 /**
  * Student-safe representation of an assessment module version.
  * This interface is intended for use by exam takers and excludes any sensitive information
  * like correct answers.
  */
-export interface ExamTakerModuleVersion {
+export interface StudentModuleVersion {
   /**
    * Module version identifier.
    */
@@ -75,5 +75,5 @@ export interface ExamTakerModuleVersion {
   /**
    * A list of questions included in this assessment module version.
    */
-  questions: ExamTakerQuestion[];
+  questions: StudentQuestion[];
 }

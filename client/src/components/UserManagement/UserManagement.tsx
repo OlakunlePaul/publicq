@@ -2,14 +2,16 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { User } from '../../models/user';
 import { userService } from '../../services/userService';
 import { UserCreateByAdminRequest } from '../../models/userCreateByAdminRequest';
-import { ExamTakerCreateRequest } from '../../models/exam-taker-create-request';
+import { StudentCreateRequest } from '../../models/student-create-request';
 import { UserRoleAssignmentRequest } from '../../models/user-role-assignment-request';
 import { UserRole } from '../../models/UserRole';
 import UserTable from '../Shared/UserTable';
 import { configurationService } from '../../services/configurationService';
 import { PasswordPolicyOptions } from '../../models/password-policy-options';
-import { ExamTakerImport } from '../../models/exam-taker-import';
+import { StudentImport } from '../../models/student-import';
 import { VALIDATION_CONSTRAINTS } from '../../constants/contstants';
+import { academicStructureService } from '../../services/academicStructureService';
+import { ClassLevelDto } from '../../models/academic';
 import userManagementStyles from './UserManagement.module.css';
 
 // Utility function for conditional class names
@@ -25,7 +27,7 @@ interface CreateUserModalProps {
   isOpen: boolean;
   loading?: boolean;
   error?: string;
-  onConfirm: (request: UserCreateByAdminRequest | ExamTakerCreateRequest, isExamTaker: boolean) => void;
+  onConfirm: (request: UserCreateByAdminRequest | StudentCreateRequest, isStudent: boolean) => void;
   onCancel: () => void;
 }
 
@@ -83,10 +85,12 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
     password: '',
     id: '',
     dateOfBirth: '',
+    classLevelId: '',
   });
-  const [isExamTaker, setIsExamTaker] = useState(false);
+  const [isStudent, setIsStudent] = useState(false);
   const [validationError, setValidationError] = useState('');
   const [emailEnabled, setEmailEnabled] = useState<boolean | null>(null);
+  const [classLevels, setClassLevels] = useState<ClassLevelDto[]>([]);
   const emailInputRef = useRef<HTMLInputElement>(null);
 
   const checkEmailConfiguration = useCallback(async (currentPassword: string) => {
@@ -125,12 +129,14 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
         password: '',
         id: '',
         dateOfBirth: '',
+        classLevelId: '',
       });
-      setIsExamTaker(false);
+      setIsStudent(false);
       setValidationError('');
       
       // Check email configuration when modal opens
       checkEmailConfiguration('');
+      loadClassLevels();
       
       // Auto-focus on email input when modal opens
       setTimeout(() => {
@@ -141,9 +147,18 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
     }
   }, [isOpen, checkEmailConfiguration]);
 
+  const loadClassLevels = async () => {
+    try {
+      const response = await academicStructureService.getClassLevels();
+      setClassLevels(response.data || []);
+    } catch (error) {
+      console.error('Failed to load class levels', error);
+    }
+  };
+
   const validateForm = useCallback((): boolean => {
     // For regular users, email is required
-    if (!isExamTaker) {
+    if (!isStudent) {
       if (!formData.email.trim()) {
         setValidationError('Email is required');
         return false;
@@ -157,13 +172,13 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
         return false;
       }
     } else {
-      // For exam takers, validate email format only if provided
+      // For students, validate email format only if provided
       if (formData.email.trim() && !formData.email.includes('@')) {
         setValidationError('Please enter a valid email address');
         return false;
       }
-      if (formData.email.length > VALIDATION_CONSTRAINTS.EXAM_TAKER.EMAIL_MAX_LENGTH) {
-        setValidationError(`Email must not exceed ${VALIDATION_CONSTRAINTS.EXAM_TAKER.EMAIL_MAX_LENGTH} characters`);
+      if (formData.email.length > VALIDATION_CONSTRAINTS.STUDENT.EMAIL_MAX_LENGTH) {
+        setValidationError(`Email must not exceed ${VALIDATION_CONSTRAINTS.STUDENT.EMAIL_MAX_LENGTH} characters`);
         return false;
       }
     }
@@ -172,68 +187,79 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
       setValidationError('Full name is required');
       return false;
     }
-    if (formData.fullName.length > (isExamTaker ? VALIDATION_CONSTRAINTS.EXAM_TAKER.NAME_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.FULL_NAME_MAX_LENGTH)) {
-      setValidationError(`Full name must not exceed ${isExamTaker ? VALIDATION_CONSTRAINTS.EXAM_TAKER.NAME_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.FULL_NAME_MAX_LENGTH} characters`);
+    if (formData.fullName.length > (isStudent ? VALIDATION_CONSTRAINTS.STUDENT.NAME_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.FULL_NAME_MAX_LENGTH)) {
+      setValidationError(`Full name must not exceed ${isStudent ? VALIDATION_CONSTRAINTS.STUDENT.NAME_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.FULL_NAME_MAX_LENGTH} characters`);
       return false;
     }
     
-    // For exam takers, validate ID if provided
-    if (isExamTaker && formData.id && formData.id.length > VALIDATION_CONSTRAINTS.EXAM_TAKER.ID_MAX_LENGTH) {
-      setValidationError(`ID must not exceed ${VALIDATION_CONSTRAINTS.EXAM_TAKER.ID_MAX_LENGTH} characters`);
+    // For students, validate ID if provided
+    if (isStudent && formData.id && formData.id.length > VALIDATION_CONSTRAINTS.STUDENT.ID_MAX_LENGTH) {
+      setValidationError(`ID must not exceed ${VALIDATION_CONSTRAINTS.STUDENT.ID_MAX_LENGTH} characters`);
       return false;
     }
     
     // For regular users: if email is disabled, password is required
-    if (!isExamTaker && emailEnabled === false && !formData.password.trim()) {
+    if (!isStudent && emailEnabled === false && !formData.password.trim()) {
       setValidationError('Password is required when email integration is disabled');
       return false;
     }
     
     // Only validate password for regular users if provided (password is now optional when email is enabled)
-    if (!isExamTaker && formData.password.trim() && formData.password.length < 8) {
+    if (!isStudent && formData.password.trim() && formData.password.length < 8) {
       setValidationError('Password must be at least 8 characters long (or leave empty)');
       return false;
     }
-    if (!isExamTaker && formData.password.length > VALIDATION_CONSTRAINTS.USER.PASSWORD_MAX_LENGTH) {
+    if (!isStudent && formData.password.length > VALIDATION_CONSTRAINTS.USER.PASSWORD_MAX_LENGTH) {
       setValidationError(`Password must not exceed ${VALIDATION_CONSTRAINTS.USER.PASSWORD_MAX_LENGTH} characters`);
       return false;
     }
     
     setValidationError('');
     return true;
-  }, [emailEnabled, formData.email, formData.fullName, formData.id, formData.password, isExamTaker]);
+  }, [emailEnabled, formData.email, formData.fullName, formData.id, formData.password, isStudent]);
 
   const handleConfirm = useCallback(() => {
     if (validateForm()) {
-      if (isExamTaker) {
-        const examTakerRequest: ExamTakerCreateRequest = {
+      if (isStudent) {
+        const studentRequest: StudentCreateRequest = {
           fullName: formData.fullName.trim(),
           ...(formData.id.trim() && { id: formData.id.trim() }),
           ...(formData.email.trim() && { email: formData.email.trim() }),
-          ...(formData.dateOfBirth.trim() && { dateOfBirth: formData.dateOfBirth.trim() })
+          ...(formData.dateOfBirth.trim() && { dateOfBirth: formData.dateOfBirth.trim() }),
+          classLevelId: formData.classLevelId
         };
-        onConfirm(examTakerRequest, true);
+        onConfirm(studentRequest, true);
       } else {
         const userRequest: UserCreateByAdminRequest = {
           email: formData.email.trim(),
           fullName: formData.fullName.trim(),
           ...(formData.password.trim() && { password: formData.password.trim() }),
-          ...(formData.dateOfBirth.trim() && { dateOfBirth: formData.dateOfBirth.trim() })
+          ...(formData.dateOfBirth.trim() && { dateOfBirth: formData.dateOfBirth.trim() }),
+          classLevelId: formData.classLevelId
         };
         onConfirm(userRequest, false);
       }
     }
-  }, [formData, isExamTaker, onConfirm, validateForm]);
+  }, [formData, isStudent, onConfirm, validateForm]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     
-    // Convert Student ID to uppercase for exam takers
-    const processedValue = (name === 'id' && isExamTaker) ? value.toUpperCase() : value;
+    // Convert Student ID to uppercase for students
+    const processedValue = (name === 'id' && isStudent) ? value.toUpperCase() : value;
     
     setFormData(prev => ({
       ...prev,
       [name]: processedValue,
+    }));
+    if (validationError) setValidationError('');
+  };
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
     }));
     if (validationError) setValidationError('');
   };
@@ -248,7 +274,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
   };
 
   const handleUserTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsExamTaker(e.target.checked);
+    setIsStudent(e.target.checked);
     if (validationError) setValidationError('');
   };
 
@@ -260,7 +286,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
     <div className={userManagementStyles.modalOverlay}>
       <div className={userManagementStyles.modal}>
         <div className={userManagementStyles.modalHeader}>
-          <h3 className={userManagementStyles.modalTitle}>{isExamTaker ? 'Create New Exam Taker' : 'Create New User'}</h3>
+          <h3 className={userManagementStyles.modalTitle}>Create New User</h3>
         </div>
         
         <div className={userManagementStyles.modalBody}>
@@ -270,15 +296,15 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
             </div>
           )}
           
-          {isExamTaker && (
+          {isStudent && (
             <div className={userManagementStyles.infoBox}>
               <p className={userManagementStyles.modalInfoText}>
-                Candidates (Takers) don't have passwords and can only access assigned exams. If no Admission Number is provided, one will be generated automatically in the format XXXX-XXXX where X is an alphanumeric uppercase character (example: H9LC-4G4L).
+                Students don't have passwords and can only access assigned exams. If no Admission Number is provided, one will be generated automatically in the format XXXX-XXXX where X is an alphanumeric uppercase character (example: H9LC-4G4L).
               </p>
             </div>
           )}
           
-          {!isExamTaker && (
+          {!isStudent && (
             <div className={userManagementStyles.infoBox}>
               <p className={userManagementStyles.modalInfoText}>
                 {emailEnabled === null 
@@ -297,21 +323,21 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
                 <input
                   type="checkbox"
                   id="userTypeToggle"
-                  checked={isExamTaker}
+                  checked={isStudent}
                   onChange={handleUserTypeChange}
                   className={userManagementStyles.checkbox}
                 />
                 <label htmlFor="userTypeToggle" className={userManagementStyles.checkboxLabel}>
-                  Create as Exam Taker (no password required)
+                  Create as Student (no password required)
                 </label>
               </div>
             </div>
           <div className={userManagementStyles.formGroup}>
             <label className={cn(
               userManagementStyles.formLabel,
-              isExamTaker && userManagementStyles.optionalLabel
+              isStudent && userManagementStyles.optionalLabel
             )}>
-              Email{isExamTaker ? ' (optional)' : ''}:
+              Email{isStudent ? ' (optional)' : ''}:
             </label>
             <input
               ref={emailInputRef}
@@ -320,8 +346,8 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
               value={formData.email}
               onChange={handleInputChange}
               className={userManagementStyles.formInput}
-              placeholder={isExamTaker ? "Enter email (optional)" : "Enter email"}
-              maxLength={isExamTaker ? VALIDATION_CONSTRAINTS.EXAM_TAKER.EMAIL_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.EMAIL_MAX_LENGTH}
+              placeholder={isStudent ? "Enter email (optional)" : "Enter email"}
+              maxLength={isStudent ? VALIDATION_CONSTRAINTS.STUDENT.EMAIL_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.EMAIL_MAX_LENGTH}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = '#3b82f6';
                 e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
@@ -333,9 +359,9 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
             />
             <div className={cn(
               userManagementStyles.characterCounter,
-              formData.email.length > (isExamTaker ? VALIDATION_CONSTRAINTS.EXAM_TAKER.EMAIL_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.EMAIL_MAX_LENGTH) * 0.9 ? userManagementStyles.counterWarning : ''
+              formData.email.length > (isStudent ? VALIDATION_CONSTRAINTS.STUDENT.EMAIL_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.EMAIL_MAX_LENGTH) * 0.9 ? userManagementStyles.counterWarning : ''
             )}>
-              {formData.email.length}/{isExamTaker ? VALIDATION_CONSTRAINTS.EXAM_TAKER.EMAIL_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.EMAIL_MAX_LENGTH}
+              {formData.email.length}/{isStudent ? VALIDATION_CONSTRAINTS.STUDENT.EMAIL_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.EMAIL_MAX_LENGTH}
             </div>
           </div>
           <div className={userManagementStyles.formGroup}>
@@ -347,7 +373,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
               onChange={handleInputChange}
               className={userManagementStyles.formInput}
               placeholder="Enter full name"
-              maxLength={isExamTaker ? VALIDATION_CONSTRAINTS.EXAM_TAKER.NAME_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.FULL_NAME_MAX_LENGTH}
+              maxLength={isStudent ? VALIDATION_CONSTRAINTS.STUDENT.NAME_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.FULL_NAME_MAX_LENGTH}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = '#3b82f6';
                 e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
@@ -359,9 +385,9 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
             />
             <div className={cn(
               userManagementStyles.characterCounter,
-              formData.fullName.length > (isExamTaker ? VALIDATION_CONSTRAINTS.EXAM_TAKER.NAME_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.FULL_NAME_MAX_LENGTH) * 0.9 ? userManagementStyles.counterWarning : ''
+              formData.fullName.length > (isStudent ? VALIDATION_CONSTRAINTS.STUDENT.NAME_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.FULL_NAME_MAX_LENGTH) * 0.9 ? userManagementStyles.counterWarning : ''
             )}>
-              {formData.fullName.length}/{isExamTaker ? VALIDATION_CONSTRAINTS.EXAM_TAKER.NAME_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.FULL_NAME_MAX_LENGTH}
+              {formData.fullName.length}/{isStudent ? VALIDATION_CONSTRAINTS.STUDENT.NAME_MAX_LENGTH : VALIDATION_CONSTRAINTS.USER.FULL_NAME_MAX_LENGTH}
             </div>
           </div>
           <div className={userManagementStyles.formGroup}>
@@ -387,7 +413,26 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
               }}
             />
           </div>
-          {isExamTaker ? (
+          <div className={userManagementStyles.formGroup}>
+            <label className={userManagementStyles.formLabel}>
+              Class: <span style={{color: '#dc2626'}}>*</span>
+            </label>
+            <select
+              name="classLevelId"
+              value={formData.classLevelId}
+              onChange={handleSelectChange}
+              className={userManagementStyles.formInput}
+              style={{ backgroundColor: 'white' }}
+            >
+              <option value="">Select Class</option>
+              {classLevels.map(cl => (
+                <option key={cl.id} value={cl.id}>
+                  {cl.name} {cl.sectionOrArm ? `(${cl.sectionOrArm})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+          {isStudent ? (
             <div className={userManagementStyles.formGroup}>
               <label className={cn(
                 userManagementStyles.formLabel,
@@ -402,7 +447,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
                 onChange={handleInputChange}
                 className={userManagementStyles.formInput}
                 placeholder="Enter admission number (optional)"
-                maxLength={VALIDATION_CONSTRAINTS.EXAM_TAKER.ID_MAX_LENGTH}
+                maxLength={VALIDATION_CONSTRAINTS.STUDENT.ID_MAX_LENGTH}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = '#3b82f6';
                   e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
@@ -414,9 +459,9 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
               />
               <div className={cn(
                 userManagementStyles.characterCounter,
-                formData.id.length > VALIDATION_CONSTRAINTS.EXAM_TAKER.ID_MAX_LENGTH * 0.9 ? userManagementStyles.counterWarning : ''
+                formData.id.length > VALIDATION_CONSTRAINTS.STUDENT.ID_MAX_LENGTH * 0.9 ? userManagementStyles.counterWarning : ''
               )}>
-                {formData.id.length}/{VALIDATION_CONSTRAINTS.EXAM_TAKER.ID_MAX_LENGTH}
+                {formData.id.length}/{VALIDATION_CONSTRAINTS.STUDENT.ID_MAX_LENGTH}
               </div>
             </div>
           ) : (
@@ -471,7 +516,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
             disabled={loading}
             className={userManagementStyles.modalConfirmButton}
           >
-            {loading ? 'Creating...' : (isExamTaker ? 'Create Exam Taker' : 'Create User')}
+            {loading ? 'Creating...' : (isStudent ? 'Create Student' : 'Create User')}
           </button>
         </div>
       </div>
@@ -1194,13 +1239,13 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
     setResetPasswordModal({ isOpen: true, userEmail });
   };
 
-  const confirmCreateUser = async (request: UserCreateByAdminRequest | ExamTakerCreateRequest, isExamTaker: boolean) => {
+  const confirmCreateUser = async (request: UserCreateByAdminRequest | StudentCreateRequest, isStudent: boolean) => {
     setLoading(true);
     setCreateUserError('');
     
     try {
-      if (isExamTaker) {
-        await userService.createExamTakerByAdmin(request as ExamTakerCreateRequest);
+      if (isStudent) {
+        await userService.createStudentByAdmin(request as StudentCreateRequest);
       } else {
         await userService.createUserByAdmin(request as UserCreateByAdminRequest);
       }
@@ -1403,7 +1448,7 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
   };
 
   // CSV parsing and upload handlers
-  const parseCsvFile = (file: File): Promise<ExamTakerImport[]> => {
+  const parseCsvFile = (file: File): Promise<StudentImport[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -1437,7 +1482,7 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
             return;
           }
           
-          const examTakers: ExamTakerImport[] = [];
+          const students: StudentImport[] = [];
           
           // Parse data rows
           for (let i = 1; i < lines.length; i++) {
@@ -1448,14 +1493,14 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
               continue; // Skip incomplete rows
             }
             
-            const examTaker: ExamTakerImport = {
+            const student: StudentImport = {
               // Always include ID field - pass empty string if not provided, let backend handle null conversion
               id: values[idIndex] || '',
               name: values[nameIndex],
             };
             
             if (emailIndex !== -1 && values[emailIndex]) {
-              examTaker.email = values[emailIndex];
+              student.email = values[emailIndex];
             }
             
             if (dateOfBirthIndex !== -1 && values[dateOfBirthIndex]) {
@@ -1466,27 +1511,27 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
                 // Verify it's a valid date and send as ISO 8601 datetime string for .NET
                 const parsedDate = new Date(dateValue + 'T00:00:00.000Z');
                 if (!isNaN(parsedDate.getTime())) {
-                  examTaker.dateOfBirth = parsedDate.toISOString();
+                  student.dateOfBirth = parsedDate.toISOString();
                 }
               }
             }
             
             if (assignmentIdIndex !== -1 && values[assignmentIdIndex]) {
-              examTaker.assignmentId = values[assignmentIdIndex];
+              student.assignmentId = values[assignmentIdIndex];
             }
             
             // Only require name to be present
-            if (examTaker.name) {
-              examTakers.push(examTaker);
+            if (student.name) {
+              students.push(student);
             }
           }
           
-          if (examTakers.length === 0) {
-            reject(new Error('No valid exam taker records found in CSV file'));
+          if (students.length === 0) {
+            reject(new Error('No valid student records found in CSV file'));
             return;
           }
           
-          resolve(examTakers);
+          resolve(students);
         } catch (error) {
           reject(new Error(`Failed to parse CSV file: ${error}`));
         }
@@ -1520,9 +1565,9 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
     setError('');
     
     try {
-      const examTakers = await parseCsvFile(file);
+      const students = await parseCsvFile(file);
       
-      const result = await userService.importExamTakers(examTakers);
+      const result = await userService.importStudents(students);
       
       setImportResultModal({
         isOpen: true,
@@ -1544,7 +1589,7 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
       setImportResultModal({
         isOpen: true,
         result: errorResult,
-        error: error.message || 'Failed to import exam takers'
+        error: error.message || 'Failed to import students'
       });
     } finally {
       setLoading(false);

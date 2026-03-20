@@ -75,19 +75,19 @@ public class QuestionEntity
     }
     
     /// <summary>
-    /// Exam taker version of the question DTO.
+    /// Student version of the question DTO.
     /// </summary>
-    /// <returns>Returns <see cref="ExamTakerQuestionDto"/></returns>
-    public ExamTakerQuestionDto ConvertToExamTakerDto()
+    /// <returns>Returns <see cref="StudentQuestionDto"/></returns>
+    public StudentQuestionDto ConvertToStudentDto()
     {
-        return new ExamTakerQuestionDto
+        return new StudentQuestionDto
         {
             Id = Id,
             Text = Text ?? string.Empty,
             StaticFileUrls = AssociatedStaticFiles.Select(f => f.FileUrl).ToHashSet(),
             StaticFileIds = AssociatedStaticFiles.Select(f => f.Id).ToHashSet(),
             Type = Type,
-            Answers = PossibleAnswers.Select(a => a.ConvertToExamTakerDto()).ToList()
+            Answers = PossibleAnswers.Select(a => a.ConvertToStudentDto()).ToList()
         };
     }
 }

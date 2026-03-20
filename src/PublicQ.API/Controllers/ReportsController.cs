@@ -46,16 +46,16 @@ public class ReportsController(IReportingService reportingService) : ControllerB
     }
 
     /// <summary>
-    /// Retrieves a paginated list of all exam takers with optional filtering by ID and name.
+    /// Retrieves a paginated list of all students with optional filtering by ID and name.
     /// </summary>
     /// <param name="pageNumber">Page number</param>
     /// <param name="pageSize">Page Size</param>
-    /// <param name="idFilter">Optional: Filter on Exam Taker ID</param>
-    /// <param name="nameFilter">Filter on Exam Taker Disaply Name</param>
+    /// <param name="idFilter">Optional: Filter on Student ID</param>
+    /// <param name="nameFilter">Filter on Student Display Name</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Returns paginated response with <see cref="IndividualUserReportDto"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
-    [HttpGet("exam-takers")]
-    public async Task<IActionResult> GetAllExamTakersAsync(
+    /// <returns>Returns paginated response with <see cref="IndividualStudentReportDto"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
+    [HttpGet("students")]
+    public async Task<IActionResult> GetAllStudentsAsync(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string? idFilter = null,
@@ -70,7 +70,7 @@ public class ReportsController(IReportingService reportingService) : ControllerB
                 .ToActionResult();
         }
         
-        var result = await reportingService.GetAllExamTakersAsync(
+        var result = await reportingService.GetAllStudentsAsync(
             idFilter,
             nameFilter,
             pageNumber,
@@ -126,52 +126,52 @@ public class ReportsController(IReportingService reportingService) : ControllerB
     }
     
     /// <summary>
-    /// Gets a detailed report for a specific exam taker.
+    /// Gets a detailed report for a specific student.
     /// </summary>
-    /// <param name="examTakerId">Exam taker ID</param>
+    /// <param name="studentId">Student ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Returns <see cref="ExamTakerReportDto"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
-    [HttpGet("exam-takers/{examTakerId}")]
-    public async Task<IActionResult> GetExamTakerReportAsync(string examTakerId, CancellationToken cancellationToken)
+    /// <returns>Returns <see cref="StudentReportDto"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
+    [HttpGet("students/{studentId}")]
+    public async Task<IActionResult> GetStudentReportAsync(string studentId, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(examTakerId))
+        if (string.IsNullOrWhiteSpace(studentId))
         {
-            return Response<IList<ExamTakerAssignmentReportDto>, GenericOperationStatuses>.Failure(
+            return Response<IList<StudentAssignmentReportDto>, GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.BadRequest,
-                "ExamTakerId cannot be empty.")
+                "StudentId cannot be empty.")
                 .ToActionResult();
         }
         
-        var result = await reportingService.GetExamTakerReportAsync(
-            examTakerId, 
+        var result = await reportingService.GetStudentReportAsync(
+            studentId, 
             cancellationToken: cancellationToken);
-
+ 
         return result.ToActionResult();
     }
 
     /// <summary>
-    /// Gets a detailed report for a specific exam taker on the specific assignment.
+    /// Gets a detailed report for a specific student on the specific assignment.
     /// </summary>
-    /// <param name="examTakerId">Exam taker ID</param>
+    /// <param name="studentId">Student ID</param>
     /// <param name="assignmentId">Assignment ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Returns <see cref="ExamTakerReportDto"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
-    [HttpGet("exam-takers/{examTakerId}/assignments/{assignmentId:guid}")]
-    public async Task<IActionResult> GetExamTakerReportAsync(
-        string examTakerId, 
+    /// <returns>Returns <see cref="StudentReportDto"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
+    [HttpGet("students/{studentId}/assignments/{assignmentId:guid}")]
+    public async Task<IActionResult> GetStudentReportAsync(
+        string studentId, 
         Guid assignmentId, 
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(examTakerId))
+        if (string.IsNullOrWhiteSpace(studentId))
         {
-            return Response<IList<ExamTakerAssignmentReportDto>, GenericOperationStatuses>.Failure(
+            return Response<IList<StudentAssignmentReportDto>, GenericOperationStatuses>.Failure(
                     GenericOperationStatuses.BadRequest,
-                    "ExamTakerId cannot be empty.")
+                    "StudentId cannot be empty.")
                 .ToActionResult();
         }
         
-        var result = await reportingService.GetExamTakerReportAsync(
-            examTakerId,
+        var result = await reportingService.GetStudentReportAsync(
+            studentId,
             assignmentId,
             cancellationToken);
 

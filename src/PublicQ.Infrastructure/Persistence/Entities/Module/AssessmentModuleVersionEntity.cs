@@ -123,9 +123,9 @@ public class AssessmentModuleVersionEntity
         };
     }
     
-    public ExamTakerModuleVersionDto ConvertToExamTakerDto()
+    public StudentModuleVersionDto ConvertToStudentDto()
     {
-        return new ExamTakerModuleVersionDto
+        return new StudentModuleVersionDto
         {
             Id = Id,
             AssessmentModuleId = AssessmentModuleId,
@@ -138,7 +138,7 @@ public class AssessmentModuleVersionEntity
             CreatedAtUtc = CreatedAtUtc,
             StaticFileUrls = AssociatedStaticFiles.Select(f => f.FileUrl).ToHashSet(),
             StaticFileIds = AssociatedStaticFiles.Select(f => f.Id.ToString()).ToHashSet(),
-            Questions = Questions.Select(q => q.ConvertToExamTakerDto()).ToList()
+            Questions = Questions.Select(q => q.ConvertToStudentDto()).ToList()
         };
     }
 }

@@ -7,6 +7,8 @@ import { useAuth } from "../context/AuthContext";
 import { userService } from "../services/userService";
 import { configurationService } from "../services/configurationService";
 import { PasswordPolicyOptions } from "../models/password-policy-options";
+import { academicStructureService } from "../services/academicStructureService";
+import { ClassLevelDto } from "../models/academic";
 import { cn } from '../utils/cn';
 import registerStyles from './Register.module.css';
 
@@ -17,6 +19,9 @@ const Register = () => {
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [classLevels, setClassLevels] = useState<ClassLevelDto[]>([]);
+  const [selectedClassLevelId, setSelectedClassLevelId] = useState('');
+  const [classLoading, setClassLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,6 +39,7 @@ const Register = () => {
       emailInputRef.current.focus();
     }
     checkRegistrationStatus();
+    loadClassLevels();
   }, []);
 
   // Load password policy only when registration is enabled
@@ -71,6 +77,20 @@ const Register = () => {
       });
     } finally {
       setPolicyLoading(false);
+    }
+  };
+
+  const loadClassLevels = async () => {
+    setClassLoading(true);
+    try {
+      const response = await academicStructureService.getClassLevels();
+      if (response.isSuccess && response.data) {
+        setClassLevels(response.data);
+      }
+    } catch (err) {
+      console.error('Failed to load class levels', err);
+    } finally {
+      setClassLoading(false);
     }
   };
 
@@ -112,6 +132,9 @@ const Register = () => {
         if (!confirmPassword.trim()) return 'Please confirm your password';
         if (password !== confirmPassword) return 'Passwords do not match';
         break;
+      case 'classLevelId':
+        if (!selectedClassLevelId) return 'Please select your class';
+        break;
     }
     return null;
   }, [username, fullName, password, confirmPassword, passwordPolicy, touched]);
@@ -123,9 +146,10 @@ const Register = () => {
     const hasFullNameError = getFieldError('fullName');
     const hasPasswordError = getFieldError('password');
     const hasConfirmPasswordError = getFieldError('confirmPassword');
+    const hasClassError = getFieldError('classLevelId');
 
     // Return true if any field has errors, false if all fields are valid
-    return !!(hasEmailError || hasFullNameError || hasPasswordError || hasConfirmPasswordError);
+    return !!(hasEmailError || hasFullNameError || hasPasswordError || hasConfirmPasswordError || hasClassError);
   }, [getFieldError]);
 
   const handleFieldTouch = (fieldName: string) => {
@@ -144,6 +168,7 @@ const Register = () => {
       dateOfBirth: true,
       password: true,
       confirmPassword: true,
+      classLevelId: true,
     });
 
     const hasValidationErrors = validateForm();
@@ -161,6 +186,7 @@ const Register = () => {
       fullName: fullName,
       password: password,
       ...(dateOfBirth && { dateOfBirth }),
+      classLevelId: selectedClassLevelId,
     };
 
     try {
@@ -215,8 +241,8 @@ const Register = () => {
           </div>
         ) : (
           <div className={registerStyles.header}>
-            <h2 className={registerStyles.title}>Create Your Account</h2>
-            <p className={registerStyles.subtitle}>Join ExamNova to create and manage assessment modules</p>
+            <h2 className={registerStyles.title}>Join Our School</h2>
+            <p className={registerStyles.subtitle}>Enter your details below to register as a student</p>
           </div>
         )}
 
@@ -303,6 +329,36 @@ const Register = () => {
                   }}
                 />
                 <div className={registerStyles.optionalFieldHint}>Date of Birth (optional)</div>
+              </div>
+
+              <div className={registerStyles.inputGroup}>
+                <select
+                  value={selectedClassLevelId}
+                  onChange={e => setSelectedClassLevelId(e.target.value)}
+                  className={cn(
+                    registerStyles.input,
+                    touched.classLevelId && getFieldError('classLevelId') && registerStyles['input--error']
+                  )}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = touched.classLevelId && getFieldError('classLevelId') ? '#ef4444' : '#3b82f6';
+                  }}
+                  onBlur={(e) => {
+                    handleFieldTouch('classLevelId');
+                    e.currentTarget.style.borderColor = touched.classLevelId && getFieldError('classLevelId') ? '#ef4444' : '#d1d5db';
+                  }}
+                  disabled={classLoading}
+                >
+                  <option value="">Select your class</option>
+                  {classLevels.map(level => (
+                    <option key={level.id} value={level.id}>
+                      {level.name}
+                    </option>
+                  ))}
+                </select>
+                {touched.classLevelId && getFieldError('classLevelId') && (
+                  <div className={registerStyles.fieldError}>{getFieldError('classLevelId')}</div>
+                )}
+                {classLoading && <div className={registerStyles.optionalFieldHint}>Loading classes...</div>}
               </div>
 
               <div className={registerStyles.inputGroup}>

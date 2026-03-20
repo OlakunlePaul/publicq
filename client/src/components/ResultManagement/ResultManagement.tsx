@@ -99,7 +99,7 @@ const ResultManagement: React.FC = () => {
       // Initialize scores state
       const initialScores: Record<string, { testScore: string, examScore: string }> = {};
       assessments.forEach(stu => {
-        initialScores[stu.examTakerId] = { testScore: '', examScore: '' };
+        initialScores[stu.studentId] = { testScore: '', examScore: '' };
       });
       setScores(initialScores);
       
@@ -113,7 +113,7 @@ const ResultManagement: React.FC = () => {
     }
   };
 
-  const handleScoreChange = (examTakerId: string, field: 'testScore' | 'examScore', value: string) => {
+  const handleScoreChange = (studentId: string, field: 'testScore' | 'examScore', value: string) => {
     // Validate max scores: Test 40, Exam 60
     let numVal = parseInt(value);
     if (!isNaN(numVal)) {
@@ -125,8 +125,8 @@ const ResultManagement: React.FC = () => {
 
     setScores(prev => ({
       ...prev,
-      [examTakerId]: {
-        ...prev[examTakerId],
+      [studentId]: {
+        ...prev[studentId],
         [field]: value
       }
     }));
@@ -148,10 +148,10 @@ const ResultManagement: React.FC = () => {
       classLevelId: selectedClass,
       subjectId: selectedSubject,
       scores: students.map(stu => ({
-        examTakerId: stu.examTakerId,
+        studentId: stu.studentId,
         subjectId: selectedSubject,
-        testScore: scores[stu.examTakerId]?.testScore !== '' ? parseInt(scores[stu.examTakerId].testScore) : undefined,
-        examScore: scores[stu.examTakerId]?.examScore !== '' ? parseInt(scores[stu.examTakerId].examScore) : undefined,
+        testScore: scores[stu.studentId]?.testScore !== '' ? parseInt(scores[stu.studentId].testScore) : undefined,
+        examScore: scores[stu.studentId]?.examScore !== '' ? parseInt(scores[stu.studentId].examScore) : undefined,
       }))
     };
 
@@ -466,8 +466,8 @@ const ResultManagement: React.FC = () => {
               </thead>
               <tbody>
                 {students.map(stu => {
-                  const testStr = scores[stu.examTakerId]?.testScore || '0';
-                  const examStr = scores[stu.examTakerId]?.examScore || '0';
+                  const testStr = scores[stu.studentId]?.testScore || '0';
+                  const examStr = scores[stu.studentId]?.examScore || '0';
                   const total = (parseInt(testStr) || 0) + (parseInt(examStr) || 0);
                   
                   const statusMap = ['Draft', 'Moderated', 'Approved', 'Published'];
@@ -487,8 +487,8 @@ const ResultManagement: React.FC = () => {
                           type="number" 
                           min="0" max="40"
                           style={inputStyle}
-                          value={scores[stu.examTakerId]?.testScore || ''}
-                          onChange={(e) => handleScoreChange(stu.examTakerId, 'testScore', e.target.value)}
+                          value={scores[stu.studentId]?.testScore || ''}
+                          onChange={(e) => handleScoreChange(stu.studentId, 'testScore', e.target.value)}
                         />
                       </td>
                       <td style={tdStyle}>
@@ -496,8 +496,8 @@ const ResultManagement: React.FC = () => {
                           type="number" 
                           min="0" max="60"
                           style={inputStyle}
-                          value={scores[stu.examTakerId]?.examScore || ''}
-                          onChange={(e) => handleScoreChange(stu.examTakerId, 'examScore', e.target.value)}
+                          value={scores[stu.studentId]?.examScore || ''}
+                          onChange={(e) => handleScoreChange(stu.studentId, 'examScore', e.target.value)}
                         />
                       </td>
                       <td style={tdStyle}>

@@ -52,9 +52,9 @@ public class AssignmentService(
                 $"Group with id '{assignmentCreateDto.GroupId}' not found or it has no members");
         }
         
-        if (assignmentCreateDto.ExamTakerIds.Count > 0)
+        if (assignmentCreateDto.StudentIds.Count > 0)
         {
-            var validationResponse = await GetValidatedExamTakersAsync(assignmentCreateDto.ExamTakerIds, cancellationToken);
+            var validationResponse = await GetValidatedStudentsAsync(assignmentCreateDto.StudentIds, cancellationToken);
             if (validationResponse.IsFailed)
             {
                 return Response<AssignmentDto, GenericOperationStatuses>.Failure(
@@ -83,7 +83,8 @@ public class AssignmentService(
                 RandomizeQuestions = assignmentCreateDto.RandomizeQuestions,
                 RandomizeAnswers = assignmentCreateDto.RandomizeAnswers,
                 ShowResultsImmediately = assignmentCreateDto.ShowResultsImmediately,
-                SubjectId = assignmentCreateDto.SubjectId
+                SubjectId = assignmentCreateDto.SubjectId,
+                ClassLevelId = assignmentCreateDto.ClassLevelId
             };
 
             logger.LogDebug("Adding new assignment to the database: {@AssignmentEntity}", assignmentToCreate);
@@ -98,29 +99,29 @@ public class AssignmentService(
 
             logger.LogInformation("New assignment added to the database with id {AssignmentId}", response.Entity.Id);
 
-            // Create exam taker assignments within the same transaction
-            var examTakerAssignmentsToCreate = assignmentCreateDto
-                .ExamTakerIds
-                .Select(id => new ExamTakerAssignmentEntity
+            // Create student assignments within the same transaction
+            var studentAssignmentsToCreate = assignmentCreateDto
+                .StudentIds
+                .Select(id => new StudentAssignmentEntity
                 {
                     AssignmentId = response.Entity.Id,
-                    ExamTakerId = id,
+                    StudentId = id,
                 }).ToList();
 
-            if (examTakerAssignmentsToCreate.Count > 0)
+            if (studentAssignmentsToCreate.Count > 0)
             {
-                logger.LogDebug("Adding {Count} exam taker assignments to the database",
-                    examTakerAssignmentsToCreate.Count);
+                logger.LogDebug("Adding {Count} student assignments to the database",
+                    studentAssignmentsToCreate.Count);
 
-                await dbContext.ExamTakerAssignments.AddRangeAsync(examTakerAssignmentsToCreate, cancellationToken);
+                await dbContext.StudentAssignments.AddRangeAsync(studentAssignmentsToCreate, cancellationToken);
                 await dbContext.SaveChangesAsync(cancellationToken);
 
-                logger.LogInformation("Added {Count} exam taker assignments to the database",
-                    examTakerAssignmentsToCreate.Count);
+                logger.LogInformation("Added {Count} student assignments to the database",
+                    studentAssignmentsToCreate.Count);
             }
             else
             {
-                logger.LogDebug("No exam taker assignments to add to the database");
+                logger.LogDebug("No student assignments to add to the database");
             }
 
             // Commit transaction - all operations succeeded
@@ -216,6 +217,7 @@ public class AssignmentService(
         assignmentToUpdate.RandomizeAnswers = updateDto.RandomizeAnswers;
         assignmentToUpdate.ShowResultsImmediately = updateDto.ShowResultsImmediately;
         assignmentToUpdate.SubjectId = updateDto.SubjectId;
+        assignmentToUpdate.ClassLevelId = updateDto.ClassLevelId;
         assignmentToUpdate.UpdatedAtUtc = DateTime.UtcNow;
         assignmentToUpdate.UpdatedByUser = updatedByUser;
 
@@ -224,7 +226,7 @@ public class AssignmentService(
         
         var updatedAssignment = await dbContext.Assignments
             .AsNoTracking()
-            .Include(x => x.ExamTakerAssignments)
+            .Include(x => x.StudentAssignments)
             .Include(x => x.Group)
             .FirstOrDefaultAsync(a => a.Id == updateDto.Id, cancellationToken);
 
@@ -242,21 +244,21 @@ public class AssignmentService(
             $"Assignment with ID '{assignmentToUpdate.Id}' updated successfully");
     }
 
-    /// <inheritdoc cref="IAssignmentService.AddExamTakersAsync"/>
-    public async Task<Response<AssignmentDto, GenericOperationStatuses>> AddExamTakersAsync(
+    /// <inheritdoc cref="IAssignmentService.AddStudentsAsync"/>
+    public async Task<Response<AssignmentDto, GenericOperationStatuses>> AddStudentsAsync(
         Guid assignmentId,
-        HashSet<string> examTakerIds,
+        HashSet<string> studentIds,
         string updatedByUser,
         CancellationToken cancellationToken)
     {
-        logger.LogDebug("Adding exam takers request received");
+        logger.LogDebug("Adding students request received");
         Guard.AgainstNullOrWhiteSpace(updatedByUser, nameof(updatedByUser));
         
-        if (examTakerIds.Count == 0)
+        if (studentIds.Count == 0)
         {
-            logger.LogWarning("No exam takers provided to add to assignment with id {AssignmentId}", assignmentId);
+            logger.LogWarning("No students provided to add to assignment with id {AssignmentId}", assignmentId);
             return Response<AssignmentDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.BadRequest,
-                "No exam takers provided to add");
+                "No students provided to add");
         }
         
         var assignment = await dbContext.Assignments
@@ -264,132 +266,132 @@ public class AssignmentService(
         
         if (assignment is null)
         {
-            logger.LogWarning("Add exam takers failed. No assignment found with id {AssignmentId}", assignmentId);
+            logger.LogWarning("Add students failed. No assignment found with id {AssignmentId}", assignmentId);
             return Response<AssignmentDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound,
                 $"Assignment with id '{assignmentId}' not found");
         }
 
-        var existingAssignments = await dbContext.ExamTakerAssignments
-            .LongCountAsync(eta => eta.AssignmentId == assignmentId && examTakerIds.Contains(eta.ExamTakerId),
+        var existingAssignments = await dbContext.StudentAssignments
+            .LongCountAsync(eta => eta.AssignmentId == assignmentId && studentIds.Contains(eta.StudentId),
                 cancellationToken);
 
         if (existingAssignments > 0)
         {
-            logger.LogWarning("Some exam takers are already assigned to assignment with id {AssignmentId}",
+            logger.LogWarning("Some students are already assigned to assignment with id {AssignmentId}",
                 assignmentId);
             return Response<AssignmentDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.Conflict,
-                "One or more exam takers are already assigned to this assignment");
+                "One or more students are already assigned to this assignment");
         }
 
-        var validatedExamTakersResponse = await GetValidatedExamTakersAsync(examTakerIds, cancellationToken);
-        if (validatedExamTakersResponse.IsFailed)
+        var validatedStudentsResponse = await GetValidatedStudentsAsync(studentIds, cancellationToken);
+        if (validatedStudentsResponse.IsFailed)
         {
             return Response<AssignmentDto, GenericOperationStatuses>.Failure(
-                validatedExamTakersResponse.Status,
-                validatedExamTakersResponse.Message,
-                validatedExamTakersResponse.Errors);
+                validatedStudentsResponse.Status,
+                validatedStudentsResponse.Message,
+                validatedStudentsResponse.Errors);
         }
 
-        var assignmentsToAdd = validatedExamTakersResponse.Data!
-            .Select(et => new ExamTakerAssignmentEntity
+        var assignmentsToAdd = validatedStudentsResponse.Data!
+            .Select(et => new StudentAssignmentEntity
             {
                 AssignmentId = assignmentId,
-                ExamTakerDisplayName = $"{et.FullName}" + 
+                StudentDisplayName = $"{et.FullName}" + 
                                        $"{(string.IsNullOrWhiteSpace(et.Email) ? string.Empty : $" ({et.Email})")}",
-                ExamTakerId = et.Id
+                StudentId = et.Id
             }).ToList();
 
-        logger.LogInformation("Adding {Count} exam takers to assignment with id {AssignmentId}",
+        logger.LogInformation("Adding {Count} students to assignment with id {AssignmentId}",
             assignmentsToAdd.Count, assignmentId);
         
         assignment.UpdatedAtUtc = DateTime.UtcNow;
         assignment.UpdatedByUser = updatedByUser;
         
-        await dbContext.ExamTakerAssignments.AddRangeAsync(assignmentsToAdd, cancellationToken);
+        await dbContext.StudentAssignments.AddRangeAsync(assignmentsToAdd, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("Assigned {Count} exam takers to assignment with id {AssignmentId}",
+        logger.LogInformation("Assigned {Count} students to assignment with id {AssignmentId}",
             assignmentsToAdd.Count,
             assignmentId);
         
         var updatedAssignment = await dbContext.Assignments
             .AsNoTracking()
-            .Include(a => a.ExamTakerAssignments)
+            .Include(a => a.StudentAssignments)
             .Include(a => a.Group)
             .FirstOrDefaultAsync(a => a.Id == assignmentId, cancellationToken);
 
         if (updatedAssignment is null)
         {
             // This should not happen as we already checked existence
-            logger.LogError("Unexpected error: Assignment with id {AssignmentId} not found after adding exam takers",
+            logger.LogError("Unexpected error: Assignment with id {AssignmentId} not found after adding students",
                 assignmentId);
             return Response<AssignmentDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.Failed,
-                $"Unexpected error: Assignment with id '{assignmentId}' not found after adding exam takers");
+                $"Unexpected error: Assignment with id '{assignmentId}' not found after adding students");
         }
 
         return Response<AssignmentDto, GenericOperationStatuses>.Success(
             updatedAssignment.ConvertToDto(),
             GenericOperationStatuses.Completed,
-            $"Added {assignmentsToAdd.Count} exam takers to assignment with id '{assignmentId}' successfully");
+            $"Added {assignmentsToAdd.Count} students to assignment with id '{assignmentId}' successfully");
     }
 
-    /// <inheritdoc cref="IAssignmentService.GetExamTakersAsync"/>
-    public async Task<Response<IList<User>, GenericOperationStatuses>> GetExamTakersAsync(
+    /// <inheritdoc cref="IAssignmentService.GetStudentsAsync"/>
+    public async Task<Response<IList<User>, GenericOperationStatuses>> GetStudentsAsync(
         Guid assignmentId, 
         CancellationToken cancellationToken)
     {
-        logger.LogDebug("Get exam takers for assignment request received");
+        logger.LogDebug("Get students for assignment request received");
         
         var assignment = await dbContext.Assignments
             .FindAsync([assignmentId], cancellationToken);
 
         if (assignment is null)
         {
-            logger.LogWarning("Get exam takers failed. No assignment found with id {AssignmentId}", assignmentId);
+            logger.LogWarning("Get students failed. No assignment found with id {AssignmentId}", assignmentId);
             return Response<IList<User>, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound,
                 $"Assignment with id '{assignmentId}' not found");
         }
         
-        var examTakerIds = await dbContext.ExamTakerAssignments
+        var studentIds = await dbContext.StudentAssignments
             .AsNoTracking()
             .Where(eta => eta.AssignmentId == assignmentId)
-            .Select(eta => eta.ExamTakerId)
+            .Select(eta => eta.StudentId)
             .ToHashSetAsync(cancellationToken);
 
-        if (examTakerIds.Count == 0)
+        if (studentIds.Count == 0)
         {
-            logger.LogDebug("No exam takers assigned to assignment with id {AssignmentId}", assignmentId);
+            logger.LogDebug("No students assigned to assignment with id {AssignmentId}", assignmentId);
             return Response<IList<User>, GenericOperationStatuses>.Success(
                 new List<User>(),
                 GenericOperationStatuses.Completed,
-                "No exam takers assigned to this assignment");
+                "No students assigned to this assignment");
         }
         
-        var combinedExamTakers = await GetExamTakersAsync(examTakerIds, cancellationToken);
+        var combinedStudents = await GetStudentsAsync(studentIds, cancellationToken);
 
-        if (combinedExamTakers.Count == 0)
+        if (combinedStudents.Count == 0)
         {
             return Response<IList<User>, GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.NotFound,
-                "No exam takers found for this assignment");
+                "No students found for this assignment");
         }
         
-        logger.LogDebug("Found {Count} exam takers for assignment with id {AssignmentId}",
-            combinedExamTakers.Count, assignmentId);
+        logger.LogDebug("Found {Count} students for assignment with id {AssignmentId}",
+            combinedStudents.Count, assignmentId);
         
         return Response<IList<User>, GenericOperationStatuses>.Success(
-            combinedExamTakers,
+            combinedStudents,
             GenericOperationStatuses.Completed,
-            $"Found {combinedExamTakers.Count} exam takers for assignment with id '{assignmentId}'");
+            $"Found {combinedStudents.Count} students for assignment with id '{assignmentId}'");
     }
 
-    /// <inheritdoc cref="IAssignmentService.RemoveExamTakersAsync"/>
-    public async Task<Response<AssignmentDto, GenericOperationStatuses>> RemoveExamTakersAsync(
+    /// <inheritdoc cref="IAssignmentService.RemoveStudentsAsync"/>
+    public async Task<Response<AssignmentDto, GenericOperationStatuses>> RemoveStudentsAsync(
         Guid assignmentId,
-        HashSet<string> examTakerIds,
+        HashSet<string> studentIds,
         string updatedByUser,
         CancellationToken cancellationToken)
     {
-        logger.LogDebug("Removing exam takers request received");
+        logger.LogDebug("Removing students request received");
         Guard.AgainstNullOrWhiteSpace(updatedByUser, nameof(updatedByUser));
         
         var assignment = await dbContext.Assignments
@@ -397,25 +399,25 @@ public class AssignmentService(
 
         if (assignment is null)
         {
-            logger.LogWarning("Remove exam takers failed. No assignment found with id {AssignmentId}",
+            logger.LogWarning("Remove students failed. No assignment found with id {AssignmentId}",
                 assignmentId);
             return Response<AssignmentDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound,
                 $"Assignment with id '{assignmentId}' not found");
         }
 
-        var assignmentsToRemove = await dbContext.ExamTakerAssignments
-            .Where(eta => eta.AssignmentId == assignmentId && examTakerIds.Contains(eta.ExamTakerId))
+        var assignmentsToRemove = await dbContext.StudentAssignments
+            .Where(eta => eta.AssignmentId == assignmentId && studentIds.Contains(eta.StudentId))
             .ToListAsync(cancellationToken);
 
-        if (assignmentsToRemove.Count == examTakerIds.Count)
+        if (assignmentsToRemove.Count == studentIds.Count)
         {
-            logger.LogWarning("Some exam takers are not assigned to assignment with id {AssignmentId}",
+            logger.LogWarning("Some students are not assigned to assignment with id {AssignmentId}",
                 assignmentId);
         }
 
-        dbContext.ExamTakerAssignments.RemoveRange(assignmentsToRemove);
+        dbContext.StudentAssignments.RemoveRange(assignmentsToRemove);
 
-        logger.LogInformation("Removing {Count} exam takers from assignment with id {AssignmentId}",
+        logger.LogInformation("Removing {Count} students from assignment with id {AssignmentId}",
             assignmentsToRemove.Count,
             assignmentId);
         
@@ -423,29 +425,29 @@ public class AssignmentService(
         assignment.UpdatedByUser = updatedByUser;
         
         await dbContext.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("Removed {Count} exam takers from assignment with id {AssignmentId}",
+        logger.LogInformation("Removed {Count} students from assignment with id {AssignmentId}",
             assignmentsToRemove.Count,
             assignmentId);
         
         var updatedAssignment = await dbContext.Assignments
             .AsNoTracking()
-            .Include(a => a.ExamTakerAssignments)
+            .Include(a => a.StudentAssignments)
             .Include(a => a.Group)
             .FirstOrDefaultAsync(a => a.Id == assignmentId, cancellationToken);
         
         if (updatedAssignment is null)
         {
             // This should not happen as we already checked existence
-            logger.LogError("Unexpected error: Assignment with id {AssignmentId} not found after removing exam takers",
+            logger.LogError("Unexpected error: Assignment with id {AssignmentId} not found after removing students",
                 assignmentId);
             return Response<AssignmentDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.Failed,
-                $"Unexpected error: Assignment with id '{assignmentId}' not found after removing exam takers");
+                $"Unexpected error: Assignment with id '{assignmentId}' not found after removing students");
         }
 
         return Response<AssignmentDto, GenericOperationStatuses>.Success(
             updatedAssignment.ConvertToDto(),
             GenericOperationStatuses.Completed,
-            $"Removed {assignmentsToRemove.Count} exam takers from assignment with id '{assignmentId}' successfully");
+            $"Removed {assignmentsToRemove.Count} students from assignment with id '{assignmentId}' successfully");
     }
 
     /// <inheritdoc cref="IAssignmentService.PublishAsync"/>
@@ -546,7 +548,7 @@ public class AssignmentService(
         var query = dbContext.Assignments
             .Where(a => titleEmpty || EF.Functions.Like(a.Title, $"%{titleFilter}%"))
             .AsNoTracking()
-            .Include(a => a.ExamTakerAssignments)
+            .Include(a => a.StudentAssignments)
             .Include(a => a.Group)
             .AsQueryable();
 
@@ -591,53 +593,67 @@ public class AssignmentService(
     }
 
     /// <inheritdoc cref="IAssignmentService.GetAvailableAssignmentsAsync"/>
-    public async Task<Response<IList<ExamTakerAssignmentDto>, GenericOperationStatuses>> GetAvailableAssignmentsAsync(
-        string examTakerId, 
+    public async Task<Response<IList<StudentAssignmentDto>, GenericOperationStatuses>> GetAvailableAssignmentsAsync(
+        string studentId, 
         CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("Get assignments by exam taker ID request received for {ExamTakerId}", examTakerId);
-        Guard.AgainstNullOrWhiteSpace(examTakerId, nameof(examTakerId));
+        logger.LogDebug("Get assignments by student ID request received for {StudentId}", studentId);
+        Guard.AgainstNullOrWhiteSpace(studentId, nameof(studentId));
 
-        // First, resolve the examTakerId to the actual internal Id if it's an admission number
-        var resolvedId = examTakerId;
+        // First, resolve the studentId to the actual internal Id if it's an admission number
+        var resolvedId = studentId;
         
-        // Check if the provided ID directly matches any ExamTaker or User
-        var existsAsId = await dbContext.ExamTakers.AnyAsync(e => e.Id == examTakerId, cancellationToken)
-                         || await dbContext.Users.AnyAsync(u => u.Id == examTakerId, cancellationToken);
+        // Check if the provided ID directly matches any Student or User
+        var existsAsId = await dbContext.Students.AnyAsync(e => e.Id == studentId, cancellationToken)
+                         || await dbContext.Users.AnyAsync(u => u.Id == studentId, cancellationToken);
         
         if (!existsAsId)
         {
             // If not found as ID, check if it's an AdmissionNumber
-            var userWithAdmissionNumber = await dbContext.ExamTakers
+            var userWithAdmissionNumber = await dbContext.Students
                 .AsNoTracking()
-                .Where(e => e.AdmissionNumber == examTakerId)
+                .Where(e => e.AdmissionNumber == studentId)
                 .Select(e => e.Id)
                 .FirstOrDefaultAsync(cancellationToken)
                 ?? await dbContext.Users
                 .AsNoTracking()
-                .Where(u => u.AdmissionNumber == examTakerId)
+                .Where(u => u.AdmissionNumber == studentId)
                 .Select(u => u.Id)
                 .FirstOrDefaultAsync(cancellationToken);
                 
             if (userWithAdmissionNumber != null)
             {
                 resolvedId = userWithAdmissionNumber;
-                logger.LogInformation("Resolved Admission Number {AdmissionNumber} to ExamTakerId {ExamTakerId}", examTakerId, resolvedId);
+                logger.LogInformation("Resolved Admission Number {AdmissionNumber} to StudentId {StudentId}", studentId, resolvedId);
             }
+        }
+
+        // Find the student's current class level for the active session
+        var activeSession = await dbContext.Sessions.AsNoTracking().FirstOrDefaultAsync(s => s.IsActive, cancellationToken);
+        Guid? studentClassId = null;
+        
+        if (activeSession != null)
+        {
+            studentClassId = await dbContext.StudentAssessments
+                .AsNoTracking()
+                .Where(a => a.StudentId == resolvedId && a.SessionId == activeSession.Id)
+                .Select(a => (Guid?)a.ClassLevelId)
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         var query = dbContext.Assignments
             .AsNoTracking()
             .Where(a => a.IsPublished
-                        && a.ExamTakerAssignments.Any(eta => eta.ExamTakerId == resolvedId));
+                        && (a.StudentAssignments.Any(sa => sa.StudentId == resolvedId)
+                            || (studentClassId != null && a.ClassLevelId == studentClassId)));
         
         var totalCount = await query.LongCountAsync(cancellationToken);
         
         if (totalCount == 0)
         {
             logger.LogInformation("No assignments found.");
-            return Response<IList<ExamTakerAssignmentDto>, GenericOperationStatuses>.Success(
-                new List<ExamTakerAssignmentDto>(),
+            return Response<IList<StudentAssignmentDto>, GenericOperationStatuses>.Success(
+                new List<StudentAssignmentDto>(),
                 GenericOperationStatuses.NotFound,
                 "No assignments found");
         }
@@ -645,15 +661,18 @@ public class AssignmentService(
         var items = await query
             .OrderByDescending(x => x.UpdatedAtUtc)
             .Include(a => a.Group)
-            .Select(a => a.ConvertToExamTakerAssignmentDto(a.Id))
+            .Include(a => a.StudentAssignments)
+            .Select(a => a.ConvertToStudentAssignmentDto(
+                a.StudentAssignments.Where(sa => sa.StudentId == resolvedId).Select(sa => sa.Id).FirstOrDefault()
+            ))
             .ToListAsync(cancellationToken);
 
-        logger.LogInformation("Fetched {Count} assignments out of {Total} for exam taker {ExamTakerId}",
+        logger.LogInformation("Fetched {Count} assignments out of {Total} for student {StudentId}",
             items.Count, 
             totalCount, 
-            examTakerId);
+            studentId);
         
-        return Response<IList<ExamTakerAssignmentDto>, GenericOperationStatuses>.Success(
+        return Response<IList<StudentAssignmentDto>, GenericOperationStatuses>.Success(
                 items, 
                 GenericOperationStatuses.Completed,
                 "Assignments retrieved successfully");
@@ -679,17 +698,17 @@ public class AssignmentService(
     /// <inheritdoc cref="IAssignmentService.RecordTabSwitchAsync"/>
     public async Task<Response<GenericOperationStatuses>> RecordTabSwitchAsync(
         Guid assignmentId,
-        string examTakerId,
+        string studentId,
         CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Recording tab switch for assignment {AssignmentId}, student {ExamTakerId}", assignmentId, examTakerId);
+        logger.LogInformation("Recording tab switch for assignment {AssignmentId}, student {StudentId}", assignmentId, studentId);
 
-        var assignment = await dbContext.ExamTakerAssignments
-            .FirstOrDefaultAsync(eta => eta.AssignmentId == assignmentId && eta.ExamTakerId == examTakerId, cancellationToken);
+        var assignment = await dbContext.StudentAssignments
+            .FirstOrDefaultAsync(eta => eta.AssignmentId == assignmentId && eta.StudentId == studentId, cancellationToken);
 
         if (assignment == null)
         {
-            logger.LogWarning("Record tab switch failed. No assignment found for student {ExamTakerId} in assignment {AssignmentId}", examTakerId, assignmentId);
+            logger.LogWarning("Record tab switch failed. No assignment tracking found for student {StudentId} in assignment {AssignmentId}", studentId, assignmentId);
             return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assignment tracking record not found.");
         }
 
@@ -702,40 +721,40 @@ public class AssignmentService(
     }
    
     /// <summary>
-    /// This service method validates that all provided exam taker IDs exist in the system.
+    /// This service method validates that all provided student IDs exist in the system.
     /// </summary>
     /// <param name="userIds">Array of user IDs.</param>
     /// <param name="cancellationToken">Cancellation Token</param>
     /// <returns>Returns a list of <see cref="User"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
     /// <exception cref="NotImplementedException"></exception>
-    private async Task<Response<IList<User>, GenericOperationStatuses>> GetValidatedExamTakersAsync(
+    private async Task<Response<IList<User>, GenericOperationStatuses>> GetValidatedStudentsAsync(
         HashSet<string> userIds, 
         CancellationToken cancellationToken)
     {
-        var examTakers = await GetExamTakersAsync(userIds, cancellationToken);
-        if (examTakers.Count == 0)
+        var students = await GetStudentsAsync(userIds, cancellationToken);
+        if (students.Count == 0)
         {
             return Response<IList<User>, GenericOperationStatuses>.Failure(
                 GenericOperationStatuses.NotFound,
-                "No exam takers found for the provided IDs");
+                "No students found for the provided IDs");
         }
 
-        var foundUserIds = examTakers.Select(u => u.Id).ToHashSet();
+        var foundUserIds = students.Select(u => u.Id).ToHashSet();
         var missingUserIds = userIds.Except(foundUserIds, StringComparer.InvariantCultureIgnoreCase).ToList();
 
         if (missingUserIds.Count > 0)
         {
-            logger.LogWarning("Validation failed. Some exam takers not found: {MissingUserIds}",
+            logger.LogWarning("Validation failed. Some students not found: {MissingUserIds}",
                 string.Join(", ", missingUserIds));
             return Response<IList<User>, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound,
-                $"Some exam takers not found: {string.Join(", ", missingUserIds)}");
+                $"Some students not found: {string.Join(", ", missingUserIds)}");
         }
 
-        logger.LogDebug("All provided exam takers validated successfully.");
+        logger.LogDebug("All provided students validated successfully.");
         return Response<IList<User>, GenericOperationStatuses>.Success(
-            examTakers, 
+            students, 
             GenericOperationStatuses.Completed,
-            "All exam takers validated successfully");
+            "All students validated successfully");
     }
     
     // TODO: Create user repository to avoid direct DbContext access in the service
@@ -746,10 +765,10 @@ public class AssignmentService(
     /// <param name="examTakerIds">Exam taker IDs</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns an array of <see cref="User"/></returns>
-    private async Task<List<User>> GetExamTakersAsync(HashSet<string> examTakerIds, CancellationToken cancellationToken)
+    private async Task<List<User>> GetStudentsAsync(HashSet<string> studentIds, CancellationToken cancellationToken)
     {
         var examTakerIdsUppercase = examTakerIds.Select(id => id.ToUpperInvariant()).ToHashSet();
-        var examTakers = await dbContext.ExamTakers
+        var examTakers = await dbContext.Students
             .AsNoTracking()
             .Where(e => examTakerIdsUppercase.Contains(e.Id))
             .Select(e => e.ConvertToUser())

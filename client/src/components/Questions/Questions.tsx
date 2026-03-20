@@ -3,10 +3,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Assignment } from '../../models/assignment';
 import { GroupMemberStateWithUserProgress } from '../../models/group-member-state-with-user-progress';
 import { User } from '../../models/user';
-import { ExamTakerState } from '../../models/exam-taker-state';
+import { StudentState } from '../../models/student-state';
 import { ModuleProgress } from '../../models/module-progress';
-import { ExamTakerModuleVersion } from '../../models/exam-taker-module-version';
-import { ExamTakerPossibleAnswer } from '../../models/exam-taker-possible-answer';
+import { StudentModuleVersion } from '../../models/student-module-version';
+import { StudentPossibleAnswer } from '../../models/student-possible-answer';
 import { sessionService } from '../../services/sessionService';
 import { assignmentService } from '../../services/assignmentService';
 import { FilePreview } from '../Shared/FilePreview';
@@ -20,7 +20,7 @@ import cssStyles from './Questions.module.css';
 interface QuestionsProps {
   // Demo mode props (optional)
   demoMode?: boolean;
-  demoModuleVersion?: ExamTakerModuleVersion;
+  demoModuleVersion?: StudentModuleVersion;
   onDemoComplete?: (answers: Record<string, string[]>) => void;
   onDemoExit?: () => void;
 }
@@ -29,7 +29,7 @@ interface LocationState {
   moduleProgress: ModuleProgress | null;
   assignment: Assignment;
   groupMember: GroupMemberStateWithUserProgress;
-  user: User | ExamTakerState;
+  user: User | StudentState;
 }
 
 const Questions: React.FC<QuestionsProps> = ({ 
@@ -42,7 +42,7 @@ const Questions: React.FC<QuestionsProps> = ({
   const navigate = useNavigate();
   const state = location.state as LocationState;
 
-  const [moduleVersion, setModuleVersion] = useState<ExamTakerModuleVersion | null>(null);
+  const [moduleVersion, setModuleVersion] = useState<StudentModuleVersion | null>(null);
   const [moduleProgress, setModuleProgress] = useState<ModuleProgress | null>(state?.moduleProgress || null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -140,7 +140,7 @@ const Questions: React.FC<QuestionsProps> = ({
       // Now get the module version for the exam taker using the version ID from progress
       const versionId = currentModuleProgress.assessmentModuleVersionId;
       
-      const moduleVersionResponse = await sessionService.getModuleVersionForExamTaker(
+      const moduleVersionResponse = await sessionService.getModuleVersionForStudent(
         state.user.id,
         state.assignment.id,
         versionId
@@ -1400,7 +1400,7 @@ const Questions: React.FC<QuestionsProps> = ({
               />
             </div>
           ) : (
-            currentQuestion.answers.map((answer: ExamTakerPossibleAnswer, index: number) => (
+            currentQuestion.answers.map((answer: StudentPossibleAnswer, index: number) => (
               <div 
                 key={answer.id} 
                 className={cn(

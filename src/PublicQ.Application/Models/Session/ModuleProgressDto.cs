@@ -101,7 +101,7 @@ public class ModuleProgressDto
     
     // Foreign Keys
     /// <summary>
-    /// Gets or sets the foreign key reference to the exam taker assignment.
+    /// Gets or sets the foreign key reference to the student assignment.
     /// Links this module progress to a specific student's assignment journey.
     /// </summary>
     /// <remarks>
@@ -109,14 +109,14 @@ public class ModuleProgressDto
     /// and their progress on individual modules within that assignment.
     /// Used to group all module progress records for a single student's assignment attempt.
     /// </remarks>
-    public Guid ExamTakerAssignmentId { get; set; }
+    public Guid StudentAssignmentId { get; set; }
     
     /// <summary>
-    /// Gets or sets the identifier of the exam taker (student) working on this module.
-    /// Redundant with ExamTakerAssignmentId but useful for direct queries and indexing.
+    /// Gets or sets the identifier of the student working on this module.
+    /// Redundant with StudentAssignmentId but useful for direct queries and indexing.
     /// </summary>
-    /// <value>A string representing the unique identifier of the exam taker.</value>
-    public string ExamTakerId { get; set; } = default!;
+    /// <value>A string representing the unique identifier of the student.</value>
+    public string StudentId { get; set; } = default!;
     
     /// <summary>
     /// Gets or sets the foreign key reference to the specific group member.

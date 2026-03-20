@@ -8,9 +8,9 @@ namespace PublicQ.Domain.Models;
 public static class UserRolesNames
 {
     /// <summary>
-    /// <see cref="UserRole.ExamTaker"/>
+    /// <see cref="UserRole.Student"/>
     /// </summary>
-    public const string ExamTaker = nameof(UserRole.ExamTaker);
+    public const string Student = nameof(UserRole.Student);
     
     /// <summary>
     /// <see cref="UserRole.Teacher"/>
@@ -50,6 +50,6 @@ public static class UserRolesNames
     /// <summary>
     /// Helper array containing all user roles in the system.
     /// </summary>
-    public static readonly string[] All = [Administrator, Analyst, Manager, Moderator, Contributor, ExamTaker, Teacher, Parent];
+    public static readonly string[] All = [Administrator, Analyst, Manager, Moderator, Contributor, Student, Teacher, Parent];
 
 }

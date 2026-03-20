@@ -31,4 +31,9 @@ public class SubjectEntity
     /// Determines the order in which subjects are displayed on report cards.
     /// </summary>
     public int DisplayOrder { get; set; }
+
+    /// <summary>
+    /// Navigation property: the class levels where this subject is taught.
+    /// </summary>
+    public ICollection<ClassLevelEntity> ClassLevels { get; set; } = new List<ClassLevelEntity>();
 }

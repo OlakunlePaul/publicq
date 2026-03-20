@@ -6,7 +6,7 @@ namespace PublicQ.Infrastructure.Persistence.Entities.Assignment;
 
 /// <summary>
 /// Represents an assignment of a group (containing modules) to students.
-/// An assignment is a time-bound allocation of assessment modules from a group to specific exam takers.
+/// An assignment is a time-bound allocation of assessment modules from a group to specific students.
 /// It controls when students can access and complete assessments, tracks their progress,
 /// and manages result visibility and configuration options.
 /// </summary>
@@ -152,6 +152,12 @@ public class AssignmentEntity
     /// This links the online exam assignment to a specific academic subject for result syncing.
     /// </summary>
     public Guid? SubjectId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the foreign key reference to the class level.
+    /// This links the exam to a specific class for better organization and filtering.
+    /// </summary>
+    public Guid? ClassLevelId { get; set; }
     
     /// <summary>
     /// Gets or sets the user username of the administrator who updated this assignment.
@@ -198,6 +204,11 @@ public class AssignmentEntity
     /// Gets or sets the subject associated with this assignment.
     /// </summary>
     public Persistence.Entities.Academic.SubjectEntity? Subject { get; set; }
+
+    /// <summary>
+    /// Gets or sets the class level associated with this assignment.
+    /// </summary>
+    public Persistence.Entities.Academic.ClassLevelEntity? ClassLevel { get; set; }
     
     /// <summary>
     /// Gets or sets the collection of student assignments linking specific exam takers to this assignment.
@@ -205,13 +216,13 @@ public class AssignmentEntity
     /// </summary>
     /// <value>A collection of <see cref="ExamTakerAssignmentEntity"/> instances.</value>
     /// <remarks>
-    /// This many-to-many relationship through ExamTakerAssignmentEntity allows:
+    /// This many-to-many relationship through StudentAssignmentEntity allows:
     /// - Tracking which students are assigned to each assignment
     /// - Recording when each student was assigned
     /// - Managing individual student progress and module completion
-    /// Each ExamTakerAssignmentEntity contains the student's progress through all modules.
+    /// Each StudentAssignmentEntity contains the student's progress through all modules.
     /// </remarks>
-    public ICollection<ExamTakerAssignmentEntity> ExamTakerAssignments { get; set; } = new List<ExamTakerAssignmentEntity>();
+    public ICollection<StudentAssignmentEntity> StudentAssignments { get; set; } = new List<StudentAssignmentEntity>();
     
     /// <summary>
     /// Converts the entity to a Data Transfer Object (DTO).
@@ -233,6 +244,7 @@ public class AssignmentEntity
             GroupId = GroupId,
             GroupTitle = Group?.Title ?? string.Empty,
             SubjectId = SubjectId,
+            ClassLevelId = ClassLevelId,
             CreatedByUser = CreatedByUser,
             UpdatedByUser = UpdatedByUser,
             CreatedAtUtc = CreatedAtUtc,
@@ -241,13 +253,13 @@ public class AssignmentEntity
     }
     
     /// <summary>
-    /// Converts the entity to an ExamTakerAssignmentDto.
+    /// Converts the entity to an StudentAssignmentDto.
     /// </summary>
-    /// <param name="examTakerAssignmentId">Exam taker assignment ID</param>
-    /// <returns>Returns <see cref="ExamTakerAssignmentDto"/></returns>
-    public ExamTakerAssignmentDto ConvertToExamTakerAssignmentDto(Guid examTakerAssignmentId)
+    /// <param name="studentAssignmentId">Student assignment ID</param>
+    /// <returns>Returns <see cref="StudentAssignmentDto"/></returns>
+    public StudentAssignmentDto ConvertToStudentAssignmentDto(Guid studentAssignmentId)
     {
-        return new ExamTakerAssignmentDto
+        return new StudentAssignmentDto
         {
             Id = Id,
             Title = Title,
@@ -260,7 +272,8 @@ public class AssignmentEntity
             RandomizeAnswers = RandomizeAnswers,
             GroupId = GroupId,
             GroupTitle = Group?.Title ?? string.Empty,
-            ExamTakerAssignmentId = examTakerAssignmentId
+            ClassLevelId = ClassLevelId,
+            StudentAssignmentId = studentAssignmentId
         };
     }
 

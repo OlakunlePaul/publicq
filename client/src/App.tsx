@@ -10,8 +10,8 @@ import Admin from './pages/Admin';
 import ModuleCreationPage from './pages/ModuleCreationPage';
 import ModuleBuilderPage from './pages/ModuleBuilderPage';
 import { RoleGuard } from './components/Shared/RoleGuard';
-import MyAssignments from './pages/MyAssignments';
-import AssignmentExecutionPage from './pages/AssignmentExecutionPage';
+import MyExams from './pages/MyExams';
+import ExamExecutionPage from './pages/ExamExecutionPage';
 import Questions from './components/Questions';
 import { UserPolicies } from './models/user-policy';
 import { UserRole } from './models/UserRole';
@@ -43,7 +43,7 @@ function HomePage() {
             Empower educators with powerful tools to manage exams efficiently.
           </p>
           <div className={homeStyles.heroActions}>
-            <Link to={ROUTES.MY_ASSIGNMENTS} className={homeStyles.btnPrimary}>
+            <Link to={ROUTES.MY_EXAMS} className={homeStyles.btnPrimary}>
               Take an Exam →
             </Link>
             {!isAuthenticated && (
@@ -206,7 +206,7 @@ function HomePage() {
 
 function AppContent() {
   const location = useLocation();
-  const isExamPage = location.pathname.startsWith('/assignment/') || 
+  const isExamPage = location.pathname.startsWith('/exam/') || 
                      location.pathname.startsWith(ROUTES.QUESTIONS);
 
   return (
@@ -223,8 +223,8 @@ function AppContent() {
           </RoleGuard>
         } />
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-        <Route path={ROUTES.MY_ASSIGNMENTS} element={<MyAssignments />} />
-        <Route path={ROUTES.ASSIGNMENT} element={<AssignmentExecutionPage />} />
+        <Route path={ROUTES.MY_EXAMS} element={<MyExams />} />
+        <Route path={`${ROUTES.EXAM}:examId`} element={<ExamExecutionPage />} />
         <Route path={ROUTES.QUESTIONS} element={<Questions />} />
         <Route path={ROUTES.MODULE_CREATE} element={
           <RoleGuard requiredRoles={[...UserPolicies.Contributors]} redirectTo={ROUTES.LOGIN}>

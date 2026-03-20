@@ -1,12 +1,12 @@
 namespace PublicQ.API.Models.Requests;
 
 /// <summary>
-/// Exam taker registration request model.
+/// Student registration request model.
 /// </summary>
-public class ExamTakerRegisterRequest
+public class StudentRegisterRequest
 {
     /// <summary>
-    /// Optional: User unique identifier.
+    /// Optional: Student unique identifier.
     /// <remarks>
     /// System will generate a new ID if not provided.
     /// </remarks>
@@ -14,7 +14,7 @@ public class ExamTakerRegisterRequest
     public string? Id { get; set; }
     
     /// <summary>
-    /// Optional: Email address of the exam taker.
+    /// Optional: Email address of the student.
     /// </summary>
     public string? Email { get; set; }
     
@@ -29,7 +29,7 @@ public class ExamTakerRegisterRequest
     public string? AdmissionNumber { get; set; }
     
     /// <summary>
-    /// Exam taker full name.
+    /// Student full name.
     /// </summary>
     public string FullName { get; set; } = null!;
 

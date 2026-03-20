@@ -1,5 +1,5 @@
 import { Group } from './group';
-import { ExamTakerAssignment } from './exam-taker-assignment';
+import { StudentAssignment } from './student-assignment';
 
 /**
  * Base assignment data transfer object with common properties.
@@ -63,6 +63,12 @@ export interface AssignmentBase {
    * This links the online exam assignment to a specific academic subject for result syncing.
    */
   subjectId?: string;
+
+  /**
+   * Gets or sets the foreign key reference to the class level.
+   * This links the online exam assignment to a specific physical class.
+   */
+  classLevelId?: string;
 }
 
 /**
@@ -122,7 +128,7 @@ export interface Assignment extends AssignmentBase {
   /**
    * The collection of student assignments linking specific exam takers to this assignment.
    */
-  examTakerAssignments?: ExamTakerAssignment[];
+  studentAssignments?: StudentAssignment[];
 }
 
 /**
@@ -133,7 +139,7 @@ export interface AssignmentCreate extends AssignmentBase {
    * Gets or sets the collection of user IDs for students assigned to this assignment.
    * This field is optional during creation - exam takers can be added later via separate operations.
    */
-  examTakerIds?: string[];
+  studentIds?: string[];
 }
 
 /**

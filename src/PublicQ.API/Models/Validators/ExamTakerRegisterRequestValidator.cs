@@ -4,9 +4,9 @@ using PublicQ.API.Models.Requests;
 namespace PublicQ.API.Models.Validators;
 
 /// <summary>
-/// Validation for <see cref="ExamTakerRegisterRequest"/>
+/// Validation for <see cref="StudentRegisterRequest"/>
 /// </summary>
-public class ExamTakerRegisterRequestValidator : AbstractValidator<ExamTakerRegisterRequest>
+public class StudentRegisterRequestValidator : AbstractValidator<StudentRegisterRequest>
 {
     /// <summary>
     /// Default constructor.
@@ -28,7 +28,5 @@ public class ExamTakerRegisterRequestValidator : AbstractValidator<ExamTakerRegi
             .MinimumLength(2).WithMessage("FullName must be at least 2 characters long.")
             .MaximumLength(200).WithMessage("FullName must not exceed 200 characters.");
             
-        RuleFor(x => x.DateOfBirth)
-            .NotEmpty().WithMessage("Date of Birth is required.");
     }
 }

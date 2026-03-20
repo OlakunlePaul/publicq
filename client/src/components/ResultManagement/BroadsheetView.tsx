@@ -19,7 +19,7 @@ const BroadsheetView: React.FC<BroadsheetViewProps> = ({ sessionId, termId, clas
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     
-    // localScores[examTakerId][subjectId] = { test: '', exam: '' }
+    // localScores[studentId][subjectId] = { test: '', exam: '' }
     const [localScores, setLocalScores] = useState<Record<string, Record<string, { test: string, exam: string }>>>({});
 
     useEffect(() => {
@@ -32,10 +32,10 @@ const BroadsheetView: React.FC<BroadsheetViewProps> = ({ sessionId, termId, clas
                 // Initialize local scores map
                 const scoresMap: Record<string, Record<string, { test: string, exam: string }>> = {};
                 data.forEach(stu => {
-                    scoresMap[stu.examTakerId] = {};
+                    scoresMap[stu.studentId] = {};
                     subjects.forEach(sub => {
                         const existing = stu.subjectScores.find(ss => ss.subjectName === sub.name);
-                        scoresMap[stu.examTakerId][sub.id] = {
+                        scoresMap[stu.studentId][sub.id] = {
                             test: existing?.testScore?.toString() || '',
                             exam: existing?.examScore?.toString() || ''
                         };
@@ -51,13 +51,13 @@ const BroadsheetView: React.FC<BroadsheetViewProps> = ({ sessionId, termId, clas
         fetchData();
     }, [sessionId, termId, classLevelId, subjects]);
 
-    const handleScoreChange = (examTakerId: string, subjectId: string, field: 'test' | 'exam', value: string) => {
+    const handleScoreChange = (studentId: string, subjectId: string, field: 'test' | 'exam', value: string) => {
         setLocalScores(prev => ({
             ...prev,
-            [examTakerId]: {
-                ...prev[examTakerId],
+            [studentId]: {
+                ...prev[studentId],
                 [subjectId]: {
-                    ...prev[examTakerId][subjectId],
+                    ...prev[studentId][subjectId],
                     [field]: value
                 }
             }
@@ -70,12 +70,12 @@ const BroadsheetView: React.FC<BroadsheetViewProps> = ({ sessionId, termId, clas
         setSuccess('');
 
         const allScores: any[] = [];
-        Object.entries(localScores).forEach(([examTakerId, subjectMap]) => {
+        Object.entries(localScores).forEach(([studentId, subjectMap]) => {
             Object.entries(subjectMap).forEach(([subjectId, score]) => {
                 // Only send if at least one score is entered
                 if (score.test !== '' || score.exam !== '') {
                     allScores.push({
-                        examTakerId,
+                        studentId,
                         subjectId,
                         testScore: score.test !== '' ? parseFloat(score.test) : 0,
                         examScore: score.exam !== '' ? parseFloat(score.exam) : 0
@@ -157,16 +157,16 @@ const BroadsheetView: React.FC<BroadsheetViewProps> = ({ sessionId, termId, clas
                                             <input 
                                                 type="number" 
                                                 style={inputStyle} 
-                                                value={localScores[stu.examTakerId]?.[sub.id]?.test || ''}
-                                                onChange={(e) => handleScoreChange(stu.examTakerId, sub.id, 'test', e.target.value)}
+                                                value={localScores[stu.studentId]?.[sub.id]?.test || ''}
+                                                onChange={(e) => handleScoreChange(stu.studentId, sub.id, 'test', e.target.value)}
                                             />
                                         </td>
                                         <td style={tdStyle}>
                                             <input 
                                                 type="number" 
                                                 style={inputStyle} 
-                                                value={localScores[stu.examTakerId]?.[sub.id]?.exam || ''}
-                                                onChange={(e) => handleScoreChange(stu.examTakerId, sub.id, 'exam', e.target.value)}
+                                                value={localScores[stu.studentId]?.[sub.id]?.exam || ''}
+                                                onChange={(e) => handleScoreChange(stu.studentId, sub.id, 'exam', e.target.value)}
                                             />
                                         </td>
                                     </React.Fragment>

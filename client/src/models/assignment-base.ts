@@ -1,5 +1,5 @@
 import { Group } from './group';
-import { ExamTakerAssignment } from './exam-taker-assignment';
+import { StudentAssignment } from './student-assignment';
 
 /**
  * Base assignment data transfer object with common properties.
@@ -108,7 +108,7 @@ export interface Assignment extends AssignmentBase {
   /**
    * The collection of student assignments linking specific exam takers to this assignment.
    */
-  examTakerAssignments?: ExamTakerAssignment[];
+  studentAssignments?: StudentAssignment[];
 }
 
 /**
@@ -118,7 +118,7 @@ export interface AssignmentCreate extends AssignmentBase {
   /**
    * Gets or sets the collection of student assignments linking specific exam takers to this assignment.
    */
-  examTakerIds: string[];
+  studentIds: string[];
 }
 
 /**

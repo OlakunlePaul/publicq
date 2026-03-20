@@ -4,7 +4,7 @@ using PublicQ.Application.Models.Reporting;
 namespace PublicQ.Infrastructure.Persistence.Entities.Assignment;
 
 /// <summary>
-/// Represents the assignment of a specific exam taker (student) to a specific assignment.
+/// Represents the assignment of a specific student to a specific assignment.
 /// This entity creates the many-to-many relationship between assignments and students,
 /// enabling multiple students to be assigned to the same assignment and tracking
 /// each student's individual progress through the assigned modules.
@@ -16,13 +16,13 @@ namespace PublicQ.Infrastructure.Persistence.Entities.Assignment;
 /// - Tracks when the student was assigned
 /// - Serves as the parent for all module progress tracking
 /// 
-/// Each ExamTakerAssignmentEntity represents one student's complete journey
+/// Each StudentAssignmentEntity represents one student's complete journey
 /// through one assignment, including all modules they must complete.
 /// </remarks>
-public class ExamTakerAssignmentEntity
+public class StudentAssignmentEntity
 {
     /// <summary>
-    /// Gets or sets the unique identifier for this exam taker assignment.
+    /// Gets or sets the unique identifier for this student assignment.
     /// </summary>
     /// <value>A GUID that uniquely identifies this student-assignment relationship.</value>
     [Key]
@@ -37,30 +37,30 @@ public class ExamTakerAssignmentEntity
     /// <remarks>
     /// This establishes the many-to-one relationship from student assignments to assignments.
     /// Multiple students can be assigned to the same assignment through separate
-    /// ExamTakerAssignmentEntity records.
+    /// StudentAssignmentEntity records.
     /// </remarks>
     [Required]
     public Guid AssignmentId { get; set; }
     
     /// <summary>
-    /// Gets or sets the identifier of the exam taker (student) assigned to this assignment.
+    /// Gets or sets the identifier of the student assigned to this assignment.
     /// References the student who must complete the assigned modules.
     /// </summary>
-    /// <value>A string representing the unique identifier of the exam taker.</value>
+    /// <value>A string representing the unique identifier of the student.</value>
     /// <remarks>
     /// This is typically the user ID from the identity system (e.g., ASP.NET Core Identity).
-    /// The same student can have multiple ExamTakerAssignmentEntity records for different assignments.
+    /// The same student can have multiple StudentAssignmentEntity records for different assignments.
     /// </remarks>
     [Required]
-    public string ExamTakerId { get; set; } = default!;
+    public string StudentId { get; set; } = default!;
     
     /// <summary>
-    /// Exam taker's display name at the time of assignment.
+    /// Student's display name at the time of assignment.
     /// This redundantly stores the name to preserve historical accuracy,
     /// even if the user's name changes later or in case of user deletion in the identity system.
     /// </summary>
     [Required]
-    public string ExamTakerDisplayName { get; set; } = string.Empty;
+    public string StudentDisplayName { get; set; } = string.Empty;
     
     // Navigation Properties
     /// <summary>
@@ -114,8 +114,8 @@ public class ExamTakerAssignmentEntity
         return new IndividualUserReportDto
         {
             Id = Id,
-            ExamTakerId = ExamTakerId,
-            ExamTakerDisplayName = ExamTakerDisplayName,
+            StudentId = StudentId,
+            StudentDisplayName = StudentDisplayName,
             TabSwitchCount = TabSwitchCount,
             LastTabSwitchAtUtc = LastTabSwitchAtUtc
         };

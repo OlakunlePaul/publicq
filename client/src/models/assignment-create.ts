@@ -8,7 +8,7 @@ export interface AssignmentCreate extends AssignmentBase {
    * Gets or sets the collection of student assignments linking specific exam takers to this assignment.
    * Represents which students have been assigned to complete this assessment.
    */
-  examTakerIds: string[];
+  studentIds: string[];
 
   /**
    * Gets or sets the foreign key reference to the group containing the assessment modules.

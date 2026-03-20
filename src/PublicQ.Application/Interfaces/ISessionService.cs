@@ -13,13 +13,13 @@ public interface ISessionService
     /// Retrieves the states of all group members for a specific assignment and group, including their progress information.
     /// </summary>
     /// <param name="userId">The ID of the requesting user</param>
-    /// <param name="examTakerAssignmentId">The ID of the exam taker assignment</param>
+    /// <param name="studentAssignmentId">The ID of the student assignment</param>
     /// <param name="groupId">The ID of the group to get member states for</param>
     /// <param name="cancellationToken">Token to cancel the operation</param>
     /// <returns>A response containing the list of group member states with user progress</returns>
     Task<Response<IList<GroupMemberStateWithUserProgressDto>, GenericOperationStatuses>> GetGroupMemberStatesAsync(
         string userId,
-        Guid examTakerAssignmentId,
+        Guid studentAssignmentId,
         Guid groupId,
         CancellationToken cancellationToken);
 
@@ -58,8 +58,8 @@ public interface ISessionService
     /// <param name="assignmentId">The ID of the assignment</param>
     /// <param name="versionId">The ID of the module version to retrieve</param>
     /// <param name="cancellationToken">Token to cancel the operation</param>
-    /// <returns>A response containing the exam taker's module version data</returns>
-    Task<Response<ExamTakerModuleVersionDto, GenericOperationStatuses>> GetModuleVersionAsync(
+    /// <returns>A response containing the student's module version data</returns>
+    Task<Response<StudentModuleVersionDto, GenericOperationStatuses>> GetModuleVersionAsync(
         string userId,
         Guid assignmentId,
         Guid versionId,

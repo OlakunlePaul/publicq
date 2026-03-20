@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import AssignmentAccess from '../components/AssignmentAccess/AssignmentAccess';
 import { Assignment } from '../models/assignment';
 import { getUserInformation, type CurrentUser } from '../utils/tokenUtils';
-import { CONSTANTS } from '../constants/contstants';
-import { ExamTakerState } from '../models/exam-taker-state';
+import { CONSTANTS, ROUTES } from '../constants/contstants';
+import { StudentState } from '../models/student-state';
 
 const MyAssignments: React.FC = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const MyAssignments: React.FC = () => {
     try {
       const examTakerFromStorageJson = localStorage.getItem(CONSTANTS.EXAM_TAKER);
       if (examTakerFromStorageJson) {
-        const examTakerFromStorage = JSON.parse(examTakerFromStorageJson) as ExamTakerState;
+        const examTakerFromStorage = JSON.parse(examTakerFromStorageJson) as StudentState;
         
         if (examTakerFromStorage && examTakerFromStorage.id) {
           setCurrentUser(examTakerFromStorage);
@@ -36,12 +36,12 @@ const MyAssignments: React.FC = () => {
   }, []);
   
   const handleLoginRequest = () => {
-    navigate('/login?redirectTo=/my-assignments');
+    navigate(`${ROUTES.LOGIN}?redirectTo=${ROUTES.MY_EXAMS}`);
   };
 
   const handleAssignmentOpen = (assignment: Assignment) => {
     // Navigate to the dedicated assignment execution page
-    navigate(`/assignment/${assignment.id}`);
+    navigate(`/exam/${assignment.id}`);
   };
 
   // Function to refresh user info - can be called when exam taker logs in
@@ -53,7 +53,7 @@ const MyAssignments: React.FC = () => {
       try {
         const examTakerFromStorageJson = localStorage.getItem(CONSTANTS.EXAM_TAKER);
         if (examTakerFromStorageJson) {
-          const examTakerFromStorage = JSON.parse(examTakerFromStorageJson) as ExamTakerState;
+          const examTakerFromStorage = JSON.parse(examTakerFromStorageJson) as StudentState;
           if (examTakerFromStorage && examTakerFromStorage.id) {
             setCurrentUser(examTakerFromStorage);
           }
@@ -67,6 +67,29 @@ const MyAssignments: React.FC = () => {
   return (
     <div style={styles.container}>
       <div style={styles.content}>
+        {/* Student Handbook Link */}
+        <div style={{ marginBottom: '1.5rem', textAlign: 'right' }}>
+          <a 
+            href="file:///C:/Users/hp/.gemini/antigravity/brain/3071a572-29b4-4b80-8db9-5dfc5be74ec4/student_handbook.md" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              color: '#4f46e5', 
+              fontWeight: 600, 
+              textDecoration: 'none',
+              fontSize: '0.9rem',
+              padding: '8px 16px',
+              backgroundColor: 'white',
+              borderRadius: '10px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <span>📘 View Student Handbook</span>
+          </a>
+        </div>
         <AssignmentAccess 
           onLoginRequest={handleLoginRequest} 
           onAssignmentOpen={handleAssignmentOpen}

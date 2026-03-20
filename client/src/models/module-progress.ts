@@ -1,4 +1,4 @@
-import { ExamTakerAssignment } from './exam-taker-assignment';
+import { StudentAssignment } from './student-assignment';
 import { GroupMemberStateWithUserProgress } from './group-member-state-with-user-progress';
 import { QuestionResponse } from './question-response';
 
@@ -42,13 +42,13 @@ export interface ModuleProgress {
    * Gets or sets the foreign key reference to the exam taker assignment.
    * @maxLength 50 characters (aligned with backend constraint)
    */
-  examTakerAssignmentId: string;
+  studentAssignmentId: string;
 
   /**
    * Gets or sets the identifier of the exam taker (student) working on this module.
    * @maxLength 50 characters (aligned with backend constraint)
    */
-  examTakerId: string;
+  studentId: string;
 
   /**
    * Gets or sets the foreign key reference to the specific group member.
@@ -65,7 +65,7 @@ export interface ModuleProgress {
   /**
    * The exam taker assignment entity this progress belongs to.
    */
-  examTakerAssignment?: ExamTakerAssignment;
+  studentAssignment?: StudentAssignment;
 
   /**
    * The group member entity representing this module within the assignment's group.

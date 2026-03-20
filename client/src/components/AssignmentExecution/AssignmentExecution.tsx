@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Assignment } from '../../models/assignment';
 import { Group } from '../../models/group';
 import { User } from '../../models/user';
-import { ExamTakerState } from '../../models/exam-taker-state';
+import { StudentState } from '../../models/student-state';
 import { GroupMemberState } from '../../models/group-member-state';
 import { ModuleStatus } from '../../models/module-status';
 import { groupService } from '../../services/groupService';
@@ -14,7 +14,7 @@ import { StaticFileDto } from '../../models/static-file';
 
 interface AssignmentExecutionProps {
   assignment: Assignment;
-  user: User | ExamTakerState;
+  user: User | StudentState;
   onBack: () => void;
 }
 
@@ -631,11 +631,11 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
 
 
 
-  const refreshGroupMemberStates = async (examTakerAssignmentId: string) => {
+  const refreshGroupMemberStates = async (studentAssignmentId: string) => {
     try {
       const memberStatesResponse = await sessionService.getGroupMemberStates(
         user.id, 
-        examTakerAssignmentId, 
+        studentAssignmentId, 
         assignment.groupId
       );
       
@@ -693,7 +693,7 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
         
         if (progressResponse.isSuccess && progressResponse.data) {
           // Refresh group member states to show updated progress from backend
-          await refreshGroupMemberStates(progressResponse.data.examTakerAssignmentId);
+          await refreshGroupMemberStates(progressResponse.data.studentAssignmentId);
           
           // Navigate to questions component with the necessary data
           navigate('/questions', {
@@ -732,7 +732,7 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
       
       if (progressResponse.isSuccess && progressResponse.data) {
         // Refresh group member states to show updated progress from backend
-        await refreshGroupMemberStates(progressResponse.data.examTakerAssignmentId);
+        await refreshGroupMemberStates(progressResponse.data.studentAssignmentId);
         
         // Close modal
         setShowLaunchModal(false);
@@ -891,7 +891,7 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
       <div style={styles.container}>
         <div style={styles.loadingContainer}>
           <div style={styles.spinner}></div>
-          <p style={styles.loadingText}>Loading assignment details...</p>
+          <p style={styles.loadingText}>Loading exam details...</p>
         </div>
       </div>
     );
@@ -901,10 +901,10 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
     return (
       <div style={styles.container}>
         <div style={styles.errorContainer}>
-          <h2 style={styles.errorTitle}>Error Loading Assignment</h2>
+          <h2 style={styles.errorTitle}>Error Loading Exam</h2>
           <p style={styles.errorText}>{error}</p>
           <button onClick={onBack} style={styles.backButton}>
-            Back to Assignments
+            Back to Exams
           </button>
         </div>
       </div>
@@ -915,10 +915,10 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
     return (
       <div style={styles.container}>
         <div style={styles.errorContainer}>
-          <h2 style={styles.errorTitle}>Assignment Not Found</h2>
-          <p style={styles.errorText}>The assignment details could not be loaded.</p>
+          <h2 style={styles.errorTitle}>Exam Not Found</h2>
+          <p style={styles.errorText}>The exam details could not be loaded.</p>
           <button onClick={onBack} style={styles.backButton}>
-            Back to Assignments
+            Back to Exams
           </button>
         </div>
       </div>
@@ -1005,7 +1005,7 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
         
         <div style={styles.headerContent} className="headerContent">
           <h1 style={styles.title}>{assignment.title}</h1>
-          <p style={styles.subtitle}>Assignment Execution</p>
+          <p style={styles.subtitle}>Exam Execution</p>
         </div>
         
         <div style={styles.userInfo} className="userInfo">
@@ -1016,9 +1016,9 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
         </div>
       </div>
 
-      {/* Assignment Info */}
+      {/* Exam Info */}
       <div style={styles.assignmentInfo}>
-        <h2 style={styles.sectionTitle} className="assignment-execution-section-title">Assignment Details</h2>
+        <h2 style={styles.sectionTitle} className="assignment-execution-section-title">Exam Details</h2>
         <div style={styles.infoGrid} className="assignment-execution-info-grid">
           <div style={styles.infoItem} className="assignment-execution-info-item">
             <span style={styles.infoLabel}>Title:</span>
@@ -1325,7 +1325,7 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
           </div>
         ) : (
           <div style={styles.emptyModules}>
-            <p style={styles.emptyText}>No modules found in this assignment.</p>
+            <p style={styles.emptyText}>No modules found in this exam.</p>
             <p style={styles.emptyText}>Debug: Group member states length = {groupMemberStates?.length || 'undefined'}</p>
           </div>
         )}
