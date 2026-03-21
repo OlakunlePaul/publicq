@@ -349,10 +349,16 @@
   
   .sectionHeader {
     padding: 16px;
+    /* Hide the dropdown button on mobile if we use bottom nav, or keep it for the title */
+  }
+
+  .sectionDropdown {
+    display: none; /* Hide dropdown in favor of bottom nav / sheets */
   }
   
   .content {
     padding: 16px;
+    padding-bottom: 90px; /* Space for bottom nav */
   }
   
   .statsGrid {
@@ -363,6 +369,66 @@
   .statNumber {
     font-size: 28px;
   }
+
+  .bottomNav {
+    display: flex;
+  }
+}
+
+/* ===== BOTTOM NAVIGATION (MOBILE) ===== */
+.bottomNav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.06);
+  z-index: 100;
+  padding: 8px 16px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bottomNavItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 8px;
+  transition: all 0.2s ease;
+  border-radius: 12px;
+  flex: 1;
+  min-height: 48px; /* Accessible touch target */
+}
+
+.bottomNavItem.activeBottomNav {
+  color: #4f46e5;
+}
+
+.bottomNavItem img {
+  width: 24px;
+  height: 24px;
+  opacity: 0.5;
+  transition: all 0.2s ease;
+}
+
+.bottomNavItem.activeBottomNav img {
+  opacity: 1;
+  filter: invert(27%) sepia(85%) saturate(3015%) hue-rotate(234deg) brightness(97%) contrast(92%);
+}
+
+.bottomNavLabel {
+  font-size: 11px;
+  font-weight: 600;
 }
 
 @media (max-width: 480px) {

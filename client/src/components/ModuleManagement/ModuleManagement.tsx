@@ -185,18 +185,64 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
           white-space: nowrap !important;
         }
         .module-management-table-container {
-          overflow-x: auto !important;
-          -webkit-overflow-scrolling: touch !important;
-          margin: 0 -20px !important;
-          padding: 0 20px !important;
+          border: none !important;
+          box-shadow: none !important;
+          background: transparent !important;
+          overflow: visible !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
-        .module-management-table {
-          min-width: 900px !important;
+        .module-management-table, 
+        .module-management-table thead, 
+        .module-management-table tbody, 
+        .module-management-table tr, 
+        .module-management-table td {
+          display: block !important;
+          width: 100% !important;
+        }
+        .module-management-table thead {
+          display: none !important;
+        }
+        .module-management-table tr {
+          background-color: white !important;
+          border-radius: 16px !important;
+          margin-bottom: 20px !important;
+          padding: 16px !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+          border: 1px solid #f3f4f6 !important;
+          position: relative !important;
+        }
+        .module-management-table td {
+          border-bottom: 1px solid #f9fafb !important;
+          padding: 12px 0 !important;
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          text-align: right !important;
+          font-size: 14px !important;
+          min-height: 44px !important;
+        }
+        .module-management-table td:last-child {
+          border-bottom: none !important;
+          margin-top: 8px !important;
+          flex-direction: column !important;
+          align-items: flex-start !important;
+          text-align: left !important;
+        }
+        .module-management-table td::before {
+          content: attr(data-label) !important;
+          font-weight: 700 !important;
+          color: #6b7280 !important;
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          letter-spacing: 0.05em !important;
+          text-align: left !important;
         }
         .module-management-pagination {
           flex-direction: column !important;
           gap: 16px !important;
           align-items: center !important;
+          margin-bottom: 40px !important;
         }
         .module-management-pagination-controls {
           gap: 12px !important;
@@ -205,47 +251,13 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
         .module-management-pagination-button {
           min-height: 44px !important;
           height: 44px !important;
-          min-width: 80px !important;
+          min-width: 100px !important;
           font-size: 14px !important;
-          padding: 10px 16px !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          text-align: center !important;
-        }
-        .module-management-page-size {
-          justify-content: center !important;
-          gap: 8px !important;
-        }
-        .module-management-spacer {
-          display: none !important;
         }
       }
       @media (max-width: 480px) {
         .module-management-create-button {
           max-width: 280px !important;
-          font-size: 13px !important;
-          padding: 10px 20px !important;
-        }
-        .module-management-table-container {
-          margin: 0 -16px !important;
-          padding: 0 16px !important;
-        }
-        .module-management-table {
-          min-width: 800px !important;
-        }
-        .module-management-pagination-controls {
-          gap: 8px !important;
-        }
-        .module-management-pagination-button {
-          min-width: 70px !important;
-          height: 44px !important;
-          font-size: 12px !important;
-          padding: 8px 12px !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          text-align: center !important;
         }
       }
     `;
@@ -595,23 +607,23 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                     >
-                      <td style={styles.td}>
+                      <td style={styles.td} data-label="Title">
                         <div style={styles.titleCell}>
                           {latestVersion?.title || 'Untitled Module'}
                         </div>
                       </td>
-                      <td style={styles.td}>
+                      <td style={styles.td} data-label="Introduction">
                         <div style={styles.descriptionCell}>
                           {latestVersion?.description || 'No introduction available'}
                         </div>
                       </td>
-                      <td style={styles.td}>v{latestVersion?.version || '1'}</td>
-                      <td style={styles.td}>
+                      <td style={styles.td} data-label="Version">v{latestVersion?.version || '1'}</td>
+                      <td style={styles.td} data-label="Status">
                         {getModuleStatusBadge(moduleData.hasPublishedVersions, latestVersion?.isPublished || false)}
                       </td>
-                      <td style={styles.td}>{latestVersion?.durationInMinutes || 0} min</td>
-                      <td style={styles.td}>{latestVersion?.passingScorePercentage || 0}%</td>
-                      <td style={styles.td}>
+                      <td style={styles.td} data-label="Duration">{latestVersion?.durationInMinutes || 0} min</td>
+                      <td style={styles.td} data-label="Passing Score">{latestVersion?.passingScorePercentage || 0}%</td>
+                      <td style={styles.td} data-label="Created">
                         <div style={styles.createdCell}>
                           <div>{moduleData?.createdAtUtc ? formatDateToLocal(moduleData.createdAtUtc) : 'Unknown'}</div>
                           <div style={styles.createdBy}>
@@ -619,7 +631,7 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
                           </div>
                         </div>
                       </td>
-                      <td style={styles.td}>
+                      <td style={styles.td} data-label="Latest Update">
                         <div style={styles.createdCell}>
                           <div>{latestVersion?.createdAtUtc ? formatDateToLocal(latestVersion.createdAtUtc) : 'Unknown'}</div>
                           <div style={styles.createdBy}>
@@ -627,7 +639,7 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
                           </div>
                         </div>
                       </td>
-                      <td style={styles.td}>
+                      <td style={styles.td} data-label="Actions">
                         <div style={styles.actionButtons}>
                           <button 
                             onClick={() => handleViewDetails(moduleData)} 

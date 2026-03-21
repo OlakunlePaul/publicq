@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import { motion, AnimatePresence } from 'framer-motion';
 import styles from './HandbookModal.module.css';
 
 interface HandbookModalProps {
@@ -37,7 +38,14 @@ const HandbookModal: React.FC<HandbookModalProps> = ({ url, title, onClose }) =>
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
+      <motion.div 
+        className={styles.modalContainer} 
+        onClick={(e) => e.stopPropagation()}
+        initial={{ y: '100%', opacity: 0.5 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: '100%', opacity: 0 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+      >
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <span className={styles.icon}>📘</span>
@@ -72,7 +80,7 @@ const HandbookModal: React.FC<HandbookModalProps> = ({ url, title, onClose }) =>
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

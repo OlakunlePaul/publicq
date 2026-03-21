@@ -426,7 +426,7 @@ const UserTable: React.FC<UserTableProps> = ({
                     onClick={() => handleUserClick(user)}
                   >
                     {selectionMode !== 'none' && (
-                      <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`}>
+                      <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="Select">
                         <input
                           type={selectionMode === 'single' ? 'radio' : 'checkbox'}
                           checked={isSelected}
@@ -435,16 +435,16 @@ const UserTable: React.FC<UserTableProps> = ({
                         />
                       </td>
                     )}
-                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`}>
+                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="ID">
                       <span className={userTableStyles.idCell}>{user.id}</span>
                     </td>
-                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`}>
+                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="Email">
                       <div className={userTableStyles.userEmail}>{user.email || 'N/A'}</div>
                     </td>
-                    <td className={userTableStyles.td}>
+                    <td className={userTableStyles.td} data-label="Full Name">
                       <div className={userTableStyles.userName}>{user.fullName || '-'}</div>
                     </td>
-                    <td className={userTableStyles.td}>
+                    <td className={userTableStyles.td} data-label="Admission No">
                       <div className={userTableStyles.admissionNumber}>
                         {user.admissionNumber ? (
                           <span className={userTableStyles.admissionNumberBadge}>
@@ -453,7 +453,7 @@ const UserTable: React.FC<UserTableProps> = ({
                         ) : '-'}
                       </div>
                     </td>
-                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`}>
+                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="Date of Birth">
                       <div className={userTableStyles.dateOfBirth}>
                         {user.dateOfBirth 
                           ? new Date(user.dateOfBirth).toLocaleDateString('en-US', {
@@ -465,7 +465,7 @@ const UserTable: React.FC<UserTableProps> = ({
                         }
                       </div>
                     </td>
-                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`}>
+                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="User Type">
                       <div className={userTableStyles.userTypeContainer}>
                         {(() => {
                           if (!user.hasCredential) {
@@ -491,7 +491,7 @@ const UserTable: React.FC<UserTableProps> = ({
                       </div>
                     </td>
                     {showActions && (
-                      <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`}>
+                      <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="Actions">
                         <div className={userTableStyles.actionContainer}>
                           {user.hasCredential && (
                             <button 

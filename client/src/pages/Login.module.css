@@ -4,21 +4,40 @@
 
 .container {
   min-height: calc(100vh - 80px);
-  background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+  background-color: #ffffff;
+  /* Subtle doodle SVG pattern - 3% opacity primary blue */
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 4.877L33.891 25.613c-.156.156-.409.156-.565 0L12.59 4.877c-.156-.156-.156-.409 0-.565L33.326.576c.156-.156.409-.156.565 0l20.736 20.736c.156.156.156.409 0 .565zM10.5 30.5c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm40 0c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm-20 20c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm0-40c2.485 0 4.5-2.015 4.5-4.5S28.985 1.5 26.5 1.5s-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm20 20c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm-40 0c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5z' fill='%233b82f6' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Gradient mask to softly fade doodle near the edges and center */
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, transparent 0%, #ffffff 90%);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .loginCard {
-  background-color: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  padding: 2.5rem;
+  background-color: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.6);
+  padding: 3rem 2.5rem;
   width: 100%;
-  max-width: 450px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  max-width: 440px;
+  position: relative;
+  z-index: 10;
 }
 
 .header {

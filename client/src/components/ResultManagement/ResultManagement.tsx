@@ -58,6 +58,140 @@ const ResultManagement: React.FC = () => {
     fetchInitialData();
   }, []);
 
+  // Add mobile responsive styles
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @media (max-width: 768px) {
+        .result-management-header {
+          flex-direction: column !important;
+          align-items: stretch !important;
+          gap: 16px !important;
+          margin-bottom: 24px !important;
+        }
+        .result-management-header-actions {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+          gap: 8px !important;
+          width: 100% !important;
+        }
+        .result-management-header-actions button {
+          width: 100% !important;
+          font-size: 13px !important;
+          padding: 10px 8px !important;
+        }
+        .result-management-header-actions button:last-child {
+          grid-column: span 2 !important;
+        }
+        .result-management-filter-inputs {
+          flex-direction: column !important;
+          gap: 12px !important;
+        }
+        .result-management-filter-inputs > div {
+          width: 100% !important;
+          min-width: 0 !important;
+        }
+        .result-management-filter-actions {
+          flex-direction: column !important;
+          gap: 12px !important;
+        }
+        .result-management-filter-actions button {
+          width: 100% !important;
+          height: 48px !important;
+        }
+        .result-management-moderation-actions {
+          flex-direction: column !important;
+          gap: 8px !important;
+        }
+        .result-management-moderation-actions button {
+          width: 100% !important;
+          text-align: left !important;
+          padding: 12px 16px !important;
+        }
+        .result-management-score-header {
+          flex-direction: column !important;
+          align-items: stretch !important;
+          gap: 16px !important;
+        }
+        .result-management-score-header h3 {
+          text-align: center !important;
+        }
+        .result-management-score-header button {
+          width: 100% !important;
+          height: 48px !important;
+        }
+        .result-management-table-container {
+          border: none !important;
+          box-shadow: none !important;
+          background: transparent !important;
+          overflow: visible !important;
+        }
+        .result-management-table, 
+        .result-management-table thead, 
+        .result-management-table tbody, 
+        .result-management-table tr, 
+        .result-management-table td {
+          display: block !important;
+          width: 100% !important;
+        }
+        .result-management-table thead {
+          display: none !important;
+        }
+        .result-management-table tr {
+          background-color: white !important;
+          border-radius: 16px !important;
+          margin-bottom: 24px !important;
+          padding: 16px !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+          border: 1px solid #f3f4f6 !important;
+        }
+        .result-management-table td {
+          border-bottom: 1px solid #f9fafb !important;
+          padding: 12px 0 !important;
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          text-align: right !important;
+          min-height: 44px !important;
+        }
+        .result-management-table td:last-child {
+          border-bottom: none !important;
+          margin-top: 12px !important;
+          flex-direction: column !important;
+          align-items: stretch !important;
+          text-align: left !important;
+        }
+        .result-management-table td::before {
+          content: attr(data-label) !important;
+          font-weight: 700 !important;
+          color: #6b7280 !important;
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          letter-spacing: 0.05em !important;
+          text-align: left !important;
+          margin-right: 16px !important;
+        }
+        .result-management-action-button {
+          height: 44px !important;
+          margin-bottom: 8px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 100% !important;
+        }
+        .result-management-score-input {
+          width: 100px !important;
+          height: 40px !important;
+          font-size: 16px !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   useEffect(() => {
     const fetchTerms = async () => {
       if (!selectedSession) {
@@ -287,14 +421,14 @@ const ResultManagement: React.FC = () => {
 
   return (
     <div className={commonStyles.container}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="result-management-header">
         <div>
           <h2 className={commonStyles.title}>Result Office</h2>
           <p className={commonStyles.description}>
             Bulk enter scores, review, and moderate student assessments.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px' }} className="result-management-header-actions">
           <button 
             onClick={() => setShowBroadsheet(true)}
             style={{ padding: '8px 16px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
@@ -337,7 +471,7 @@ const ResultManagement: React.FC = () => {
 
       <div className={commonStyles.card} style={{ marginBottom: '24px', padding: '20px' }}>
         <h3 style={{ marginTop: 0, fontSize: '16px' }}>Filter Context</h3>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }} className="result-management-filter-inputs">
           <div style={{ flex: 1, minWidth: '200px' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Session</label>
             <select 
@@ -385,7 +519,7 @@ const ResultManagement: React.FC = () => {
           </div>
         </div>
         
-        <div style={{ marginTop: '20px', display: 'flex', gap: '12px' }}>
+        <div style={{ marginTop: '20px', display: 'flex', gap: '12px' }} className="result-management-filter-actions">
           <button 
             onClick={handleFetchStudents}
             style={{ padding: '10px 20px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
@@ -411,7 +545,7 @@ const ResultManagement: React.FC = () => {
           Batch update the status of academic results for the selected class to push them through the school's moderation pipeline.
           (Draft → Vetted → Approved → Finalized for Report Cards)
         </p>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }} className="result-management-moderation-actions">
           <button 
             onClick={() => handleBatchStatusUpdate(0, 1)}
             style={{ padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
@@ -435,7 +569,7 @@ const ResultManagement: React.FC = () => {
 
       {students.length > 0 && (
         <div className={commonStyles.card} style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }} className="result-management-score-header">
             <h3 style={{ margin: 0, fontSize: '16px' }}>
               Bulk Score Entry 
               <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: 'normal', marginLeft: '12px' }}>
@@ -451,8 +585,8 @@ const ResultManagement: React.FC = () => {
             </button>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={tableStyle}>
+          <div style={{ overflowX: 'auto' }} className="result-management-table-container">
+            <table style={tableStyle} className="result-management-table">
               <thead>
                 <tr>
                   <th style={thStyle}>Admn No.</th>
@@ -475,51 +609,56 @@ const ResultManagement: React.FC = () => {
                   
                   return (
                     <tr key={stu.id} style={trStyle}>
-                      <td style={tdStyle}>{stu.admissionNumber || '-'}</td>
-                      <td style={tdStyle}><strong>{stu.studentName}</strong></td>
-                      <td style={tdStyle}>
+                      <td style={tdStyle} data-label="Admn No.">{stu.admissionNumber || '-'}</td>
+                      <td style={tdStyle} data-label="Student Name"><strong>{stu.studentName}</strong></td>
+                      <td style={tdStyle} data-label="Status">
                         <span style={{ fontSize: '12px', fontWeight: 600, padding: '4px 8px', borderRadius: '4px', backgroundColor: '#f3f4f6' }}>
                           {statusLabel}
                         </span>
                       </td>
-                      <td style={tdStyle}>
+                      <td style={tdStyle} data-label="Test Score (40)">
                         <input 
                           type="number" 
                           min="0" max="40"
                           style={inputStyle}
+                          className="result-management-score-input"
                           value={scores[stu.studentId]?.testScore || ''}
                           onChange={(e) => handleScoreChange(stu.studentId, 'testScore', e.target.value)}
                         />
                       </td>
-                      <td style={tdStyle}>
+                      <td style={tdStyle} data-label="Exam Score (60)">
                         <input 
                           type="number" 
                           min="0" max="60"
                           style={inputStyle}
+                          className="result-management-score-input"
                           value={scores[stu.studentId]?.examScore || ''}
                           onChange={(e) => handleScoreChange(stu.studentId, 'examScore', e.target.value)}
                         />
                       </td>
-                      <td style={tdStyle}>
+                      <td style={tdStyle} data-label="Total (100)">
                         <span style={{ fontWeight: 600, color: total < 40 ? '#dc2626' : '#16a34a' }}>
                           {total}
                         </span>
                       </td>
-                      <td style={{ ...tdStyle, display: 'flex', gap: '8px' }}>
+                      <td style={{ ...tdStyle, display: 'flex', gap: '8px' }} data-label="Actions">
                         <button 
                           onClick={() => setSelectedAssessmentId(stu.id)}
+                          className="result-management-action-button"
                           style={{ padding: '6px 12px', backgroundColor: '#e5e7eb', color: '#374151', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
                         >
                           Edit Details
                         </button>
                         <button 
                           onClick={() => handlePrint(stu.id)}
+                          className="result-management-action-button"
                           style={{ padding: '6px 12px', backgroundColor: '#dcfce7', color: '#166534', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
                         >
                           Print Report
                         </button>
                         <button 
                           onClick={() => handleToggleLock(stu.id, stu.isLockedForParents)}
+                          className="result-management-action-button"
                           style={{ 
                             padding: '6px 12px', 
                             backgroundColor: stu.isLockedForParents ? '#fee2e2' : '#f3f4f6', 

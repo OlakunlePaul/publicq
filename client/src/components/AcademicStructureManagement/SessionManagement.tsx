@@ -190,6 +190,93 @@ const SessionManagement = () => {
     }
   }
 
+  // Add mobile responsive styles
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @media (max-width: 768px) {
+        .session-management-header {
+          flex-direction: column !important;
+          align-items: stretch !important;
+          gap: 16px !important;
+          margin-bottom: 24px !important;
+        }
+        .session-management-header h3 {
+          text-align: center !important;
+        }
+        .session-management-create-button {
+          width: 100% !important;
+          max-width: 300px !important;
+          margin: 0 auto !important;
+          height: 48px !important;
+        }
+        .session-management-table-container {
+          border: none !important;
+          box-shadow: none !important;
+          background: transparent !important;
+          overflow: visible !important;
+        }
+        .session-management-table, 
+        .session-management-table thead, 
+        .session-management-table tbody, 
+        .session-management-table tr, 
+        .session-management-table td {
+          display: block !important;
+          width: 100% !important;
+        }
+        .session-management-table thead {
+          display: none !important;
+        }
+        .session-management-table tr {
+          background-color: white !important;
+          border-radius: 16px !important;
+          margin-bottom: 20px !important;
+          padding: 16px !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+          border: 1px solid #f3f4f6 !important;
+        }
+        .session-management-table td {
+          border-bottom: 1px solid #f9fafb !important;
+          padding: 12px 0 !important;
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          text-align: right !important;
+          min-height: 44px !important;
+        }
+        .session-management-table td:last-child {
+          border-bottom: none !important;
+          margin-top: 12px !important;
+          flex-direction: column !important;
+          align-items: stretch !important;
+          text-align: left !important;
+        }
+        .session-management-table td::before {
+          content: attr(data-label) !important;
+          font-weight: 700 !important;
+          color: #6b7280 !important;
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          letter-spacing: 0.05em !important;
+          text-align: left !important;
+        }
+        .session-management-action-button {
+          height: 44px !important;
+          margin-bottom: 8px !important;
+          margin-right: 0 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 100% !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString();
@@ -205,9 +292,13 @@ const SessionManagement = () => {
         apiError={formModal.apiError}
       />
       
-      <div style={styles.header}>
+      <div style={styles.header} className="session-management-header">
         <h3 style={{ margin: 0 }}>Session Management</h3>
-        <button style={styles.createButton} onClick={() => setFormModal({ isOpen: true, apiError: '', session: undefined })}>
+        <button 
+          style={styles.createButton} 
+          className="session-management-create-button"
+          onClick={() => setFormModal({ isOpen: true, apiError: '', session: undefined })}
+        >
           Create Session
         </button>
       </div>
@@ -215,8 +306,8 @@ const SessionManagement = () => {
       {error && <ValidationMessage type="error" message={error} />}
       
       {loading ? <p>Loading sessions...</p> : (
-        <div style={styles.tableContainer}>
-          <table style={styles.table}>
+        <div style={styles.tableContainer} className="session-management-table-container">
+          <table style={styles.table} className="session-management-table">
             <thead>
               <tr>
                 <th style={styles.th}>Name</th>
@@ -232,27 +323,40 @@ const SessionManagement = () => {
               ) : (
                 sessions.map(s => (
                   <tr key={s.id} style={styles.tr}>
-                    <td style={styles.td}><strong>{s.name}</strong></td>
-                    <td style={styles.td}>{formatDate(s.startDate)}</td>
-                    <td style={styles.td}>{formatDate(s.endDate)}</td>
-                    <td style={styles.td}>
+                    <td style={styles.td} data-label="Name"><strong>{s.name}</strong></td>
+                    <td style={styles.td} data-label="Start Date">{formatDate(s.startDate)}</td>
+                    <td style={styles.td} data-label="End Date">{formatDate(s.endDate)}</td>
+                    <td style={styles.td} data-label="Status">
                       {s.isActive ? (
                         <span style={styles.activeBadge}>Active</span>
                       ) : (
                         <span style={styles.inactiveBadge}>Inactive</span>
                       )}
                     </td>
-                    <td style={styles.td}>
+                    <td style={styles.td} data-label="Actions">
                       <button 
                         style={{ ...styles.actionButton, backgroundColor: '#3b82f6', marginRight: '8px' }} 
+                        className="session-management-action-button"
                         onClick={() => setFormModal({ isOpen: true, apiError: '', session: s })}
                       >
                         Edit
                       </button>
                       {!s.isActive && (
                         <>
-                          <button style={{ ...styles.actionButton, backgroundColor: '#10b981', marginRight: '8px' }} onClick={() => setAsActive(s.id)}>Set Active</button>
-                          <button style={{ ...styles.actionButton, backgroundColor: '#ef4444' }} onClick={() => handleDelete(s.id)}>Delete</button>
+                          <button 
+                            style={{ ...styles.actionButton, backgroundColor: '#10b981', marginRight: '8px' }} 
+                            className="session-management-action-button"
+                            onClick={() => setAsActive(s.id)}
+                          >
+                            Set Active
+                          </button>
+                          <button 
+                            style={{ ...styles.actionButton, backgroundColor: '#ef4444' }} 
+                            className="session-management-action-button"
+                            onClick={() => handleDelete(s.id)}
+                          >
+                            Delete
+                          </button>
                         </>
                       )}
                     </td>

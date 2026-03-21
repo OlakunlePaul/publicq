@@ -198,6 +198,96 @@ const TermManagement = () => {
     }
   };
 
+  // Add mobile responsive styles
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @media (max-width: 768px) {
+        .term-management-header {
+          flex-direction: column !important;
+          align-items: stretch !important;
+          gap: 16px !important;
+          margin-bottom: 24px !important;
+        }
+        .term-management-header h3 {
+          text-align: center !important;
+        }
+        .term-management-header-left {
+          flex-direction: column !important;
+          align-items: stretch !important;
+        }
+        .term-management-create-button {
+          width: 100% !important;
+          max-width: 300px !important;
+          margin: 0 auto !important;
+          height: 48px !important;
+        }
+        .term-management-table-container {
+          border: none !important;
+          box-shadow: none !important;
+          background: transparent !important;
+          overflow: visible !important;
+        }
+        .term-management-table, 
+        .term-management-table thead, 
+        .term-management-table tbody, 
+        .term-management-table tr, 
+        .term-management-table td {
+          display: block !important;
+          width: 100% !important;
+        }
+        .term-management-table thead {
+          display: none !important;
+        }
+        .term-management-table tr {
+          background-color: white !important;
+          border-radius: 16px !important;
+          margin-bottom: 20px !important;
+          padding: 16px !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+          border: 1px solid #f3f4f6 !important;
+        }
+        .term-management-table td {
+          border-bottom: 1px solid #f9fafb !important;
+          padding: 12px 0 !important;
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          text-align: right !important;
+          min-height: 44px !important;
+        }
+        .term-management-table td:last-child {
+          border-bottom: none !important;
+          margin-top: 12px !important;
+          flex-direction: column !important;
+          align-items: stretch !important;
+          text-align: left !important;
+        }
+        .term-management-table td::before {
+          content: attr(data-label) !important;
+          font-weight: 700 !important;
+          color: #6b7280 !important;
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          letter-spacing: 0.05em !important;
+          text-align: left !important;
+        }
+        .term-management-action-button {
+          height: 44px !important;
+          margin-bottom: 8px !important;
+          margin-right: 0 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this term?")) return;
     try {
@@ -228,8 +318,8 @@ const TermManagement = () => {
         apiError={formModal.apiError}
       />
       
-      <div style={styles.header}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={styles.header} className="term-management-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }} className="term-management-header-left">
           <h3 style={{ margin: 0 }}>Term Management</h3>
           <select 
             style={styles.select}
@@ -243,6 +333,7 @@ const TermManagement = () => {
         </div>
         <button 
           style={styles.createButton} 
+          className="term-management-create-button"
           onClick={() => setFormModal({ isOpen: true, apiError: '', term: undefined })}
           disabled={!selectedSessionId}
         >
@@ -253,8 +344,8 @@ const TermManagement = () => {
       {error && <ValidationMessage type="error" message={error} />}
       
       {loading ? <p>Loading terms...</p> : (
-        <div style={styles.tableContainer}>
-          <table style={styles.table}>
+        <div style={styles.tableContainer} className="term-management-table-container">
+          <table style={styles.table} className="term-management-table">
             <thead>
               <tr>
                 <th style={styles.th}>Name</th>
@@ -271,26 +362,28 @@ const TermManagement = () => {
               ) : (
                 terms.map(t => (
                   <tr key={t.id} style={styles.tr}>
-                    <td style={styles.td}><strong>{t.name}</strong></td>
-                    <td style={styles.td}>{formatDate(t.startDate)}</td>
-                    <td style={styles.td}>{formatDate(t.endDate)}</td>
-                    <td style={styles.td}>{formatDate(t.nextTermBegins)}</td>
-                    <td style={styles.td}>
+                    <td style={styles.td} data-label="Name"><strong>{t.name}</strong></td>
+                    <td style={styles.td} data-label="Start Date">{formatDate(t.startDate)}</td>
+                    <td style={styles.td} data-label="End Date">{formatDate(t.endDate)}</td>
+                    <td style={styles.td} data-label="Next Term">{formatDate(t.nextTermBegins)}</td>
+                    <td style={styles.td} data-label="Status">
                       {t.isActive ? (
                         <span style={styles.activeBadge}>Active</span>
                       ) : (
                         <span style={styles.inactiveBadge}>Inactive</span>
                       )}
                     </td>
-                    <td style={styles.td}>
+                    <td style={styles.td} data-label="Actions">
                       <button 
                         style={{ ...styles.actionButton, backgroundColor: '#3b82f6', marginRight: '8px' }} 
+                        className="term-management-action-button"
                         onClick={() => setFormModal({ isOpen: true, apiError: '', term: t })}
                       >
                         Edit
                       </button>
                       <button 
                         style={{ ...styles.actionButton, backgroundColor: '#ef4444' }} 
+                        className="term-management-action-button"
                         onClick={() => handleDelete(t.id)}
                       >
                         Delete

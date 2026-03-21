@@ -21,6 +21,17 @@ import AiChatDemo from './pages/AiChat';
 import DemoExam from './components/DemoExam/DemoExam';
 import ContactUs from './pages/ContactUs/ContactUs';
 import ParentDashboard from './pages/ParentDashboard';
+import { motion, Variants } from 'framer-motion';
+
+const fadeInUp: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } }
+};
+
+const staggerContainer: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
 
 function HomePage() {
   const { isAuthenticated, userRoles } = useAuth();
@@ -29,19 +40,24 @@ function HomePage() {
     <div className={homeStyles.homePage}>
       {/* Hero Section */}
       <section className={homeStyles.hero}>
-        <div className={homeStyles.heroContent}>
-          <div className={homeStyles.heroBadge}>
+        <motion.div 
+          className={homeStyles.heroContent}
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div variants={fadeInUp} className={homeStyles.heroBadge}>
             <img src="https://cdn-icons-png.flaticon.com/512/8074/8074800.png" alt="Trusted" className={homeStyles.heroBadgeIcon} />
             Trusted by Academic Institutions
-          </div>
-          <h1 className={homeStyles.heroTitle}>
+          </motion.div>
+          <motion.h1 variants={fadeInUp} className={homeStyles.heroTitle}>
             The Smart Examination Platform for <span className={homeStyles.heroHighlight}>Modern Education</span>
-          </h1>
-          <p className={homeStyles.heroSubtitle}>
+          </motion.h1>
+          <motion.p variants={fadeInUp} className={homeStyles.heroSubtitle}>
             Create, deliver, and grade assessments seamlessly across primary schools, secondary schools, and universities.
             Empower educators with powerful tools to manage exams efficiently.
-          </p>
-          <div className={homeStyles.heroActions}>
+          </motion.p>
+          <motion.div variants={fadeInUp} className={homeStyles.heroActions}>
             {!isAuthenticated && (
               <>
                 <Link to={ROUTES.REGISTER} className={homeStyles.btnPrimary}>
@@ -70,8 +86,8 @@ function HomePage() {
                 Go to Parent Dashboard →
               </Link>
             )}
-          </div>
-          <div className={homeStyles.heroStats}>
+          </motion.div>
+          <motion.div variants={fadeInUp} className={homeStyles.heroStats}>
             <div className={homeStyles.heroStat}>
               <img src="https://cdn-icons-png.flaticon.com/512/2991/2991108.png" alt="Auto-Graded" className={homeStyles.heroStatIcon} />
               <span className={homeStyles.heroStatLabel}>Auto-Graded Exams</span>
@@ -86,126 +102,134 @@ function HomePage() {
               <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="Secure" className={homeStyles.heroStatIcon} />
               <span className={homeStyles.heroStatLabel}>Secure & Reliable</span>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Who It's For Section */}
       <section className={homeStyles.audienceSection}>
-        <h2 className={homeStyles.sectionTitle}>Built for Every Level of Education</h2>
-        <p className={homeStyles.sectionSubtitle}>
-          Whether you're running a primary school quiz or a university-level final exam, ExamNova scales to your needs.
-        </p>
-        <div className={homeStyles.audienceCards}>
-          <div className={homeStyles.audienceCard}>
-            <div className={homeStyles.audienceIcon}>
-              <img src="https://cdn-icons-png.flaticon.com/512/167/167707.png" alt="Primary" className={homeStyles.audienceIconImg} />
-            </div>
-            <h3 className={homeStyles.audienceCardTitle}>Primary Schools</h3>
-            <p className={homeStyles.audienceCardDesc}>Simple quizzes with auto-grading. Teachers save hours on marking with instant results.</p>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={staggerContainer}>
+          <motion.h2 variants={fadeInUp} className={homeStyles.sectionTitle}>Built for Every Level of Education</motion.h2>
+          <motion.p variants={fadeInUp} className={homeStyles.sectionSubtitle}>
+            Whether you're running a primary school quiz or a university-level final exam, ExamNova scales to your needs.
+          </motion.p>
+          <div className={homeStyles.audienceCards}>
+            <motion.div variants={fadeInUp} className={homeStyles.audienceCard}>
+              <div className={homeStyles.audienceIcon}>
+                <img src="https://cdn-icons-png.flaticon.com/512/167/167707.png" alt="Primary" className={homeStyles.audienceIconImg} />
+              </div>
+              <h3 className={homeStyles.audienceCardTitle}>Primary Schools</h3>
+              <p className={homeStyles.audienceCardDesc}>Simple quizzes with auto-grading. Teachers save hours on marking with instant results.</p>
+            </motion.div>
+            <motion.div variants={fadeInUp} className={homeStyles.audienceCard}>
+              <div className={homeStyles.audienceIcon}>
+                <img src="https://cdn-icons-png.flaticon.com/512/2906/2906496.png" alt="Secondary" className={homeStyles.audienceIconImg} />
+              </div>
+              <h3 className={homeStyles.audienceCardTitle}>Secondary Schools</h3>
+              <p className={homeStyles.audienceCardDesc}>Manage class groups, assignments, and track student progress across terms and subjects.</p>
+            </motion.div>
+            <motion.div variants={fadeInUp} className={homeStyles.audienceCard}>
+              <div className={homeStyles.audienceIcon}>
+                <img src="https://cdn-icons-png.flaticon.com/512/2490/2490421.png" alt="Universities" className={homeStyles.audienceIconImg} />
+              </div>
+              <h3 className={homeStyles.audienceCardTitle}>Universities</h3>
+              <p className={homeStyles.audienceCardDesc}>Large-scale exams with multiple versions, timed sessions, randomized questions, and detailed analytics.</p>
+            </motion.div>
           </div>
-          <div className={homeStyles.audienceCard}>
-            <div className={homeStyles.audienceIcon}>
-              <img src="https://cdn-icons-png.flaticon.com/512/2906/2906496.png" alt="Secondary" className={homeStyles.audienceIconImg} />
-            </div>
-            <h3 className={homeStyles.audienceCardTitle}>Secondary Schools</h3>
-            <p className={homeStyles.audienceCardDesc}>Manage class groups, assignments, and track student progress across terms and subjects.</p>
-          </div>
-          <div className={homeStyles.audienceCard}>
-            <div className={homeStyles.audienceIcon}>
-              <img src="https://cdn-icons-png.flaticon.com/512/2490/2490421.png" alt="Universities" className={homeStyles.audienceIconImg} />
-            </div>
-            <h3 className={homeStyles.audienceCardTitle}>Universities</h3>
-            <p className={homeStyles.audienceCardDesc}>Large-scale exams with multiple versions, timed sessions, randomized questions, and detailed analytics.</p>
-          </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Features Section */}
       <section className={homeStyles.featuresSection}>
-        <h2 className={homeStyles.sectionTitle}>Everything You Need to Run Exams</h2>
-        <div className={homeStyles.featuresGrid}>
-          <div className={homeStyles.featureCard}>
-            <div className={homeStyles.featureCardIcon}>
-              <img src="https://cdn-icons-png.flaticon.com/512/2541/2541991.png" alt="Builder" className={homeStyles.featureCardIconImg} />
-            </div>
-            <h3 className={homeStyles.featureCardTitle}>Easy Question Builder</h3>
-            <p className={homeStyles.featureCardDesc}>Multiple choice, multi-select, and free-text questions with file attachments.</p>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={staggerContainer}>
+          <motion.h2 variants={fadeInUp} className={homeStyles.sectionTitle}>Everything You Need to Run Exams</motion.h2>
+          <div className={homeStyles.featuresGrid}>
+            <motion.div variants={fadeInUp} className={homeStyles.featureCard}>
+              <div className={homeStyles.featureCardIcon}>
+                <img src="https://cdn-icons-png.flaticon.com/512/2541/2541991.png" alt="Builder" className={homeStyles.featureCardIconImg} />
+              </div>
+              <h3 className={homeStyles.featureCardTitle}>Easy Question Builder</h3>
+              <p className={homeStyles.featureCardDesc}>Multiple choice, multi-select, and free-text questions with file attachments.</p>
+            </motion.div>
+            <motion.div variants={fadeInUp} className={homeStyles.featureCard}>
+              <div className={homeStyles.featureCardIcon}>
+                <img src="https://cdn-icons-png.flaticon.com/512/9513/9513110.png" alt="Auto-Grading" className={homeStyles.featureCardIconImg} />
+              </div>
+              <h3 className={homeStyles.featureCardTitle}>Auto-Grading</h3>
+              <p className={homeStyles.featureCardDesc}>Objective questions are graded instantly. Students get results the moment they finish.</p>
+            </motion.div>
+            <motion.div variants={fadeInUp} className={homeStyles.featureCard}>
+              <div className={homeStyles.featureCardIcon}>
+                <img src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" alt="Class" className={homeStyles.featureCardIconImg} />
+              </div>
+              <h3 className={homeStyles.featureCardTitle}>Class Management</h3>
+              <p className={homeStyles.featureCardDesc}>Organize students into groups, assign exams to specific classes, and track completion.</p>
+            </motion.div>
+            <motion.div variants={fadeInUp} className={homeStyles.featureCard}>
+              <div className={homeStyles.featureCardIcon}>
+                <img src="https://cdn-icons-png.flaticon.com/512/2311/2311545.png" alt="Reports" className={homeStyles.featureCardIconImg} />
+              </div>
+              <h3 className={homeStyles.featureCardTitle}>Detailed Reports</h3>
+              <p className={homeStyles.featureCardDesc}>Per-student scores, question-level analysis, and exportable class performance data.</p>
+            </motion.div>
+            <motion.div variants={fadeInUp} className={homeStyles.featureCard}>
+              <div className={homeStyles.featureCardIcon}>
+                <img src="https://cdn-icons-png.flaticon.com/512/467/467262.png" alt="Anti-Cheating" className={homeStyles.featureCardIconImg} />
+              </div>
+              <h3 className={homeStyles.featureCardTitle}>Anti-Cheating</h3>
+              <p className={homeStyles.featureCardDesc}>Randomize question order and answer options. Timed sessions prevent sharing.</p>
+            </motion.div>
+            <motion.div variants={fadeInUp} className={homeStyles.featureCard}>
+              <div className={homeStyles.featureCardIcon}>
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Access" className={homeStyles.featureCardIconImg} />
+              </div>
+              <h3 className={homeStyles.featureCardTitle}>Access Anywhere</h3>
+              <p className={homeStyles.featureCardDesc}>Students take exams from any device — phone, tablet, or computer. No app install needed.</p>
+            </motion.div>
           </div>
-          <div className={homeStyles.featureCard}>
-            <div className={homeStyles.featureCardIcon}>
-              <img src="https://cdn-icons-png.flaticon.com/512/9513/9513110.png" alt="Auto-Grading" className={homeStyles.featureCardIconImg} />
-            </div>
-            <h3 className={homeStyles.featureCardTitle}>Auto-Grading</h3>
-            <p className={homeStyles.featureCardDesc}>Objective questions are graded instantly. Students get results the moment they finish.</p>
-          </div>
-          <div className={homeStyles.featureCard}>
-            <div className={homeStyles.featureCardIcon}>
-              <img src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" alt="Class" className={homeStyles.featureCardIconImg} />
-            </div>
-            <h3 className={homeStyles.featureCardTitle}>Class Management</h3>
-            <p className={homeStyles.featureCardDesc}>Organize students into groups, assign exams to specific classes, and track completion.</p>
-          </div>
-          <div className={homeStyles.featureCard}>
-            <div className={homeStyles.featureCardIcon}>
-              <img src="https://cdn-icons-png.flaticon.com/512/2311/2311545.png" alt="Reports" className={homeStyles.featureCardIconImg} />
-            </div>
-            <h3 className={homeStyles.featureCardTitle}>Detailed Reports</h3>
-            <p className={homeStyles.featureCardDesc}>Per-student scores, question-level analysis, and exportable class performance data.</p>
-          </div>
-          <div className={homeStyles.featureCard}>
-            <div className={homeStyles.featureCardIcon}>
-              <img src="https://cdn-icons-png.flaticon.com/512/467/467262.png" alt="Anti-Cheating" className={homeStyles.featureCardIconImg} />
-            </div>
-            <h3 className={homeStyles.featureCardTitle}>Anti-Cheating</h3>
-            <p className={homeStyles.featureCardDesc}>Randomize question order and answer options. Timed sessions prevent sharing.</p>
-          </div>
-          <div className={homeStyles.featureCard}>
-            <div className={homeStyles.featureCardIcon}>
-              <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Access" className={homeStyles.featureCardIconImg} />
-            </div>
-            <h3 className={homeStyles.featureCardTitle}>Access Anywhere</h3>
-            <p className={homeStyles.featureCardDesc}>Students take exams from any device — phone, tablet, or computer. No app install needed.</p>
-          </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* How It Works */}
       <section className={homeStyles.howItWorks}>
-        <h2 className={homeStyles.sectionTitle}>How It Works</h2>
-        <div className={homeStyles.steps}>
-          <div className={homeStyles.step}>
-            <div className={homeStyles.stepNumber}>1</div>
-            <h3 className={homeStyles.stepTitle}>Create</h3>
-            <p className={homeStyles.stepDesc}>Build your exam with our intuitive question builder. Add questions, set passing scores, and configure time limits.</p>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={staggerContainer}>
+          <motion.h2 variants={fadeInUp} className={homeStyles.sectionTitle}>How It Works</motion.h2>
+          <div className={homeStyles.steps}>
+            <motion.div variants={fadeInUp} className={homeStyles.step}>
+              <div className={homeStyles.stepNumber}>1</div>
+              <h3 className={homeStyles.stepTitle}>Create</h3>
+              <p className={homeStyles.stepDesc}>Build your exam with our intuitive question builder. Add questions, set passing scores, and configure time limits.</p>
+            </motion.div>
+            <motion.div variants={fadeInUp} className={homeStyles.stepConnector}></motion.div>
+            <motion.div variants={fadeInUp} className={homeStyles.step}>
+              <div className={homeStyles.stepNumber}>2</div>
+              <h3 className={homeStyles.stepTitle}>Assign</h3>
+              <p className={homeStyles.stepDesc}>Create assignments, set exam windows, and add your students. They'll receive their access automatically.</p>
+            </motion.div>
+            <motion.div variants={fadeInUp} className={homeStyles.stepConnector}></motion.div>
+            <motion.div variants={fadeInUp} className={homeStyles.step}>
+              <div className={homeStyles.stepNumber}>3</div>
+              <h3 className={homeStyles.stepTitle}>Grade</h3>
+              <p className={homeStyles.stepDesc}>Objective questions are graded instantly. Review analytics and export results for your records.</p>
+            </motion.div>
           </div>
-          <div className={homeStyles.stepConnector}></div>
-          <div className={homeStyles.step}>
-            <div className={homeStyles.stepNumber}>2</div>
-            <h3 className={homeStyles.stepTitle}>Assign</h3>
-            <p className={homeStyles.stepDesc}>Create assignments, set exam windows, and add your students. They'll receive their access automatically.</p>
-          </div>
-          <div className={homeStyles.stepConnector}></div>
-          <div className={homeStyles.step}>
-            <div className={homeStyles.stepNumber}>3</div>
-            <h3 className={homeStyles.stepTitle}>Grade</h3>
-            <p className={homeStyles.stepDesc}>Objective questions are graded instantly. Review analytics and export results for your records.</p>
-          </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* CTA Section */}
       <section className={homeStyles.ctaSection}>
-        <h2 className={homeStyles.ctaTitle}>Ready to Transform Your Exams?</h2>
-        <p className={homeStyles.ctaSubtitle}>Join academic institutions using ExamNova to streamline their assessment process.</p>
-        <div className={homeStyles.ctaActions}>
-          <Link to={ROUTES.REGISTER} className={homeStyles.btnPrimary}>
-            Get Started Free
-          </Link>
-          <Link to={ROUTES.DEMO} className={homeStyles.btnOutline}>
-            Try a Demo Exam
-          </Link>
-        </div>
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.5 }} variants={staggerContainer}>
+          <motion.h2 variants={fadeInUp} className={homeStyles.ctaTitle}>Ready to Transform Your Exams?</motion.h2>
+          <motion.p variants={fadeInUp} className={homeStyles.ctaSubtitle}>Join academic institutions using ExamNova to streamline their assessment process.</motion.p>
+          <motion.div variants={fadeInUp} className={homeStyles.ctaActions}>
+            <Link to={ROUTES.REGISTER} className={homeStyles.btnPrimary}>
+              Get Started Free
+            </Link>
+            <Link to={ROUTES.DEMO} className={homeStyles.btnOutline}>
+              Try a Demo Exam
+            </Link>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Footer */}

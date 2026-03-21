@@ -34,6 +34,7 @@ import { userService } from '../services/userService';
 import { cn } from '../utils/cn';
 import cssStyles from './Admin.module.css';
 import HandbookModal from '../components/Shared/HandbookModal';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type AdminSection = 'dashboard' | 'users' | 'groups' | 'assignments' | 'assessments' | 'reports' | 'email' | 'banners' | 'pages' | 'ai' | 'ai-chat' | 'security' | 'cache' | 'storage' | 'logs' | 'admissions' | 'branding' | 'academic' | 'results' | 'permissions';
 
@@ -504,6 +505,118 @@ const Admin = () => {
           </div>
         </div>
         {renderContent()}
+
+        {/* Mobile Bottom Navigation */}
+        <nav className={cssStyles.bottomNav}>
+          <button 
+            className={cn(cssStyles.bottomNavItem, { [cssStyles.activeBottomNav]: activeSection === 'dashboard' })}
+            onClick={() => { navigateToSection('dashboard'); setIsDropdownOpen(false); }}
+          >
+            <img src="https://cdn-icons-png.flaticon.com/512/1828/1828762.png" alt="Dashboard" />
+            <span className={cssStyles.bottomNavLabel}>Overview</span>
+          </button>
+          
+          {UserPolicies.hasContributorAccess(userRoles) && (
+            <button 
+              className={cn(cssStyles.bottomNavItem, { [cssStyles.activeBottomNav]: activeSection === 'assessments' })}
+              onClick={() => { navigateToSection('assessments'); setIsDropdownOpen(false); }}
+            >
+              <img src="https://cdn-icons-png.flaticon.com/512/3429/3429153.png" alt="Questions" />
+              <span className={cssStyles.bottomNavLabel}>Papers</span>
+            </button>
+          )}
+
+          {UserPolicies.hasContributorAccess(userRoles) && (
+            <button 
+              className={cn(cssStyles.bottomNavItem, { [cssStyles.activeBottomNav]: activeSection === 'assignments' })}
+              onClick={() => { navigateToSection('assignments'); setIsDropdownOpen(false); }}
+            >
+              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Exams" />
+              <span className={cssStyles.bottomNavLabel}>Exams</span>
+            </button>
+          )}
+
+          {UserPolicies.hasContributorAccess(userRoles) && (
+            <button 
+              className={cn(cssStyles.bottomNavItem, { [cssStyles.activeBottomNav]: activeSection === 'users' })}
+              onClick={() => { navigateToSection('users'); setIsDropdownOpen(false); }}
+            >
+              <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="Users" />
+              <span className={cssStyles.bottomNavLabel}>Users</span>
+            </button>
+          )}
+
+          <button 
+            className={cn(cssStyles.bottomNavItem, { [cssStyles.activeBottomNav]: isDropdownOpen })}
+            onClick={() => setIsDropdownOpen(true)}
+          >
+            <img src="https://cdn-icons-png.flaticon.com/512/5482/5482436.png" alt="Menu" />
+            <span className={cssStyles.bottomNavLabel}>Menu</span>
+          </button>
+        </nav>
+
+        {/* Mobile Filter / Overlay Menu Bottom Sheet */}
+        <AnimatePresence>
+          {isDropdownOpen && (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)' }} onClick={() => setIsDropdownOpen(false)}>
+              <motion.div 
+                initial={{ y: '100%' }} 
+                animate={{ y: 0 }} 
+                exit={{ y: '100%' }} 
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                style={{ background: 'white', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', padding: '24px', paddingBottom: 'calc(24px + env(safe-area-inset-bottom))', maxHeight: '85vh', overflowY: 'auto' }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div style={{ width: '40px', height: '5px', background: '#cbd5e1', borderRadius: '4px', margin: '0 auto 20px auto' }}></div>
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>All Menu Sections</h3>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '8px' }}>
+                  {['dashboard', 'users', 'admissions', 'branding', 'academic', 'results', 'permissions', 'groups', 'assignments', 'assessments', 'reports', 'email', 'banners', 'pages', 'ai', 'ai-chat', 'security', 'logs'].map(section => {
+                    const sec = section as AdminSection;
+                    const isVisible = (
+                      sec === 'dashboard' ||
+                      (sec === 'users' && UserPolicies.hasContributorAccess(userRoles)) ||
+                      (sec === 'admissions' && UserPolicies.hasManagerAccess(userRoles)) ||
+                      (sec === 'branding' && UserPolicies.hasManagerAccess(userRoles)) ||
+                      (sec === 'permissions' && UserPolicies.hasAdminAccess(userRoles)) ||
+                      (sec === 'groups' && UserPolicies.hasContributorAccess(userRoles)) ||
+                      (sec === 'assignments' && UserPolicies.hasContributorAccess(userRoles)) ||
+                      (sec === 'assessments' && UserPolicies.hasContributorAccess(userRoles)) ||
+                      (sec === 'reports' && UserPolicies.hasManagerAccess(userRoles)) ||
+                      (sec === 'email' && UserPolicies.hasAdminAccess(userRoles)) ||
+                      (sec === 'banners' && UserPolicies.hasManagerAccess(userRoles)) ||
+                      (sec === 'ai' && UserPolicies.hasAdminAccess(userRoles)) ||
+                      (sec === 'ai-chat' && UserPolicies.hasContributorAccess(userRoles)) ||
+                      (sec === 'security' && UserPolicies.hasAdminAccess(userRoles)) ||
+                      (sec === 'academic' && UserPolicies.hasManagerAccess(userRoles)) ||
+                      (sec === 'results' && UserPolicies.hasContributorAccess(userRoles)) ||
+                      (sec === 'logs' && UserPolicies.hasManagerAccess(userRoles))
+                    );
+
+                    if (!isVisible) return null;
+
+                    return (
+                      <button 
+                        key={section} 
+                        onClick={() => { navigateToSection(sec); setIsDropdownOpen(false); }} 
+                        style={{ 
+                          display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', 
+                          width: '100%', border: 'none', background: activeSection === section ? 'rgba(79, 70, 229, 0.08)' : 'transparent', 
+                          borderRadius: '12px', cursor: 'pointer', textAlign: 'left', 
+                          fontWeight: activeSection === section ? 600 : 500, 
+                          color: activeSection === section ? '#4f46e5' : '#475569' 
+                        }}
+                      >
+                        {getSectionInfo(sec).icon}
+                        <span>{getSectionInfo(sec).title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -515,7 +628,34 @@ const DashboardContent = ({ userCount, studentCount, teacherCount, groupCount, m
   
   if (loading) return (
     <div className={cssStyles.dashboardContainer}>
-      <div className={cssStyles.loadingContainer}><p className={cssStyles.loadingText}>Loading dashboard analytics...</p></div>
+      {/* Skeleton for Handbook Banner */}
+      <div style={{ backgroundColor: '#eff6ff', borderRadius: '12px', padding: '16px', marginBottom: '24px', height: '80px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+      
+      {/* Skeletons for Stat Cards */}
+      <div className={cssStyles.statsGrid}>
+        {[1, 2, 3, 4, 5, 6].map(i => (
+          <div key={i} className={cssStyles.statCard} style={{ 
+            height: '110px', 
+            background: 'linear-gradient(90deg, #f8fafc 25%, #f1f5f9 50%, #f8fafc 75%)', 
+            backgroundSize: '200% 100%', 
+            animation: 'shimmer 1.5s infinite' 
+          }}></div>
+        ))}
+      </div>
+      
+      {/* Skeletons for Welcome Message */}
+      <div className={cssStyles.welcomeMessage} style={{ minHeight: '200px', animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}></div>
+      
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: .5; }
+        }
+      `}</style>
     </div>
   );
 
@@ -532,7 +672,7 @@ const DashboardContent = ({ userCount, studentCount, teacherCount, groupCount, m
   return (
     <div className={cssStyles.dashboardContainer}>
       {/* Handbook Banner */}
-      <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '16px', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '16px', marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '24px' }}>📘</span>
           <div>
@@ -542,19 +682,21 @@ const DashboardContent = ({ userCount, studentCount, teacherCount, groupCount, m
         </div>
         <button 
           onClick={() => setIsHandbookModalOpen(true)}
-          style={{ backgroundColor: '#2563eb', border: 'none', cursor: 'pointer', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 500, fontSize: '13px', transition: 'background-color 0.2s' }}
+          style={{ backgroundColor: '#2563eb', border: 'none', cursor: 'pointer', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 500, fontSize: '13px', transition: 'background-color 0.2s', whiteSpace: 'nowrap' }}
         >
           View Handbook
         </button>
       </div>
 
-      {isHandbookModalOpen && (
-        <HandbookModal 
-          url={handbookUrl} 
-          title={UserPolicies.hasManagerAccess(userRoles) ? "Manager Handbook" : "Teacher Handbook"}
-          onClose={() => setIsHandbookModalOpen(false)} 
-        />
-      )}
+      <AnimatePresence>
+        {isHandbookModalOpen && (
+          <HandbookModal 
+            url={handbookUrl} 
+            title={UserPolicies.hasManagerAccess(userRoles) ? "Manager Handbook" : "Teacher Handbook"}
+            onClose={() => setIsHandbookModalOpen(false)} 
+          />
+        )}
+      </AnimatePresence>
 
       <div className={cssStyles.statsGrid}>
         <div className={cssStyles.statCard} style={{ animationDelay: '0.1s' }}>

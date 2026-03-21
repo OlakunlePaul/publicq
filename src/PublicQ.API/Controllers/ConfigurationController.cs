@@ -300,6 +300,7 @@ public class ConfigurationController(
     /// This endpoint is used by the front end to validate password complexity rules before user registration.
     /// </summary>
     /// <returns>Returns password policy options wrapped into <see cref="Response{TData, TStatus}"/></returns>
+    [AllowAnonymous]
     [HttpGet("security/password", Name = nameof(GetPasswordPolicyConfig))]
     public ActionResult<Response<PasswordPolicyOptions, GenericOperationStatuses>> GetPasswordPolicyConfig()
     {

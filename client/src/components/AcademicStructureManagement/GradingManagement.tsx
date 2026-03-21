@@ -23,6 +23,91 @@ const GradingManagement: React.FC = () => {
         loadSchemas();
     }, []);
 
+    // Add mobile responsive styles
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            @media (max-width: 768px) {
+                .grading-management-header {
+                    flex-direction: column !important;
+                    align-items: stretch !important;
+                    gap: 16px !important;
+                    margin-bottom: 24px !important;
+                }
+                .grading-management-header h3 {
+                    text-align: center !important;
+                }
+                .grading-management-create-button {
+                    width: 100% !important;
+                    max-width: 300px !important;
+                    margin: 0 auto !important;
+                    height: 48px !important;
+                }
+                .grading-management-table-container {
+                    border: none !important;
+                    box-shadow: none !important;
+                    background: transparent !important;
+                    overflow: visible !important;
+                }
+                .grading-management-table, 
+                .grading-management-table thead, 
+                .grading-management-table tbody, 
+                .grading-management-table tr, 
+                .grading-management-table td {
+                    display: block !important;
+                    width: 100% !important;
+                }
+                .grading-management-table thead {
+                    display: none !important;
+                }
+                .grading-management-table tr {
+                    background-color: white !important;
+                    border-radius: 16px !important;
+                    margin-bottom: 20px !important;
+                    padding: 16px !important;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+                    border: 1px solid #f3f4f6 !important;
+                }
+                .grading-management-table td {
+                    border-bottom: 1px solid #f9fafb !important;
+                    padding: 12px 0 !important;
+                    display: flex !important;
+                    justify-content: space-between !important;
+                    align-items: center !important;
+                    text-align: right !important;
+                    min-height: 44px !important;
+                }
+                .grading-management-table td:last-child {
+                    border-bottom: none !important;
+                    margin-top: 12px !important;
+                    flex-direction: column !important;
+                    align-items: stretch !important;
+                    text-align: left !important;
+                }
+                .grading-management-table td::before {
+                    content: attr(data-label) !important;
+                    font-weight: 700 !important;
+                    color: #6b7280 !important;
+                    text-transform: uppercase !important;
+                    font-size: 11px !important;
+                    letter-spacing: 0.05em !important;
+                    text-align: left !important;
+                }
+                .grading-management-action-button {
+                    height: 44px !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    width: 100% !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        return () => {
+            document.head.removeChild(style);
+        };
+    }, []);
+
     const loadSchemas = async () => {
         try {
             const resp = await academicStructureService.getGradingSchemas();
@@ -110,11 +195,11 @@ const GradingManagement: React.FC = () => {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }} className="grading-management-header">
                 <h3 style={{ margin: 0 }}>Grading Schemas</h3>
                 <button 
                     onClick={openCreateModal}
-                    className={commonStyles.primaryButton}
+                    className={`${commonStyles.primaryButton} grading-management-create-button`}
                 >
                     Create New Schema
                 </button>
@@ -123,8 +208,8 @@ const GradingManagement: React.FC = () => {
             {error && <ValidationMessage type="error" message={error} />}
             {success && <ValidationMessage type="success" message={success} />}
 
-            <div className={commonStyles.card} style={{ padding: 0 }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div className={`${commonStyles.card} grading-management-table-container`} style={{ padding: 0 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }} className="grading-management-table">
                     <thead>
                         <tr style={{ textAlign: 'left', backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
                             <th style={{ padding: '12px 16px' }}>Name</th>
@@ -136,8 +221,8 @@ const GradingManagement: React.FC = () => {
                     <tbody>
                         {schemas.map(s => (
                             <tr key={s.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                                <td style={{ padding: '12px 16px' }}><strong>{s.name}</strong></td>
-                                <td style={{ padding: '12px 16px' }}>
+                                <td style={{ padding: '12px 16px' }} data-label="Name"><strong>{s.name}</strong></td>
+                                <td style={{ padding: '12px 16px' }} data-label="Status">
                                     <span style={{ 
                                         padding: '4px 8px', borderRadius: '4px', fontSize: '12px',
                                         backgroundColor: s.isActive ? '#dcfce7' : '#fee2e2',
@@ -146,12 +231,13 @@ const GradingManagement: React.FC = () => {
                                         {s.isActive ? 'Active' : 'Inactive'}
                                     </span>
                                 </td>
-                                <td style={{ padding: '12px 16px' }}>
+                                <td style={{ padding: '12px 16px' }} data-label="Grades">
                                     {s.gradeRanges.map(r => r.symbol).join(', ')}
                                 </td>
-                                <td style={{ padding: '12px 16px' }}>
+                                <td style={{ padding: '12px 16px' }} data-label="Actions">
                                     <button 
                                         onClick={() => openEditModal(s)}
+                                        className="grading-management-action-button"
                                         style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontWeight: 600 }}
                                     >
                                         Edit

@@ -1429,13 +1429,13 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
                       e.currentTarget.style.backgroundColor = 'transparent';
                     }}
                   >
-                    <td className={cssStyles.td}>
+                    <td className={cssStyles.td} data-label="ID">
                       <div className={cssStyles.idCell}>
                         {assignment.id}
                       </div>
                     </td>
-                    <td className={cssStyles.td}>{assignment.title}</td>
-                    <td className={cssStyles.td}>
+                    <td className={cssStyles.td} data-label="Title">{assignment.title}</td>
+                    <td className={cssStyles.td} data-label="Description">
                       <div 
                         className={cssStyles.descriptionCell}
                         title={assignment.description || 'No description available'}
@@ -1448,14 +1448,14 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
                         }
                       </div>
                     </td>
-                    <td className={cssStyles.td}>
+                    <td className={cssStyles.td} data-label="Group">
                       <div className={cssStyles.groupCell}>
                         {assignment.groupTitle || 'No group'}
                       </div>
                     </td>
-                    <td className={cssStyles.td}>{formatDateToLocal(assignment.startDateUtc)}</td>
-                    <td className={cssStyles.td}>{formatDateToLocal(assignment.endDateUtc)}</td>
-                    <td className={cssStyles.td}>
+                    <td className={cssStyles.td} data-label="Start Date">{formatDateToLocal(assignment.startDateUtc)}</td>
+                    <td className={cssStyles.td} data-label="End Date">{formatDateToLocal(assignment.endDateUtc)}</td>
+                    <td className={cssStyles.td} data-label="Status">
                       <span className={cssStyles.badge} style={{
                         backgroundColor: assignment.isPublished ? '#dcfce7' : '#fef3c7',
                         color: assignment.isPublished ? '#166534' : '#92400e',
@@ -1463,7 +1463,7 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
                         {assignment.isPublished ? 'Published' : 'Draft'}
                       </span>
                     </td>
-                    <td className={cssStyles.td}>
+                    <td className={cssStyles.td} data-label="Settings">
                       <div className={cssStyles.settingsCell}>
                         {assignment.showResultsImmediately && (
                           <span className={cssStyles.settingTag}>Show Results</span>
@@ -1476,7 +1476,7 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
                         )}
                       </div>
                     </td>
-                    <td className={cssStyles.td}>
+                    <td className={cssStyles.td} data-label="Created">
                       <div className={cssStyles.createdCell}>
                         <div>{formatDateToLocal(assignment.createdAtUtc)}</div>
                         <div className={cssStyles.createdBy}>
@@ -1484,7 +1484,7 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
                         </div>
                       </div>
                     </td>
-                    <td className={cssStyles.td}>
+                    <td className={cssStyles.td} data-label="Updated">
                       <div className={cssStyles.updatedCell}>
                         {assignment.updatedByUser && assignment.updatedAtUtc ? (
                           <>
@@ -1498,7 +1498,7 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
                         )}
                       </div>
                     </td>
-                    <td className={cssStyles.td}>
+                    <td className={cssStyles.td} data-label="Actions">
                       <div className={cssStyles.actionContainer}>
                         {!assignment.isPublished && (
                           <button 

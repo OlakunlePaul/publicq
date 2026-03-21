@@ -9,6 +9,7 @@ import { PageService } from '../../services/pageService';
 import { PageType } from '../../models/page-type';
 import { ROUTES } from '../../constants/contstants';
 import ProfileSettingsModal from '../Shared/ProfileSettingsModal';
+import { AnimatePresence } from 'framer-motion';
 import navStyles from './NavBar.module.css';
 
 const NavBar = () => {
@@ -16,7 +17,7 @@ const NavBar = () => {
   const [hasContactPage, setHasContactPage] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  const { token, logout } = useAuth();
+  const { token, logout, userRoles } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,18 +63,20 @@ const NavBar = () => {
       </button>
 
       <ul className={cn(navStyles.navLinks, isMobileMenuOpen && navStyles['navLinks--open'])}>
-        <li>
-          <NavLink 
-            to={ROUTES.MY_EXAMS} 
-            className={({ isActive }) => cn(
-              navStyles.navBtn,
-              isActive && navStyles['navBtn--active']
-            )}
-            onClick={closeMobileMenu}
-          >
-            My Exams
-          </NavLink>
-        </li>
+        {token && userRoles?.includes(UserRole.EXAM_TAKER) && (
+          <li>
+            <NavLink 
+              to={ROUTES.MY_EXAMS} 
+              className={({ isActive }) => cn(
+                navStyles.navBtn,
+                isActive && navStyles['navBtn--active']
+              )}
+              onClick={closeMobileMenu}
+            >
+              My Exams
+            </NavLink>
+          </li>
+        )}
         {hasContactPage && (
           <li>
             <NavLink 
@@ -169,9 +172,11 @@ const NavBar = () => {
         )}
       </ul>
 
-      {isProfileModalOpen && (
-        <ProfileSettingsModal onClose={() => setIsProfileModalOpen(false)} />
-      )}
+      <AnimatePresence>
+        {isProfileModalOpen && (
+          <ProfileSettingsModal onClose={() => setIsProfileModalOpen(false)} />
+        )}
+      </AnimatePresence>
     </nav>
   );
 };

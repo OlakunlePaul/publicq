@@ -139,6 +139,92 @@ const SubjectManagement = () => {
     }
   };
 
+  // Add mobile responsive styles
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @media (max-width: 768px) {
+        .subject-management-header {
+          flex-direction: column !important;
+          align-items: stretch !important;
+          gap: 16px !important;
+          margin-bottom: 24px !important;
+        }
+        .subject-management-header h3 {
+          text-align: center !important;
+        }
+        .subject-management-create-button {
+          width: 100% !important;
+          max-width: 300px !important;
+          margin: 0 auto !important;
+          height: 48px !important;
+        }
+        .subject-management-table-container {
+          border: none !important;
+          box-shadow: none !important;
+          background: transparent !important;
+          overflow: visible !important;
+        }
+        .subject-management-table, 
+        .subject-management-table thead, 
+        .subject-management-table tbody, 
+        .subject-management-table tr, 
+        .subject-management-table td {
+          display: block !important;
+          width: 100% !important;
+        }
+        .subject-management-table thead {
+          display: none !important;
+        }
+        .subject-management-table tr {
+          background-color: white !important;
+          border-radius: 16px !important;
+          margin-bottom: 20px !important;
+          padding: 16px !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+          border: 1px solid #f3f4f6 !important;
+        }
+        .subject-management-table td {
+          border-bottom: 1px solid #f9fafb !important;
+          padding: 12px 0 !important;
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          text-align: right !important;
+          min-height: 44px !important;
+        }
+        .subject-management-table td:last-child {
+          border-bottom: none !important;
+          margin-top: 12px !important;
+          flex-direction: column !important;
+          align-items: stretch !important;
+          text-align: left !important;
+        }
+        .subject-management-table td::before {
+          content: attr(data-label) !important;
+          font-weight: 700 !important;
+          color: #6b7280 !important;
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          letter-spacing: 0.05em !important;
+          text-align: left !important;
+        }
+        .subject-management-action-button {
+          height: 44px !important;
+          margin-bottom: 8px !important;
+          margin-right: 0 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this subject?")) return;
     try {
@@ -163,9 +249,13 @@ const SubjectManagement = () => {
         apiError={formModal.apiError}
       />
       
-      <div style={styles.header}>
+      <div style={styles.header} className="subject-management-header">
         <h3 style={{ margin: 0 }}>Subject Management</h3>
-        <button style={styles.createButton} onClick={() => setFormModal({ isOpen: true, apiError: '', subject: undefined })}>
+        <button 
+          style={styles.createButton} 
+          className="subject-management-create-button"
+          onClick={() => setFormModal({ isOpen: true, apiError: '', subject: undefined })}
+        >
           Create Subject
         </button>
       </div>
@@ -173,8 +263,8 @@ const SubjectManagement = () => {
       {error && <ValidationMessage type="error" message={error} />}
       
       {loading ? <p>Loading subjects...</p> : (
-        <div style={styles.tableContainer}>
-          <table style={styles.table}>
+        <div style={styles.tableContainer} className="subject-management-table-container">
+          <table style={styles.table} className="subject-management-table">
             <thead>
               <tr>
                 <th style={styles.th}>Name</th>
@@ -187,20 +277,22 @@ const SubjectManagement = () => {
               {subjects.length === 0 ? (
                 <tr><td colSpan={4} style={styles.td}>No subjects found.</td></tr>
               ) : (
-                subjects.map(s => (
+                 subjects.map(s => (
                   <tr key={s.id} style={styles.tr}>
-                    <td style={styles.td}><strong>{s.name}</strong></td>
-                    <td style={styles.td}>{s.code || '-'}</td>
-                    <td style={styles.td}>{s.displayOrder}</td>
-                    <td style={styles.td}>
+                    <td style={styles.td} data-label="Name"><strong>{s.name}</strong></td>
+                    <td style={styles.td} data-label="Code">{s.code || '-'}</td>
+                    <td style={styles.td} data-label="Order">{s.displayOrder}</td>
+                    <td style={styles.td} data-label="Actions">
                       <button 
                         style={{ ...styles.actionButton, backgroundColor: '#3b82f6', marginRight: '8px' }} 
+                        className="subject-management-action-button"
                         onClick={() => setFormModal({ isOpen: true, apiError: '', subject: s })}
                       >
                         Edit
                       </button>
                       <button 
                         style={{ ...styles.actionButton, backgroundColor: '#ef4444' }} 
+                        className="subject-management-action-button"
                         onClick={() => handleDelete(s.id)}
                       >
                         Delete

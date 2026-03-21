@@ -508,18 +508,64 @@ const GroupManagement = ({ groupManagementData, setGroupManagementData }: GroupM
           white-space: nowrap !important;
         }
         .group-management-table-container {
-          overflow-x: auto !important;
-          -webkit-overflow-scrolling: touch !important;
-          margin: 0 -20px !important;
-          padding: 0 20px !important;
+          border: none !important;
+          box-shadow: none !important;
+          background: transparent !important;
+          overflow: visible !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
-        .group-management-table {
-          min-width: 700px !important;
+        .group-management-table, 
+        .group-management-table thead, 
+        .group-management-table tbody, 
+        .group-management-table tr, 
+        .group-management-table td {
+          display: block !important;
+          width: 100% !important;
+        }
+        .group-management-table thead {
+          display: none !important;
+        }
+        .group-management-table tr {
+          background-color: white !important;
+          border-radius: 16px !important;
+          margin-bottom: 20px !important;
+          padding: 16px !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+          border: 1px solid #f3f4f6 !important;
+          position: relative !important;
+        }
+        .group-management-table td {
+          border-bottom: 1px solid #f9fafb !important;
+          padding: 12px 0 !important;
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          text-align: right !important;
+          font-size: 14px !important;
+          min-height: 44px !important;
+        }
+        .group-management-table td:last-child {
+          border-bottom: none !important;
+          margin-top: 8px !important;
+          flex-direction: column !important;
+          align-items: flex-start !important;
+          text-align: left !important;
+        }
+        .group-management-table td::before {
+          content: attr(data-label) !important;
+          font-weight: 700 !important;
+          color: #6b7280 !important;
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          letter-spacing: 0.05em !important;
+          text-align: left !important;
         }
         .group-management-pagination {
           flex-direction: column !important;
           gap: 16px !important;
           align-items: center !important;
+          margin-bottom: 40px !important;
         }
         .group-management-pagination-controls {
           gap: 12px !important;
@@ -528,47 +574,13 @@ const GroupManagement = ({ groupManagementData, setGroupManagementData }: GroupM
         .group-management-pagination-button {
           min-height: 44px !important;
           height: 44px !important;
-          min-width: 80px !important;
+          min-width: 100px !important;
           font-size: 14px !important;
-          padding: 10px 16px !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          text-align: center !important;
-        }
-        .group-management-page-size {
-          justify-content: center !important;
-          gap: 8px !important;
-        }
-        .group-management-spacer {
-          display: none !important;
         }
       }
       @media (max-width: 480px) {
         .group-management-create-button {
           max-width: 280px !important;
-          font-size: 13px !important;
-          padding: 10px 20px !important;
-        }
-        .group-management-table-container {
-          margin: 0 -16px !important;
-          padding: 0 16px !important;
-        }
-        .group-management-table {
-          min-width: 600px !important;
-        }
-        .group-management-pagination-controls {
-          gap: 8px !important;
-        }
-        .group-management-pagination-button {
-          min-width: 70px !important;
-          height: 44px !important;
-          font-size: 12px !important;
-          padding: 8px 12px !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          text-align: center !important;
         }
       }
     `;
@@ -822,8 +834,8 @@ const GroupManagement = ({ groupManagementData, setGroupManagementData }: GroupM
                       e.currentTarget.style.backgroundColor = 'transparent';
                     }}
                   >
-                    <td style={styles.td}>{group.title}</td>
-                    <td style={styles.td}>
+                    <td style={styles.td} data-label="Title">{group.title}</td>
+                    <td style={styles.td} data-label="Description">
                       <div 
                         style={styles.descriptionCell}
                         title={group.description || 'No description available'}
@@ -836,8 +848,8 @@ const GroupManagement = ({ groupManagementData, setGroupManagementData }: GroupM
                         }
                       </div>
                     </td>
-                    <td style={styles.td}>{group.groupMembers?.length || 0}</td>
-                    <td style={styles.td}>
+                    <td style={styles.td} data-label="Members">{group.groupMembers?.length || 0}</td>
+                    <td style={styles.td} data-label="Progression">
                       <span style={{
                         ...styles.badge,
                         backgroundColor: group.waitModuleCompletion ? '#dcfce7' : '#fef3c7',
@@ -846,7 +858,7 @@ const GroupManagement = ({ groupManagementData, setGroupManagementData }: GroupM
                         {group.waitModuleCompletion ? 'Enabled' : 'Disabled'}
                       </span>
                     </td>
-                    <td style={styles.td}>
+                    <td style={styles.td} data-label="Order Lock">
                       <span style={{
                         ...styles.badge,
                         backgroundColor: group.isMemberOrderLocked ? '#dcfce7' : '#fef3c7',
@@ -855,7 +867,7 @@ const GroupManagement = ({ groupManagementData, setGroupManagementData }: GroupM
                         {group.isMemberOrderLocked ? 'Locked' : 'Unlocked'}
                       </span>
                     </td>
-                    <td style={styles.td}>
+                    <td style={styles.td} data-label="Created">
                       <div style={styles.createdCell}>
                         <div>{formatDateToLocal(group.createdAtUtc)}</div>
                         <div style={styles.createdBy}>
@@ -863,7 +875,7 @@ const GroupManagement = ({ groupManagementData, setGroupManagementData }: GroupM
                         </div>
                       </div>
                     </td>
-                    <td style={styles.td}>
+                    <td style={styles.td} data-label="Updated">
                       <div style={styles.updatedCell}>
                         {group.updatedByUserId ? (
                           <>
@@ -877,7 +889,7 @@ const GroupManagement = ({ groupManagementData, setGroupManagementData }: GroupM
                         )}
                       </div>
                     </td>
-                    <td style={styles.td}>
+                    <td style={styles.td} data-label="Actions">
                       <div style={styles.actionContainer}>
                         <button 
                           onClick={() => handleManageModules(group)} 

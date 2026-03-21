@@ -464,104 +464,109 @@
   width: 120px;
 }
 
-/* Mobile Responsive Design */
+/* Mobile Responsive Design - Card View Transformation */
 @media (max-width: 768px) {
-  .pagination {
-    flex-direction: column;
-    gap: var(--spacing-md);
-    align-items: stretch;
-  }
-  
-  .paginationControls {
-    position: static;
-    left: auto;
-    transform: none;
-    justify-content: center;
-    order: 1;
-  }
-  
-  .pageSizeContainer {
-    justify-content: center;
-    order: 2;
-  }
-  
-  .paginationSpacer {
-    display: none;
-  }
-  
-  .paginationButton {
-    padding: var(--spacing-md) var(--spacing-lg);
-    font-size: var(--font-size-md);
-    min-width: 120px;
-    height: 48px;
-  }
-  
-  .pageInfo {
-    font-size: var(--font-size-sm);
-    white-space: nowrap;
-    text-align: center;
-  }
-  
   .tableContainer {
-    overflow-x: auto;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    overflow: visible;
   }
-  
-  .table {
-    min-width: 600px;
+
+  .table, .tableHead, .tbody, .tr, .td {
+    display: block;
+    width: 100%;
   }
-  
-  .searchWrapper {
-    max-width: 100%;
+
+  .tableHead {
+    display: none; /* Hide original headers */
+  }
+
+  .tr {
+    background-color: white;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--color-gray-100);
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .tr:active {
+    transform: scale(0.98);
+  }
+
+  .trSelected {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-light);
+  }
+
+  .td {
+    border-bottom: 1px solid var(--color-gray-50);
+    padding: 12px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: right;
+    font-size: 14px;
+  }
+
+  .td:last-child {
+    border-bottom: none;
+    margin-top: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  /* Labels using data-label attribute */
+  .td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--color-gray-500);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-align: left;
+    margin-right: 16px;
+  }
+
+  /* Specific cell alignments */
+  .idCell {
+    font-size: 11px;
+  }
+
+  .actionContainer {
+    width: 100%;
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .actionButton, .actionButtonSecondary, .actionButtonDanger {
+    width: 100%;
+    height: 44px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .actionButtonDanger {
+    grid-column: span 2;
+  }
+
+  .pagination {
+    margin-top: 16px;
+    padding-bottom: 40px;
   }
 }
 
 @media (max-width: 480px) {
-  .pagination {
-    gap: var(--spacing-md);
-  }
-  
-  .paginationControls {
-    flex-direction: column;
-    gap: var(--spacing-md);
-  }
-  
-  .paginationButton {
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: var(--font-size-sm);
-    min-width: 100px;
-    height: 44px;
-  }
-  
-  .pageInfo {
-    font-size: var(--font-size-xs);
-  }
-  
-  .pageSizeContainer {
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    text-align: center;
-  }
-  
-  .table {
-    min-width: 500px;
-  }
-  
-  .th,
-  .td {
-    padding: var(--spacing-md) var(--spacing-sm);
-    font-size: var(--font-size-xs);
-  }
-  
-  .actionContainer {
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-  
-  .actionButton,
-  .actionButtonSecondary,
-  .actionButtonDanger {
-    font-size: var(--font-size-xs);
-    padding: var(--spacing-xs) var(--spacing-sm);
+  .searchWrapper {
+    max-width: 100%;
   }
 }
 

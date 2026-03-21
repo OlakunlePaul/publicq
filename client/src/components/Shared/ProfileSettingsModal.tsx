@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getUserInformation, type CurrentUser } from '../../utils/tokenUtils';
+import { motion } from 'framer-motion';
 import styles from './ProfileSettingsModal.module.css';
 
 interface ProfileSettingsModalProps {
@@ -24,7 +25,14 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({ onClose }) 
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modalContainer} onClick={(e) => e.stopPropagation()}>
+      <motion.div 
+        className={styles.modalContainer} 
+        onClick={(e) => e.stopPropagation()}
+        initial={{ y: '100%', opacity: 0.5 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: '100%', opacity: 0 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+      >
         <div className={styles.header}>
           <h2 className={styles.title}>Profile Settings</h2>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
@@ -58,7 +66,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({ onClose }) 
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
