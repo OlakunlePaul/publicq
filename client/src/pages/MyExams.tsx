@@ -5,6 +5,8 @@ import { Assignment } from '../models/assignment';
 import { getUserInformation, type CurrentUser } from '../utils/tokenUtils';
 import { CONSTANTS, ROUTES } from '../constants/contstants';
 import { StudentState } from '../models/student-state';
+import styles from './MyExams.module.css';
+import { AnimatePresence } from 'framer-motion';
 import HandbookModal from '../components/Shared/HandbookModal';
 
 const MyAssignments: React.FC = () => {
@@ -17,7 +19,6 @@ const MyAssignments: React.FC = () => {
     try {
       const user = getUserInformation();
       setCurrentUser(user);
-      return;
     } catch (error) {
       // No token or invalid token, continue to check localStorage
     }
@@ -67,38 +68,28 @@ const MyAssignments: React.FC = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.content}>
+    <div className={styles.container}>
+      <div className={styles.content}>
         {/* Student Handbook Link */}
         <div style={{ marginBottom: '1.5rem', textAlign: 'right' }}>
           <button 
             onClick={() => setIsHandbookModalOpen(true)}
-            style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              color: '#4f46e5', 
-              fontWeight: 600, 
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-              padding: '8px 16px',
-              backgroundColor: 'white',
-              borderRadius: '10px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}
+            className={styles.handbookButton}
           >
             <span>📘 View Student Handbook</span>
           </button>
         </div>
         
-        {isHandbookModalOpen && (
-          <HandbookModal 
-            url="/handbooks/student_handbook.md" 
-            title="Student Handbook"
-            onClose={() => setIsHandbookModalOpen(false)} 
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {isHandbookModalOpen && (
+            <HandbookModal 
+              url="/handbooks/student_handbook.md" 
+              title="Student Handbook"
+              onClose={() => setIsHandbookModalOpen(false)} 
+            />
+          )}
+        </AnimatePresence>
+
         <AssignmentAccess 
           onLoginRequest={handleLoginRequest} 
           onAssignmentOpen={handleAssignmentOpen}
@@ -106,20 +97,36 @@ const MyAssignments: React.FC = () => {
           onUserUpdate={refreshUserInfo}
         />
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className={styles.bottomNav}>
+        <button 
+          className={`${styles.bottomNavItem} ${styles.active}`}
+          onClick={() => navigate(ROUTES.MY_EXAMS)}
+        >
+          <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Exams" className={styles.bottomNavIcon} />
+          <span className={styles.bottomNavLabel}>My Exams</span>
+        </button>
+        
+        <button 
+          className={styles.bottomNavItem}
+          onClick={() => navigate(ROUTES.HOME)}
+        >
+          <img src="https://cdn-icons-png.flaticon.com/512/1946/1946436.png" alt="Home" className={styles.bottomNavIcon} />
+          <span className={styles.bottomNavLabel}>Home</span>
+        </button>
+
+        <button 
+          className={styles.bottomNavItem}
+          onClick={() => setIsHandbookModalOpen(true)}
+        >
+          <img src="https://cdn-icons-png.flaticon.com/512/3306/3306631.png" alt="Handbook" className={styles.bottomNavIcon} />
+          <span className={styles.bottomNavLabel}>Handbook</span>
+        </button>
+      </nav>
     </div>
   );
 };
 
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    minHeight: 'calc(100vh - 80px)',
-    background: 'linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%)',
-    padding: '2rem 1rem',
-  },
-  content: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-  },
-};
 
 export default MyAssignments;
