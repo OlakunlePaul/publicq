@@ -13,6 +13,7 @@ const MyAssignments: React.FC = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isHandbookModalOpen, setIsHandbookModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'exams' | 'results' | 'profile'>('exams');
 
   useEffect(() => {
     // First, try to get authenticated user from token
@@ -67,19 +68,89 @@ const MyAssignments: React.FC = () => {
     }
   };
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className={styles.tabContent}>
+            <div className={styles.welcomeBanner}>
+              <h2>Hello, {currentUser?.fullName || 'Student'}! 👋</h2>
+              <p>Welcome to your ExamNova dashboard. Use the navigation below to access your exams and results.</p>
+            </div>
+            
+            <div className={styles.quickStats}>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Active Exams</span>
+                <span className={styles.statValue}>-</span>
+              </div>
+              <div className={styles.statBox}>
+                <span className={styles.statLabel}>Completed</span>
+                <span className={styles.statValue}>-</span>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setIsHandbookModalOpen(true)}
+              className={styles.handbookButtonLarge}
+            >
+              📘 View Student Handbook
+            </button>
+          </div>
+        );
+      case 'exams':
+        return (
+          <AssignmentAccess 
+            onLoginRequest={handleLoginRequest} 
+            onAssignmentOpen={handleAssignmentOpen}
+            currentUser={currentUser}
+            onUserUpdate={refreshUserInfo}
+          />
+        );
+      case 'results':
+        return (
+          <div className={styles.tabContent}>
+            <h3>My Exam Results</h3>
+            <div className={styles.emptyResults}>
+              <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" alt="" style={{width: '64px', opacity: 0.5}} />
+              <p>Your official results and report cards will appear here once published.</p>
+            </div>
+          </div>
+        );
+      case 'profile':
+        return (
+          <div className={styles.tabContent}>
+            <h3>My Profile</h3>
+            <div className={styles.profileCard}>
+              <div className={styles.profileInfo}>
+                <div className={styles.infoRow}>
+                  <label>Full Name</label>
+                  <span>{currentUser?.fullName || 'Not provided'}</span>
+                </div>
+                <div className={styles.infoRow}>
+                  <label>Admission Number</label>
+                  <span>{currentUser?.admissionNumber || 'Not provided'}</span>
+                </div>
+                {currentUser?.email && (
+                  <div className={styles.infoRow}>
+                    <label>Email</label>
+                    <span>{currentUser.email}</span>
+                  </div>
+                )}
+              </div>
+              <button className={styles.logoutButton} onClick={() => navigate(ROUTES.LOGIN)}>
+                Sign Out
+              </button>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.content}>
-        {/* Student Handbook Link */}
-        <div style={{ marginBottom: '1.5rem', textAlign: 'right' }}>
-          <button 
-            onClick={() => setIsHandbookModalOpen(true)}
-            className={styles.handbookButton}
-          >
-            <span>📘 View Student Handbook</span>
-          </button>
-        </div>
-        
         <AnimatePresence mode="wait">
           {isHandbookModalOpen && (
             <HandbookModal 
@@ -90,38 +161,41 @@ const MyAssignments: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <AssignmentAccess 
-          onLoginRequest={handleLoginRequest} 
-          onAssignmentOpen={handleAssignmentOpen}
-          currentUser={currentUser}
-          onUserUpdate={refreshUserInfo}
-        />
+        {renderContent()}
       </div>
 
       {/* Mobile Bottom Navigation */}
       <nav className={styles.bottomNav}>
         <button 
-          className={`${styles.bottomNavItem} ${styles.active}`}
-          onClick={() => navigate(ROUTES.MY_EXAMS)}
-        >
-          <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Exams" className={styles.bottomNavIcon} />
-          <span className={styles.bottomNavLabel}>My Exams</span>
-        </button>
-        
-        <button 
-          className={styles.bottomNavItem}
-          onClick={() => navigate(ROUTES.HOME)}
+          className={`${styles.bottomNavItem} ${activeTab === 'overview' ? styles.active : ''}`}
+          onClick={() => setActiveTab('overview')}
         >
           <img src="https://cdn-icons-png.flaticon.com/512/1946/1946436.png" alt="Home" className={styles.bottomNavIcon} />
-          <span className={styles.bottomNavLabel}>Home</span>
+          <span className={styles.bottomNavLabel}>Overview</span>
         </button>
 
         <button 
-          className={styles.bottomNavItem}
-          onClick={() => setIsHandbookModalOpen(true)}
+          className={`${styles.bottomNavItem} ${activeTab === 'exams' ? styles.active : ''}`}
+          onClick={() => setActiveTab('exams')}
         >
-          <img src="https://cdn-icons-png.flaticon.com/512/3306/3306631.png" alt="Handbook" className={styles.bottomNavIcon} />
-          <span className={styles.bottomNavLabel}>Handbook</span>
+          <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Exams" className={styles.bottomNavIcon} />
+          <span className={styles.bottomNavLabel}>Assessments</span>
+        </button>
+        
+        <button 
+          className={`${styles.bottomNavItem} ${activeTab === 'results' ? styles.active : ''}`}
+          onClick={() => setActiveTab('results')}
+        >
+          <img src="https://cdn-icons-png.flaticon.com/512/2641/2641409.png" alt="Results" className={styles.bottomNavIcon} />
+          <span className={styles.bottomNavLabel}>Results</span>
+        </button>
+
+        <button 
+          className={`${styles.bottomNavItem} ${activeTab === 'profile' ? styles.active : ''}`}
+          onClick={() => setActiveTab('profile')}
+        >
+          <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile" className={styles.bottomNavIcon} />
+          <span className={styles.bottomNavLabel}>Profile</span>
         </button>
       </nav>
     </div>

@@ -1091,9 +1091,21 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState<'email' | 'id'>('email');
+  
+  const isTeacherOnly = currentUserRoles.includes(UserRole.CONTRIBUTOR) && 
+    !currentUserRoles.includes(UserRole.MANAGER) && 
+    !currentUserRoles.includes(UserRole.ADMINISTRATOR);
+
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState<UserRole | ''>(isTeacherOnly ? UserRole.EXAM_TAKER : '');
 
   // Load users data
-  const loadUsers = useCallback(async (page: number = 1, newPageSize: number = pageSize, search: string = searchTerm, searchBy: 'email' | 'id' = searchType) => {
+  const loadUsers = useCallback(async (
+    page: number = 1, 
+    newPageSize: number = pageSize, 
+    search: string = searchTerm, 
+    searchBy: 'email' | 'id' = searchType,
+    roleFilter: UserRole | '' = selectedRoleFilter
+  ) => {
     setLoading(true);
     setError('');
     try {
@@ -1102,9 +1114,9 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
       if (search.trim()) {
         const emailPart = searchBy === 'email' ? search.trim() : '';
         const idPart = searchBy === 'id' ? search.trim() : '';
-        response = await userService.searchUsers(emailPart, idPart, page, newPageSize);
+        response = await userService.searchUsers(emailPart, idPart, page, newPageSize, roleFilter || undefined);
       } else {
-        response = await userService.fetchUsers(page, newPageSize);
+        response = await userService.fetchUsers(page, newPageSize, roleFilter || undefined);
       }
       
       setUserManagementData({
@@ -1119,7 +1131,7 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
     } finally {
       setLoading(false);
     }
-  }, [pageSize, searchTerm, searchType, setUserManagementData]);
+  }, [pageSize, searchTerm, searchType, selectedRoleFilter, setUserManagementData]);
 
   // Load users on component mount or when page size changes
   useEffect(() => {
@@ -1131,19 +1143,19 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
   // Handle page size changes with proper reset
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize);
-    loadUsers(1, newPageSize);
+    loadUsers(1, newPageSize, searchTerm, searchType, selectedRoleFilter);
   };
 
   // Handle page changes
   const handlePageChange = (newPage: number) => {
-    loadUsers(newPage, pageSize, searchTerm, searchType);
+    loadUsers(newPage, pageSize, searchTerm, searchType, selectedRoleFilter);
   };
   
   // Handle search changes
   const handleSearchChange = (newSearchTerm: string) => {
     setSearchTerm(newSearchTerm);
     // Reset to page 1 when searching and trigger server-side search
-    loadUsers(1, pageSize, newSearchTerm, searchType);
+    loadUsers(1, pageSize, newSearchTerm, searchType, selectedRoleFilter);
   };
   
   // Handle search type changes
@@ -1151,7 +1163,13 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
     setSearchType(newSearchType);
     setSearchTerm(''); // Clear search when changing type
     // Reset to page 1 and reload
-    loadUsers(1, pageSize, '', newSearchType);
+    loadUsers(1, pageSize, '', newSearchType, selectedRoleFilter);
+  };
+
+  // Handle role filter change
+  const handleRoleFilterChange = (newRole: UserRole | '') => {
+    setSelectedRoleFilter(newRole);
+    loadUsers(1, pageSize, searchTerm, searchType, newRole);
   };
   const [createUserModal, setCreateUserModal] = useState({ isOpen: false });
   const [deleteModal, setDeleteModal] = useState<{
@@ -1251,7 +1269,7 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
       }
       setCreateUserModal({ isOpen: false });
       // Refresh user list with current search state
-      loadUsers(userManagementData.currentPage, pageSize, searchTerm, searchType);
+      loadUsers(userManagementData.currentPage, pageSize, searchTerm, searchType, selectedRoleFilter);
     } catch (err: any) {
       // Extract detailed error message from backend response
       let errorMessage = '';
@@ -1321,7 +1339,7 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
       await userService.resetPasswordByAdmin(resetPasswordModal.userEmail, newPassword);
       setResetPasswordModal({ isOpen: false, userEmail: '' });
       // Refresh user list with current search state
-      loadUsers(userManagementData.currentPage, pageSize, searchTerm, searchType);
+      loadUsers(userManagementData.currentPage, pageSize, searchTerm, searchType, selectedRoleFilter);
     } catch (err: any) {
       setError('Failed to reset password: ' + (err.response?.data?.message || err.message));
       setResetPasswordModal({ isOpen: false, userEmail: '' });
@@ -1342,7 +1360,7 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
       await userService.deleteUser(deleteModal.userId);
       setDeleteModal({ isOpen: false, userEmail: '', userId: '' });
       // Refresh user list with current search state
-      loadUsers(userManagementData.currentPage, pageSize, searchTerm, searchType);
+      loadUsers(userManagementData.currentPage, pageSize, searchTerm, searchType, selectedRoleFilter);
     } catch (err: any) {
       setError('Failed to delete user: ' + (err.response?.data?.message || err.message));
       setDeleteModal({ isOpen: false, userEmail: '', userId: '' });
@@ -1576,7 +1594,7 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
       });
       
       // Refresh user list on successful import with current search state
-      loadUsers(userManagementData.currentPage, pageSize, searchTerm, searchType);
+      loadUsers(userManagementData.currentPage, pageSize, searchTerm, searchType, selectedRoleFilter);
       
     } catch (error: any) {
       
@@ -1714,20 +1732,24 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
                 className={userManagementStyles.hiddenFileInput}
                 ref={fileInputRef}
               />
-              <button 
-                onClick={handleDownloadSampleCsv}
-                className={cn(userManagementStyles.downloadButton, "user-management-button")}
-                title="Download sample CSV template with examples"
-              >
-                Download Sample CSV
-              </button>
-              <button 
-                onClick={() => fileInputRef.current?.click()}
-                className={cn(userManagementStyles.importButton, "user-management-button")}
-                title="Import exam takers from CSV file"
-              >
-                Import CSV
-              </button>
+              {!isTeacherOnly && (
+                <>
+                  <button 
+                    onClick={handleDownloadSampleCsv}
+                    className={cn(userManagementStyles.downloadButton, "user-management-button")}
+                    title="Download sample CSV template with examples"
+                  >
+                    Download Sample CSV
+                  </button>
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(userManagementStyles.importButton, "user-management-button")}
+                    title="Import exam takers from CSV file"
+                  >
+                    Import CSV
+                  </button>
+                </>
+              )}
               <button 
                 onClick={handlePrintStudentList}
                 className={cn(userManagementStyles.printButton, "user-management-button")}
@@ -1740,11 +1762,28 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
                 className={cn(userManagementStyles.createButton, "user-management-button")}
                 title="Create new user or exam taker (Ctrl+N)"
               >
-                Create User/Taker
+                {isTeacherOnly ? 'Create Student' : 'Create User/Taker'}
               </button>
             </div>
           </div>
         </div>
+
+        {!isTeacherOnly && (
+          <div className={userManagementStyles.filterBar}>
+            <select
+              value={selectedRoleFilter}
+              onChange={(e) => handleRoleFilterChange(e.target.value as UserRole | '')}
+              className={userManagementStyles.roleFilterSelect}
+            >
+              <option value="">All Roles</option>
+              <option value={UserRole.EXAM_TAKER}>Students</option>
+              <option value={UserRole.CONTRIBUTOR}>Teachers</option>
+              <option value={UserRole.MANAGER}>Managers</option>
+              <option value={UserRole.PARENT}>Parents</option>
+              <option value={UserRole.ADMINISTRATOR}>Admins</option>
+            </select>
+          </div>
+        )}
         
         {error && <p className={userManagementStyles.error}>{error}</p>}
         

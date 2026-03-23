@@ -1,30 +1,37 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { SubjectDto, SubjectCreateDto } from '../../models/academic';
+import { SubjectDto, SubjectCreateDto, ClassLevelDto } from '../../models/academic';
 import { academicStructureService } from '../../services/academicStructureService';
 import { ValidationMessage } from '../Shared/ValidationComponents';
 
 interface SubjectFormModalProps {
   isOpen: boolean;
   subject?: SubjectDto; // Pass subject for editing
+  classLevels: ClassLevelDto[];
   onConfirm: (subject: SubjectCreateDto) => void;
   onCancel: () => void;
   apiError?: string;
 }
 
-const SubjectFormModal = ({ isOpen, subject, onConfirm, onCancel, apiError }: SubjectFormModalProps) => {
+const SubjectFormModal = ({ isOpen, subject, classLevels, onConfirm, onCancel, apiError }: SubjectFormModalProps) => {
   const [formData, setFormData] = useState<SubjectCreateDto>({
     name: '',
     code: '',
     displayOrder: 0,
+    classLevelIds: []
   });
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       if (subject) {
-        setFormData({ name: subject.name, code: subject.code || '', displayOrder: subject.displayOrder });
+        setFormData({ 
+          name: subject.name, 
+          code: subject.code || '', 
+          displayOrder: subject.displayOrder,
+          classLevelIds: subject.classLevelIds || []
+        });
       } else {
-        setFormData({ name: '', code: '', displayOrder: 0 });
+        setFormData({ name: '', code: '', displayOrder: 0, classLevelIds: [] });
       }
       setError('');
     }
@@ -48,42 +55,85 @@ const SubjectFormModal = ({ isOpen, subject, onConfirm, onCancel, apiError }: Su
     }
   };
 
+  const toggleClass = (classId: string) => {
+    const currentIds = formData.classLevelIds || [];
+    if (currentIds.includes(classId)) {
+      setFormData({ ...formData, classLevelIds: currentIds.filter(id => id !== classId) });
+    } else {
+      setFormData({ ...formData, classLevelIds: [...currentIds, classId] });
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
     <div style={styles.modalOverlay}>
-      <div style={styles.modal}>
+      <div style={{ ...styles.modal, width: '500px' }}>
         <h3 style={styles.modalTitle}>{subject ? 'Edit Subject' : 'Create New Subject'}</h3>
         {error && <ValidationMessage type="error" message={error} />}
         
-        <div style={styles.formGroup}>
-          <label style={styles.formLabel}>Subject Name:</label>
-          <input
-            style={styles.formInput}
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="e.g. Mathematics"
-          />
-        </div>
-        
-        <div style={styles.formGroup}>
-          <label style={styles.formLabel}>Subject Code (optional):</label>
-          <input
-            style={styles.formInput}
-            value={formData.code || ''}
-            onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-            placeholder="e.g. MTH101"
-          />
-        </div>
-        
-        <div style={styles.formGroup}>
-          <label style={styles.formLabel}>Display Order:</label>
-          <input
-            type="number"
-            style={styles.formInput}
-            value={formData.displayOrder}
-            onChange={(e) => setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 })}
-          />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div>
+            <div style={styles.formGroup}>
+              <label style={styles.formLabel}>Subject Name:</label>
+              <input
+                style={styles.formInput}
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="e.g. Mathematics"
+              />
+            </div>
+            
+            <div style={styles.formGroup}>
+              <label style={styles.formLabel}>Subject Code:</label>
+              <input
+                style={styles.formInput}
+                value={formData.code || ''}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                placeholder="e.g. MTH101"
+              />
+            </div>
+            
+            <div style={styles.formGroup}>
+              <label style={styles.formLabel}>Display Order:</label>
+              <input
+                type="number"
+                style={styles.formInput}
+                value={formData.displayOrder}
+                onChange={(e) => setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label style={styles.formLabel}>Link to Classes:</label>
+            <div style={{ 
+              maxHeight: '300px', 
+              overflowY: 'auto', 
+              border: '1px solid #d1d5db', 
+              borderRadius: '6px',
+              padding: '10px'
+            }}>
+              {classLevels.length === 0 ? (
+                <p style={{ fontSize: '12px', color: '#6b7280' }}>No classes available. Create classes first.</p>
+              ) : (
+                classLevels.map(cl => (
+                  <div key={cl.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                    <input 
+                      type="checkbox" 
+                      id={`class-${cl.id}`}
+                      checked={formData.classLevelIds?.includes(cl.id)}
+                      onChange={() => toggleClass(cl.id)}
+                      style={{ marginRight: '8px' }}
+                    />
+                    <label htmlFor={`class-${cl.id}`} style={{ fontSize: '14px', cursor: 'pointer' }}>
+                      {cl.name} {cl.sectionOrArm ? `(${cl.sectionOrArm})` : ''}
+                    </label>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
         <div style={styles.modalActions}>
@@ -97,6 +147,7 @@ const SubjectFormModal = ({ isOpen, subject, onConfirm, onCancel, apiError }: Su
 
 const SubjectManagement = () => {
   const [subjects, setSubjects] = useState<SubjectDto[]>([]);
+  const [classLevels, setClassLevels] = useState<ClassLevelDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formModal, setFormModal] = useState<{ isOpen: boolean; apiError: string; subject?: SubjectDto }>({ isOpen: false, apiError: '' });
@@ -104,12 +155,19 @@ const SubjectManagement = () => {
   const loadSubjects = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await academicStructureService.getSubjects();
-      if (response.isSuccess) {
-        setSubjects(response.data || []);
+      const [subjectResp, classResp] = await Promise.all([
+        academicStructureService.getSubjects(),
+        academicStructureService.getClassLevels()
+      ]);
+      
+      if (subjectResp.isSuccess) {
+        setSubjects(subjectResp.data || []);
+      }
+      if (classResp.isSuccess) {
+        setClassLevels(classResp.data || []);
       }
     } catch (err: any) {
-      setError('Failed to load subjects: ' + err.message);
+      setError('Failed to load subjects or classes: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -244,6 +302,7 @@ const SubjectManagement = () => {
       <SubjectFormModal 
         isOpen={formModal.isOpen} 
         subject={formModal.subject}
+        classLevels={classLevels}
         onConfirm={handleSave} 
         onCancel={() => setFormModal({ isOpen: false, apiError: '', subject: undefined })} 
         apiError={formModal.apiError}

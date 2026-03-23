@@ -284,10 +284,11 @@ const Admin = () => {
         setDashboardLoading(true);
         setDashboardError('');
         try {
-          const [statsResponse, studentCountResponse, teacherCountResponse] = await Promise.all([
+          const [statsResponse, studentCountResponse, teacherCountResponse, contributorCountResponse] = await Promise.all([
             PlatformStatisticService.getPlatformStatistics(),
             userService.getTotalUsers(UserRole.EXAM_TAKER),
-            userService.getTotalUsers(UserRole.TEACHER)
+            userService.getTotalUsers(UserRole.TEACHER),
+            userService.getTotalUsers(UserRole.CONTRIBUTOR)
           ]);
 
           if (statsResponse.isSuccess && statsResponse.data) {
@@ -298,7 +299,12 @@ const Admin = () => {
             setQuestionCount(statsResponse.data.totalQuestions);
             
             if (studentCountResponse.isSuccess) setStudentCount(studentCountResponse.data);
-            if (teacherCountResponse.isSuccess) setTeacherCount(teacherCountResponse.data);
+            
+            // Sum Teacher and Contributor roles for total staff/teachers count
+            let totalTeachers = 0;
+            if (teacherCountResponse.isSuccess) totalTeachers += teacherCountResponse.data;
+            if (contributorCountResponse.isSuccess) totalTeachers += contributorCountResponse.data;
+            setTeacherCount(totalTeachers);
 
             setDashboardDataLoaded(true);
           } else {

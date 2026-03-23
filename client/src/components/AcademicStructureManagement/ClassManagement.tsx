@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { ClassLevelDto, ClassLevelCreateDto, GradingSchemaDto } from '../../models/academic';
+import { ClassLevelDto, ClassLevelCreateDto, GradingSchemaDto, SubjectDto } from '../../models/academic';
 import { academicStructureService } from '../../services/academicStructureService';
 import { ValidationMessage } from '../Shared/ValidationComponents';
 
@@ -7,17 +7,19 @@ interface ClassFormModalProps {
   isOpen: boolean;
   classLevel?: ClassLevelDto; // Pass classLevel for editing
   schemas: GradingSchemaDto[];
+  subjects: SubjectDto[];
   onConfirm: (classLevel: ClassLevelCreateDto) => void;
   onCancel: () => void;
   apiError?: string;
 }
 
-const ClassFormModal = ({ isOpen, classLevel, schemas, onConfirm, onCancel, apiError }: ClassFormModalProps) => {
+const ClassFormModal = ({ isOpen, classLevel, schemas, subjects, onConfirm, onCancel, apiError }: ClassFormModalProps) => {
   const [formData, setFormData] = useState<ClassLevelCreateDto>({
     name: '',
     sectionOrArm: '',
     orderIndex: 0,
-    gradingSchemaId: undefined
+    gradingSchemaId: undefined,
+    subjectIds: []
   });
   const [error, setError] = useState('');
 
@@ -28,10 +30,11 @@ const ClassFormModal = ({ isOpen, classLevel, schemas, onConfirm, onCancel, apiE
           name: classLevel.name, 
           sectionOrArm: classLevel.sectionOrArm || '', 
           orderIndex: classLevel.orderIndex,
-          gradingSchemaId: classLevel.gradingSchemaId
+          gradingSchemaId: classLevel.gradingSchemaId,
+          subjectIds: classLevel.subjectIds || []
         });
       } else {
-        setFormData({ name: '', sectionOrArm: '', orderIndex: 0, gradingSchemaId: undefined });
+        setFormData({ name: '', sectionOrArm: '', orderIndex: 0, gradingSchemaId: undefined, subjectIds: [] });
       }
       setError('');
     }
@@ -55,56 +58,99 @@ const ClassFormModal = ({ isOpen, classLevel, schemas, onConfirm, onCancel, apiE
     }
   };
 
+  const toggleSubject = (subjectId: string) => {
+    const currentIds = formData.subjectIds || [];
+    if (currentIds.includes(subjectId)) {
+      setFormData({ ...formData, subjectIds: currentIds.filter(id => id !== subjectId) });
+    } else {
+      setFormData({ ...formData, subjectIds: [...currentIds, subjectId] });
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
     <div style={styles.modalOverlay}>
-      <div style={styles.modal}>
+      <div style={{ ...styles.modal, width: '500px' }}>
         <h3 style={styles.modalTitle}>{classLevel ? 'Edit Class Level' : 'Create New Class Level'}</h3>
         {error && <ValidationMessage type="error" message={error} />}
         
-        <div style={styles.formGroup}>
-          <label style={styles.formLabel}>Class Name (e.g. JSS 1, Primary 1):</label>
-          <input
-            style={styles.formInput}
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="e.g. JSS 1"
-          />
-        </div>
-        
-        <div style={styles.formGroup}>
-          <label style={styles.formLabel}>Section/Arm (e.g. A, Gold, Science):</label>
-          <input
-            style={styles.formInput}
-            value={formData.sectionOrArm || ''}
-            onChange={(e) => setFormData({ ...formData, sectionOrArm: e.target.value })}
-            placeholder="e.g. A"
-          />
-        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div>
+            <div style={styles.formGroup}>
+              <label style={styles.formLabel}>Class Name:</label>
+              <input
+                style={styles.formInput}
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="e.g. JSS 1"
+              />
+            </div>
+            
+            <div style={styles.formGroup}>
+              <label style={styles.formLabel}>Section/Arm:</label>
+              <input
+                style={styles.formInput}
+                value={formData.sectionOrArm || ''}
+                onChange={(e) => setFormData({ ...formData, sectionOrArm: e.target.value })}
+                placeholder="e.g. A"
+              />
+            </div>
 
-        <div style={styles.formGroup}>
-          <label style={styles.formLabel}>Grading Schema:</label>
-          <select
-            style={styles.formInput}
-            value={formData.gradingSchemaId || ''}
-            onChange={(e) => setFormData({ ...formData, gradingSchemaId: e.target.value || undefined })}
-          >
-            <option value="">-- No Specific Schema --</option>
-            {schemas.map(s => (
-              <option key={s.id} value={s.id}>{s.name} {s.isActive ? '' : '(Inactive)'}</option>
-            ))}
-          </select>
-        </div>
-        
-        <div style={styles.formGroup}>
-          <label style={styles.formLabel}>Sort Order:</label>
-          <input
-            type="number"
-            style={styles.formInput}
-            value={formData.orderIndex}
-            onChange={(e) => setFormData({ ...formData, orderIndex: parseInt(e.target.value) || 0 })}
-          />
+            <div style={styles.formGroup}>
+              <label style={styles.formLabel}>Grading Schema:</label>
+              <select
+                style={styles.formInput}
+                value={formData.gradingSchemaId || ''}
+                onChange={(e) => setFormData({ ...formData, gradingSchemaId: e.target.value || undefined })}
+              >
+                <option value="">-- No Specific Schema --</option>
+                {schemas.map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div style={styles.formGroup}>
+              <label style={styles.formLabel}>Sort Order:</label>
+              <input
+                type="number"
+                style={styles.formInput}
+                value={formData.orderIndex}
+                onChange={(e) => setFormData({ ...formData, orderIndex: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label style={styles.formLabel}>Link Subjects:</label>
+            <div style={{ 
+              maxHeight: '300px', 
+              overflowY: 'auto', 
+              border: '1px solid #d1d5db', 
+              borderRadius: '6px',
+              padding: '10px'
+            }}>
+              {subjects.length === 0 ? (
+                <p style={{ fontSize: '12px', color: '#6b7280' }}>No subjects available. Create subjects first.</p>
+              ) : (
+                subjects.map(subject => (
+                  <div key={subject.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                    <input 
+                      type="checkbox" 
+                      id={`subject-${subject.id}`}
+                      checked={formData.subjectIds?.includes(subject.id)}
+                      onChange={() => toggleSubject(subject.id)}
+                      style={{ marginRight: '8px' }}
+                    />
+                    <label htmlFor={`subject-${subject.id}`} style={{ fontSize: '14px', cursor: 'pointer' }}>
+                      {subject.name}
+                    </label>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
         <div style={styles.modalActions}>
@@ -119,6 +165,7 @@ const ClassFormModal = ({ isOpen, classLevel, schemas, onConfirm, onCancel, apiE
 const ClassManagement = () => {
   const [classes, setClasses] = useState<ClassLevelDto[]>([]);
   const [schemas, setSchemas] = useState<GradingSchemaDto[]>([]);
+  const [subjects, setSubjects] = useState<SubjectDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formModal, setFormModal] = useState<{ isOpen: boolean; apiError: string; classLevel?: ClassLevelDto }>({ isOpen: false, apiError: '' });
@@ -126,9 +173,10 @@ const ClassManagement = () => {
   const loadClasses = useCallback(async () => {
     setLoading(true);
     try {
-      const [classResp, schemaResp] = await Promise.all([
+      const [classResp, schemaResp, subjectResp] = await Promise.all([
         academicStructureService.getClassLevels(),
-        academicStructureService.getGradingSchemas()
+        academicStructureService.getGradingSchemas(),
+        academicStructureService.getSubjects()
       ]);
 
       if (classResp.isSuccess) {
@@ -137,8 +185,11 @@ const ClassManagement = () => {
       if (schemaResp.isSuccess) {
         setSchemas(schemaResp.data || []);
       }
+      if (subjectResp.isSuccess) {
+        setSubjects(subjectResp.data || []);
+      }
     } catch (err: any) {
-      setError('Failed to load classes or schemas: ' + err.message);
+      setError('Failed to load classes, schemas or subjects: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -274,6 +325,7 @@ const ClassManagement = () => {
         isOpen={formModal.isOpen} 
         classLevel={formModal.classLevel}
         schemas={schemas}
+        subjects={subjects}
         onConfirm={handleSave} 
         onCancel={() => setFormModal({ isOpen: false, apiError: '', classLevel: undefined })} 
         apiError={formModal.apiError}
