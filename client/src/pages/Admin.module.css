@@ -331,50 +331,6 @@
   border-color: #4f46e5 !important;
 }
 
-/* ===== RESPONSIVE DESIGN ===== */
-@media (max-width: 1200px) {
-  .statsGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-  }
-  
-  .sidebar {
-    display: none;
-  }
-  
-  .sectionHeader {
-    padding: 16px;
-    /* Hide the dropdown button on mobile if we use bottom nav, or keep it for the title */
-  }
-
-  .sectionDropdown {
-    display: none; /* Hide dropdown in favor of bottom nav / sheets */
-  }
-  
-  .content {
-    padding: 16px;
-    padding-bottom: 90px; /* Space for bottom nav */
-  }
-  
-  .statsGrid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-  
-  .statNumber {
-    font-size: 28px;
-  }
-
-  .bottomNav {
-    display: flex;
-  }
-}
-
 /* ===== BOTTOM NAVIGATION (MOBILE) ===== */
 .bottomNav {
   display: none;
@@ -429,6 +385,50 @@
 .bottomNavLabel {
   font-size: 11px;
   font-weight: 600;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1200px) {
+  .statsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    display: none;
+  }
+  
+  .sectionHeader {
+    padding: 16px;
+    /* Hide the dropdown button on mobile if we use bottom nav, or keep it for the title */
+  }
+
+  .sectionDropdown {
+    display: none; /* Hide dropdown in favor of bottom nav / sheets */
+  }
+  
+  .content {
+    padding: 16px;
+    padding-bottom: 90px; /* Space for bottom nav */
+  }
+  
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  
+  .statNumber {
+    font-size: 28px;
+  }
+
+  .bottomNav {
+    display: flex;
+  }
 }
 
 @media (max-width: 480px) {

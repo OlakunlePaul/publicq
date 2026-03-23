@@ -6,7 +6,7 @@
   min-height: calc(100vh - 80px);
   background-color: #ffffff;
   /* Subtle doodle SVG pattern - 3% opacity primary blue */
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627 4.877L33.891 25.613c-.156.156-.409.156-.565 0L12.59 4.877c-.156-.156-.156-.409 0-.565L33.326.576c.156-.156.409-.156.565 0l20.736 20.736c.156.156.156.409 0 .565zM10.5 30.5c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm40 0c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm-20 20c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm0-40c2.485 0 4.5-2.015 4.5-4.5S28.985 1.5 26.5 1.5s-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm20 20c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5zm-40 0c2.485 0 4.5-2.015 4.5-4.5s-2.015-4.5-4.5-4.5-4.5 2.015-4.5 4.5 2.015 4.5 4.5 4.5z' fill='%233b82f6' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 20 L20 15 L30 20 L20 25 Z' fill='%233b82f6' fill-opacity='0.08'/%3E%3Ccircle cx='50' cy='30' r='3' fill='%233b82f6' fill-opacity='0.1'/%3E%3Crect x='70' y='10' width='10' height='15' rx='2' fill='%233b82f6' fill-opacity='0.08'/%3E%3Cpath d='M80 80 L90 75 L100 80 L90 85 Z' fill='%233b82f6' fill-opacity='0.08'/%3E%3Cpath d='M20 70 Q 25 60, 30 70 T 40 70' stroke='%233b82f6' stroke-opacity='0.1' fill='none'/%3E%3C/svg%3E");
   display: flex;
   align-items: center;
   justify-content: center;

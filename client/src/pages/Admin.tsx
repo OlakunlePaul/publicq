@@ -571,7 +571,7 @@ const Admin = () => {
                 <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>All Menu Sections</h3>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '8px' }}>
-                  {['dashboard', 'users', 'admissions', 'branding', 'academic', 'results', 'permissions', 'groups', 'assignments', 'assessments', 'reports', 'email', 'banners', 'pages', 'ai', 'ai-chat', 'security', 'logs'].map(section => {
+                  {['dashboard', 'users', 'admissions', 'branding', 'academic', 'results', 'permissions', 'groups', 'assignments', 'assessments', 'reports', 'email', 'banners', 'pages', 'ai', 'ai-chat', 'security', 'logs', 'cache', 'storage'].map(section => {
                     const sec = section as AdminSection;
                     const isVisible = (
                       sec === 'dashboard' ||
@@ -590,7 +590,9 @@ const Admin = () => {
                       (sec === 'security' && UserPolicies.hasAdminAccess(userRoles)) ||
                       (sec === 'academic' && UserPolicies.hasManagerAccess(userRoles)) ||
                       (sec === 'results' && UserPolicies.hasContributorAccess(userRoles)) ||
-                      (sec === 'logs' && UserPolicies.hasManagerAccess(userRoles))
+                      (sec === 'logs' && UserPolicies.hasManagerAccess(userRoles)) ||
+                      (sec === 'cache' && UserPolicies.hasAdminAccess(userRoles)) ||
+                      (sec === 'storage' && UserPolicies.hasAdminAccess(userRoles))
                     );
 
                     if (!isVisible) return null;
@@ -703,7 +705,7 @@ const DashboardContent = ({ userCount, studentCount, teacherCount, groupCount, m
           <h3>Students</h3>
           <p className={cssStyles.statNumber}><AnimatedCounter target={studentCount} delay={100} /></p>
         </div>
-        {UserPolicies.hasAdminAccess(userRoles) && (
+        {UserPolicies.hasManagerAccess(userRoles) && (
           <div className={cssStyles.statCard} style={{ animationDelay: '0.15s' }}>
             <h3>Teachers</h3>
             <p className={cssStyles.statNumber}><AnimatedCounter target={teacherCount} delay={200} /></p>
@@ -728,7 +730,7 @@ const DashboardContent = ({ userCount, studentCount, teacherCount, groupCount, m
       </div>
       
       <div className={cssStyles.welcomeMessage}>
-        <p>Welcome to the ExamNova Teacher Portal. Your central hub for preparing question papers, scheduling exams, and managing student report cards.</p>
+        <p>Welcome to the ExamNova Portal. Your central hub for preparing question papers, scheduling exams, and managing student report cards.</p>
         <div className={cssStyles.statisticsNote}>
           <p className={cssStyles.statisticsNoteText}>
             <img src="https://cdn-icons-png.flaticon.com/512/189/189665.png" alt="Info" style={{width: '18px', height: '18px'}} />
