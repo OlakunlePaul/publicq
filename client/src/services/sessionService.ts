@@ -42,5 +42,10 @@ export const sessionService = {
   completeModule: async (userProgressId: string): Promise<Response<GenericOperationStatuses>> => {
     const response = await axios.post<Response<GenericOperationStatuses>>(`sessions/progress/${userProgressId}/complete`);
     return response.data;
+  },
+
+  updateQuestionResponseMark: async (responseId: string, isCorrect: boolean): Promise<Response<GenericOperationStatuses>> => {
+    const response = await axios.patch<Response<GenericOperationStatuses>>(`sessions/responses/${responseId}/mark?isCorrect=${isCorrect}`);
+    return response.data;
   }
 }

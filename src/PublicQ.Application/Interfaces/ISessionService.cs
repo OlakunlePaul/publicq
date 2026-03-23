@@ -98,4 +98,16 @@ public interface ISessionService
     Task<Response<GenericOperationStatuses>> CompleteModuleAsync(
         Guid userProgressId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Updates the IsCorrect flag on a question response (for manual essay marking by teachers).
+    /// </summary>
+    /// <param name="questionResponseId">The ID of the question response to update</param>
+    /// <param name="isCorrect">Whether the response is correct</param>
+    /// <param name="cancellationToken">Token to cancel the operation</param>
+    /// <returns>A response indicating the success or failure of the update</returns>
+    Task<Response<GenericOperationStatuses>> UpdateQuestionResponseMarkAsync(
+        Guid questionResponseId,
+        bool isCorrect,
+        CancellationToken cancellationToken);
 }

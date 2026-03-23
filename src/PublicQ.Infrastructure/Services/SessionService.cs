@@ -756,4 +756,31 @@ public class SessionService(
             .OrderBy(o => random.Next())
             .ToList();
     }
+
+    /// <inheritdoc cref="ISessionService.UpdateQuestionResponseMarkAsync"/>
+    public async Task<Response<GenericOperationStatuses>> UpdateQuestionResponseMarkAsync(
+        Guid questionResponseId,
+        bool isCorrect,
+        CancellationToken cancellationToken)
+    {
+        var questionResponse = await dbContext.QuestionResponses
+            .FirstOrDefaultAsync(qr => qr.Id == questionResponseId, cancellationToken);
+
+        if (questionResponse is null)
+        {
+            return Response<GenericOperationStatuses>.Failure(
+                GenericOperationStatuses.NotFound,
+                "Question response not found.");
+        }
+
+        questionResponse.IsCorrect = isCorrect;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Question response {ResponseId} manually marked as {IsCorrect}.",
+            questionResponseId, isCorrect);
+
+        return Response<GenericOperationStatuses>.Success(
+            GenericOperationStatuses.Completed,
+            "Question response mark updated successfully.");
+    }
 }

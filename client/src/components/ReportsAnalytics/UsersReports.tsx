@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import ManualMarkingModal from './ManualMarkingModal';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import {
@@ -43,6 +44,14 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
   const [assignmentReportLoading, setAssignmentReportLoading] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const [hoveredStatus, setHoveredStatus] = useState<string | null>(null);
+  const [markingModal, setMarkingModal] = useState<{
+    isOpen: boolean;
+    studentId: string;
+    assignmentId: string;
+    moduleId: string;
+    moduleTitle: string;
+    studentName: string;
+  }>({ isOpen: false, studentId: '', assignmentId: '', moduleId: '', moduleTitle: '', studentName: '' });
   const isInitialMount = useRef(true);
 
   // Handle page size change
@@ -1020,6 +1029,7 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
                         <div className={styles.tableHeaderCell}>Questions</div>
                         <div className={styles.tableHeaderCell}>Time</div>
                         <div className={styles.tableHeaderCell}>Passed</div>
+                        <div className={styles.tableHeaderCell}>Actions</div>
                       </div>
                       {assignment.moduleReports.map((module, index) => {
                         // Parse status once at the beginning
@@ -1072,6 +1082,23 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
                               }}>
                                 {module.passed ? 'Yes' : 'No'}
                               </span>
+                            )}
+                          </div>
+                          <div className={styles.tableCell}>
+                            {!isNotStartedModule && (
+                              <button
+                                className={styles.detailedReportButton}
+                                onClick={() => setMarkingModal({
+                                  isOpen: true,
+                                  studentId: examTaker.examTakerId,
+                                  assignmentId: assignment.assignmentId,
+                                  moduleId: module.moduleId,
+                                  moduleTitle: module.moduleTitle,
+                                  studentName: examTaker.examTakerDisplayName,
+                                })}
+                              >
+                                Review Answers
+                              </button>
                             )}
                           </div>
                         </div>
@@ -1449,6 +1476,17 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
 
       {/* Assignment Detailed Report Modal */}
       {renderAssignmentDetailedReport()}
+
+      {/* Manual Essay Marking Modal */}
+      <ManualMarkingModal
+        isOpen={markingModal.isOpen}
+        studentId={markingModal.studentId}
+        assignmentId={markingModal.assignmentId}
+        moduleId={markingModal.moduleId}
+        moduleTitle={markingModal.moduleTitle}
+        studentName={markingModal.studentName}
+        onClose={() => setMarkingModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

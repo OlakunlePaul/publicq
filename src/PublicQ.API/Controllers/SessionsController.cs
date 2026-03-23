@@ -252,4 +252,33 @@ public class SessionsController(ISessionService sessionService) : ControllerBase
         
         return response.ToActionResult();
     }
+
+    /// <summary>
+    /// Updates the IsCorrect flag on a question response (for manual essay marking).
+    /// </summary>
+    /// <param name="responseId">Question response ID</param>
+    /// <param name="isCorrect">Whether the response is marked as correct</param>
+    /// <param name="cancellationToken">Cancellation Token</param>
+    /// <returns>Returns <see cref="GenericOperationStatuses"/> wrapped into <see cref="Response{TStatus}"/></returns>
+    [HttpPatch("responses/{responseId:guid}/mark")]
+    public async Task<IActionResult> UpdateQuestionResponseMarkAsync(
+        [FromRoute] Guid responseId,
+        [FromQuery] bool isCorrect,
+        CancellationToken cancellationToken)
+    {
+        if (responseId == Guid.Empty)
+        {
+            return Response<GenericOperationStatuses>.Failure(
+                GenericOperationStatuses.BadRequest,
+                    "Validation failed. Please ensure all IDs are provided and valid.")
+                .ToActionResult();
+        }
+        
+        var response = await sessionService.UpdateQuestionResponseMarkAsync(
+            responseId,
+            isCorrect,
+            cancellationToken);
+        
+        return response.ToActionResult();
+    }
 }
