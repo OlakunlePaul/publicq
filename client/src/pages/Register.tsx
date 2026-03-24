@@ -31,6 +31,8 @@ const Register = () => {
   const [showPasswordInfo, setShowPasswordInfo] = useState(false);
   const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
   const [registrationLoading, setRegistrationLoading] = useState(true);
+  const [isStudent, setIsStudent] = useState(true);
+  const [registrationSuccessData, setRegistrationSuccessData] = useState<{ id: string, name: string } | null>(null);
   const { saveToken } = useAuth()
   const emailInputRef = useRef<HTMLInputElement>(null);
 
@@ -101,44 +103,48 @@ const Register = () => {
 
     switch (fieldName) {
       case 'email':
-        if (!username.trim()) return 'Email is required';
-        if (!/\S+@\S+\.\S+/.test(username)) return 'Please enter a valid email address';
+        if (!isStudent && !username.trim()) return 'Email is required';
+        if (username.trim() && !/\S+@\S+\.\S+/.test(username)) return 'Please enter a valid email address';
         break;
       case 'fullName':
         if (!fullName.trim()) return 'Full name is required';
         break;
       case 'password':
-        if (!password.trim()) return 'Password is required';
-        if (passwordPolicy) {
-          if (password.length < passwordPolicy.requiredLength) {
-            return `Password must be at least ${passwordPolicy.requiredLength} characters long`;
+        if (!isStudent) {
+          if (!password.trim()) return 'Password is required';
+          if (passwordPolicy) {
+            if (password.length < passwordPolicy.requiredLength) {
+              return `Password must be at least ${passwordPolicy.requiredLength} characters long`;
+            }
+            if (passwordPolicy.requireDigit && !/\d/.test(password)) {
+              return 'Password must contain at least one digit (0-9)';
+            }
+            if (passwordPolicy.requireUppercase && !/[A-Z]/.test(password)) {
+              return 'Password must contain at least one uppercase letter (A-Z)';
+            }
+            if (passwordPolicy.requireLowercase && !/[a-z]/.test(password)) {
+              return 'Password must contain at least one lowercase letter (a-z)';
+            }
+            if (passwordPolicy.requireNonAlphanumeric && !/[^A-Za-z0-9]/.test(password)) {
+              return 'Password must contain at least one special character (!@#$%^&* etc.)';
+            }
+          } else if (password.length < 6) {
+            return 'Password must be at least 6 characters long';
           }
-          if (passwordPolicy.requireDigit && !/\d/.test(password)) {
-            return 'Password must contain at least one digit (0-9)';
-          }
-          if (passwordPolicy.requireUppercase && !/[A-Z]/.test(password)) {
-            return 'Password must contain at least one uppercase letter (A-Z)';
-          }
-          if (passwordPolicy.requireLowercase && !/[a-z]/.test(password)) {
-            return 'Password must contain at least one lowercase letter (a-z)';
-          }
-          if (passwordPolicy.requireNonAlphanumeric && !/[^A-Za-z0-9]/.test(password)) {
-            return 'Password must contain at least one special character (!@#$%^&* etc.)';
-          }
-        } else if (password.length < 6) {
-          return 'Password must be at least 6 characters long';
         }
         break;
       case 'confirmPassword':
-        if (!confirmPassword.trim()) return 'Please confirm your password';
-        if (password !== confirmPassword) return 'Passwords do not match';
+        if (!isStudent) {
+          if (!confirmPassword.trim()) return 'Please confirm your password';
+          if (password !== confirmPassword) return 'Passwords do not match';
+        }
         break;
       case 'classLevelId':
-        if (!selectedClassLevelId) return 'Please select your class';
+        if (isStudent && !selectedClassLevelId) return 'Please select your class';
         break;
     }
     return null;
-  }, [username, fullName, password, confirmPassword, passwordPolicy, touched, selectedClassLevelId]);
+  }, [username, fullName, password, confirmPassword, passwordPolicy, touched, selectedClassLevelId, isStudent]);
 
   const validateForm = useCallback(() => {
     // Check if any field has validation errors by using the existing getFieldError function
@@ -182,23 +188,35 @@ const Register = () => {
     setErrors([]);
     setIsSubmitting(true);
 
-    const registerData: UserCreateRequest = {
-      email: username,
-      fullName: fullName,
-      password: password,
-      ...(dateOfBirth && { dateOfBirth }),
-      classLevelId: selectedClassLevelId,
-    };
-
     try {
-      const response = await userService.createUser(registerData);
-      const token = response.accessToken;
+      if (isStudent) {
+        const registerDataStudent: any = {
+          fullName: fullName.trim(),
+          ...(username.trim() && { email: username.trim() }),
+          ...(dateOfBirth.trim() && { dateOfBirth: dateOfBirth.trim() }),
+          classLevelId: selectedClassLevelId,
+        };
+        const response = await userService.createStudentPublic(registerDataStudent);
+        setRegistrationSuccessData({
+          id: response.data?.admissionNumber || response.data?.id || 'Unknown',
+          name: response.data?.fullName || fullName.trim()
+        });
+      } else {
+        const registerDataTeacher: UserCreateRequest = {
+          email: username,
+          fullName: fullName,
+          password: password,
+          ...(dateOfBirth && { dateOfBirth }),
+        };
+        const response = await userService.createUser(registerDataTeacher);
+        const token = response.accessToken;
 
-      localStorage.setItem(CONSTANTS.TOKEN_VARIABLE_NAME, token);
-      saveToken(token);
-      
-      // Redirect to home page after successful registration
-      navigate('/');
+        localStorage.setItem(CONSTANTS.TOKEN_VARIABLE_NAME, token);
+        saveToken(token);
+        
+        // Redirect to home page after successful registration
+        navigate('/');
+      }
     } catch (err: any) {
       const result = err.response?.data as ResponseWithData<string, any> | undefined;
       if (result?.errors) {
@@ -209,7 +227,7 @@ const Register = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [username, fullName, dateOfBirth, password, isSubmitting, navigate, saveToken, validateForm, selectedClassLevelId]);
+  }, [username, fullName, dateOfBirth, password, isSubmitting, navigate, saveToken, validateForm, selectedClassLevelId, isStudent]);
 
   // Handle Ctrl+Enter keyboard shortcut
   useEffect(() => {
@@ -243,7 +261,9 @@ const Register = () => {
         ) : (
           <div className={registerStyles.header}>
             <h2 className={registerStyles.title}>Join Our School</h2>
-            <p className={registerStyles.subtitle}>Enter your details below to register as a student</p>
+            <p className={registerStyles.subtitle}>
+              {isStudent ? 'Enter your details below to register as a student' : 'Enter your details below to register as a teacher or parent'}
+            </p>
           </div>
         )}
 
@@ -253,7 +273,71 @@ const Register = () => {
             <p className={registerStyles.loadingText}>Checking registration availability...</p>
           </div>
         ) : registrationEnabled === true ? (
+          registrationSuccessData ? (
+            <div className={registerStyles.successContainer} style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#f0fdf4', borderRadius: '0.5rem', border: '1px solid #bbf7d0', marginBottom: '1.5rem' }}>
+              <div style={{ color: '#22c55e', fontSize: '3rem', marginBottom: '1rem' }}>✓</div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#166534', marginBottom: '0.5rem' }}>Registration Successful!</h3>
+              <p style={{ color: '#15803d', marginBottom: '1.5rem' }}>
+                Welcome, {registrationSuccessData.name}. Your account has been created.
+              </p>
+              <div style={{ backgroundColor: '#fff', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #dcfce7', marginBottom: '1.5rem' }}>
+                <p style={{ color: '#166534', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem' }}>Your Admission Number / Login ID</p>
+                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#15803d', letterSpacing: '0.05em' }}>
+                  {registrationSuccessData.id}
+                </div>
+              </div>
+              <p style={{ fontSize: '0.875rem', color: '#166534', marginBottom: '1.5rem' }}>
+                Please save this number. You will use it to log in as a student.
+              </p>
+              <button 
+                onClick={() => navigate('/login')}
+                className={registerStyles.submitButton}
+                style={{ width: '100%' }}
+              >
+                Go to Login
+              </button>
+            </div>
+          ) : (
           <>
+            <div style={{ display: 'flex', marginBottom: '1.5rem', backgroundColor: '#f3f4f6', borderRadius: '0.5rem', padding: '0.25rem' }}>
+              <button
+                type="button"
+                onClick={() => { setIsStudent(true); setErrors([]); setTouched({}); }}
+                style={{ 
+                  flex: 1, 
+                  padding: '0.5rem', 
+                  borderRadius: '0.375rem',
+                  border: 'none',
+                  backgroundColor: isStudent ? '#fff' : 'transparent',
+                  color: isStudent ? '#1f2937' : '#4b5563',
+                  fontWeight: isStudent ? 600 : 500,
+                  boxShadow: isStudent ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                I am a Student
+              </button>
+              <button
+                type="button"
+                onClick={() => { setIsStudent(false); setErrors([]); setTouched({}); }}
+                style={{ 
+                  flex: 1, 
+                  padding: '0.5rem', 
+                  borderRadius: '0.375rem',
+                  border: 'none',
+                  backgroundColor: !isStudent ? '#fff' : 'transparent',
+                  color: !isStudent ? '#1f2937' : '#4b5563',
+                  fontWeight: !isStudent ? 600 : 500,
+                  boxShadow: !isStudent ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Teacher / Parent
+              </button>
+            </div>
+
             {errors.length > 0 && (
               <div className={registerStyles.errorContainer}>
                 <ul className={registerStyles.errorList}>
@@ -268,7 +352,7 @@ const Register = () => {
                 <input
                   ref={emailInputRef}
                   type="email"
-                  placeholder="Email address"
+                  placeholder={isStudent ? "Email address (optional)" : "Email address"}
                   value={username}
                   onChange={e => setUsername(e.target.value)}
                   className={cn(
@@ -332,37 +416,41 @@ const Register = () => {
                 <div className={registerStyles.optionalFieldHint}>Date of Birth (optional)</div>
               </div>
 
-              <div className={registerStyles.inputGroup}>
-                <select
-                  value={selectedClassLevelId}
-                  onChange={e => setSelectedClassLevelId(e.target.value)}
-                  className={cn(
-                    registerStyles.input,
-                    touched.classLevelId && getFieldError('classLevelId') && registerStyles['input--error']
+              {isStudent && (
+                <div className={registerStyles.inputGroup}>
+                  <select
+                    value={selectedClassLevelId}
+                    onChange={e => setSelectedClassLevelId(e.target.value)}
+                    className={cn(
+                      registerStyles.input,
+                      touched.classLevelId && getFieldError('classLevelId') && registerStyles['input--error']
+                    )}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = touched.classLevelId && getFieldError('classLevelId') ? '#ef4444' : '#3b82f6';
+                    }}
+                    onBlur={(e) => {
+                      handleFieldTouch('classLevelId');
+                      e.currentTarget.style.borderColor = touched.classLevelId && getFieldError('classLevelId') ? '#ef4444' : '#d1d5db';
+                    }}
+                    disabled={classLoading}
+                  >
+                    <option value="">Select your class</option>
+                    {classLevels.map(level => (
+                      <option key={level.id} value={level.id}>
+                        {level.name}
+                      </option>
+                    ))}
+                  </select>
+                  {touched.classLevelId && getFieldError('classLevelId') && (
+                    <div className={registerStyles.fieldError}>{getFieldError('classLevelId')}</div>
                   )}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = touched.classLevelId && getFieldError('classLevelId') ? '#ef4444' : '#3b82f6';
-                  }}
-                  onBlur={(e) => {
-                    handleFieldTouch('classLevelId');
-                    e.currentTarget.style.borderColor = touched.classLevelId && getFieldError('classLevelId') ? '#ef4444' : '#d1d5db';
-                  }}
-                  disabled={classLoading}
-                >
-                  <option value="">Select your class</option>
-                  {classLevels.map(level => (
-                    <option key={level.id} value={level.id}>
-                      {level.name}
-                    </option>
-                  ))}
-                </select>
-                {touched.classLevelId && getFieldError('classLevelId') && (
-                  <div className={registerStyles.fieldError}>{getFieldError('classLevelId')}</div>
-                )}
-                {classLoading && <div className={registerStyles.optionalFieldHint}>Loading classes...</div>}
-              </div>
+                  {classLoading && <div className={registerStyles.optionalFieldHint}>Loading classes...</div>}
+                </div>
+              )}
 
-              <div className={registerStyles.inputGroup}>
+              {!isStudent && (
+                <>
+                  <div className={registerStyles.inputGroup}>
                 <PasswordInput
                 placeholder="Password"
                 value={password}
@@ -415,6 +503,8 @@ const Register = () => {
                   <div className={registerStyles.fieldError}>{getFieldError('confirmPassword')}</div>
                 )}
               </div>
+                </>
+              )}
 
           {/* Error Messages */}
           {errors.length > 0 && (
@@ -467,6 +557,7 @@ const Register = () => {
           </button>
         </form>
       </>
+          )
         ) : null}
 
         <div className={registerStyles.loginLink}>

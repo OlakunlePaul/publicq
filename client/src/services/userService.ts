@@ -57,6 +57,11 @@ export const userService = {
     return r.data;
   },
 
+  createStudentPublic: async (request: StudentCreateRequest): Promise<ResponseWithData<User, GenericOperationStatuses>> => {
+    const r = await axios.post<ResponseWithData<User, GenericOperationStatuses>>('users/student/register', request);
+    return r.data;
+  },
+
   resetPasswordByAdmin: async (email: string, password: string): Promise<Response> => {
     const request = {
       email: email,

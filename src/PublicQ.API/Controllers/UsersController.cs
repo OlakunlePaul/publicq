@@ -223,7 +223,44 @@ public class UsersController(
     }
 
     /// <summary>
-    /// Registers a new student (user without credentials).
+    /// Registers a new student (user without credentials) publicly without requiring authentication.
+    /// </summary>
+    /// <param name="dto"><see cref="StudentRegisterRequest"/></param>
+    /// <param name="validator">Validator <see cref="StudentRegisterRequestValidator"/></param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [AllowAnonymous]
+    [HttpPost("student/register")]
+    public async Task<IActionResult> RegisterStudentPublicAsync(
+        [FromBody] StudentRegisterRequest dto,
+        [FromServices] IValidator<StudentRegisterRequest> validator,
+        CancellationToken cancellationToken)
+    {
+        var validationResult = await validator.ValidateAsync(dto, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            return Response<string, GenericOperationStatuses>.Failure(GenericOperationStatuses.BadRequest,
+                    "Validation failed",
+                    validationResult.Errors.Select(e => e.ErrorMessage).ToList())
+                .ToActionResult();
+        }
+
+        // Email is optional for exam takers
+        var mailAddress = string.IsNullOrEmpty(dto.Email) ? null : new MailAddress(dto.Email);
+
+        var result = await userService.RegisterStudentAsync(
+            mailAddress,
+            dto.Id,
+            dto.DateOfBirth,
+            dto.FullName,
+            dto.AdmissionNumber,
+            dto.ClassLevelId,
+            cancellationToken);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>
+    /// Registers a new student (user without credentials) by admin.
     /// </summary>
     /// <param name="dto"><see cref="StudentRegisterRequest"/></param>
     /// <param name="validator">Validator <see cref="StudentRegisterRequestValidator"/></param>
