@@ -221,7 +221,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
     
     setValidationError('');
     return true;
-  }, [emailEnabled, formData.email, formData.fullName, formData.id, formData.password, isStudent]);
+  }, [emailEnabled, formData.email, formData.fullName, formData.id, formData.password, formData.classLevelId, isStudent]);
 
   const handleConfirm = useCallback(() => {
     if (validateForm()) {
