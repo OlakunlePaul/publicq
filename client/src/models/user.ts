@@ -33,4 +33,19 @@ export interface User {
    * Roles assigned to the user.
    */
   roles?: string[];
+
+  /**
+   * Current class name (if enrolled).
+   */
+  className?: string;
+
+  /**
+   * Current session name (if enrolled).
+   */
+  sessionName?: string;
+
+  /**
+   * Current term name (if enrolled).
+   */
+  termName?: string;
 }

@@ -22,7 +22,13 @@ public class AcademicStructureService(
     {
         var subjects = await dbContext.Subjects
             .Include(s => s.ClassLevels)
-            .Select(s => new SubjectDto(s.Id, s.Name, s.Code, s.DisplayOrder, s.ClassLevels.Select(cl => cl.Id).ToList()))
+            .Select(s => new SubjectDto(
+                s.Id, 
+                s.Name, 
+                s.Code, 
+                s.DisplayOrder, 
+                s.ClassLevels.Select(cl => cl.Id).ToList(),
+                s.ClassLevels.Select(cl => $"{cl.Name}{(string.IsNullOrEmpty(cl.SectionOrArm) ? "" : $" ({cl.SectionOrArm})")}").ToList()))
             .ToListAsync(cancellationToken);
 
         return Response<IList<SubjectDto>, GenericOperationStatuses>.Success(
@@ -58,7 +64,13 @@ public class AcademicStructureService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Response<SubjectDto, GenericOperationStatuses>.Success(
-            new SubjectDto(subject.Id, subject.Name, subject.Code, subject.DisplayOrder, subject.ClassLevels.Select(cl => cl.Id).ToList()),
+            new SubjectDto(
+                subject.Id, 
+                subject.Name, 
+                subject.Code, 
+                subject.DisplayOrder, 
+                subject.ClassLevels.Select(cl => cl.Id).ToList(),
+                subject.ClassLevels.Select(cl => $"{cl.Name}{(string.IsNullOrEmpty(cl.SectionOrArm) ? "" : $" ({cl.SectionOrArm})")}").ToList()),
             GenericOperationStatuses.Completed, "Subject created successfully.");
     }
 
@@ -171,7 +183,14 @@ public class AcademicStructureService(
     {
         var classLevels = await dbContext.ClassLevels
             .Include(c => c.Subjects)
-            .Select(c => new ClassLevelDto(c.Id, c.Name, c.SectionOrArm, c.OrderIndex, c.GradingSchemaId, c.Subjects.Select(s => s.Id).ToList()))
+            .Select(c => new ClassLevelDto(
+                c.Id, 
+                c.Name, 
+                c.SectionOrArm, 
+                c.OrderIndex, 
+                c.GradingSchemaId, 
+                c.Subjects.Select(s => s.Id).ToList(),
+                c.Subjects.Select(s => s.Name).ToList()))
             .ToListAsync(cancellationToken);
 
         return Response<IList<ClassLevelDto>, GenericOperationStatuses>.Success(
@@ -208,7 +227,14 @@ public class AcademicStructureService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Response<ClassLevelDto, GenericOperationStatuses>.Success(
-            new ClassLevelDto(classLevel.Id, classLevel.Name, classLevel.SectionOrArm, classLevel.OrderIndex, classLevel.GradingSchemaId, classLevel.Subjects.Select(s => s.Id).ToList()),
+            new ClassLevelDto(
+                classLevel.Id, 
+                classLevel.Name, 
+                classLevel.SectionOrArm, 
+                classLevel.OrderIndex, 
+                classLevel.GradingSchemaId, 
+                classLevel.Subjects.Select(s => s.Id).ToList(),
+                classLevel.Subjects.Select(s => s.Name).ToList()),
             GenericOperationStatuses.Completed, "Class level created successfully.");
     }
 
@@ -235,7 +261,13 @@ public class AcademicStructureService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return Response<SubjectDto, GenericOperationStatuses>.Success(
-            new SubjectDto(subject.Id, subject.Name, subject.Code, subject.DisplayOrder, subject.ClassLevels.Select(cl => cl.Id).ToList()),
+            new SubjectDto(
+                subject.Id, 
+                subject.Name, 
+                subject.Code, 
+                subject.DisplayOrder, 
+                subject.ClassLevels.Select(cl => cl.Id).ToList(),
+                subject.ClassLevels.Select(cl => $"{cl.Name}{(string.IsNullOrEmpty(cl.SectionOrArm) ? "" : $" ({cl.SectionOrArm})")}").ToList()),
             GenericOperationStatuses.Completed, "Subject updated successfully.");
     }
 
@@ -341,7 +373,14 @@ public class AcademicStructureService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return Response<ClassLevelDto, GenericOperationStatuses>.Success(
-            new ClassLevelDto(classLevel.Id, classLevel.Name, classLevel.SectionOrArm, classLevel.OrderIndex, classLevel.GradingSchemaId, classLevel.Subjects.Select(s => s.Id).ToList()),
+            new ClassLevelDto(
+                classLevel.Id, 
+                classLevel.Name, 
+                classLevel.SectionOrArm, 
+                classLevel.OrderIndex, 
+                classLevel.GradingSchemaId, 
+                classLevel.Subjects.Select(s => s.Id).ToList(),
+                classLevel.Subjects.Select(s => s.Name).ToList()),
             GenericOperationStatuses.Completed, "Class level updated successfully.");
     }
 

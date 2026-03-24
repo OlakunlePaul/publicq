@@ -328,6 +328,7 @@ const SubjectManagement = () => {
               <tr>
                 <th style={styles.th}>Name</th>
                 <th style={styles.th}>Code</th>
+                <th style={styles.th}>Classes</th>
                 <th style={styles.th}>Display Order</th>
                 <th style={styles.th}>Actions</th>
               </tr>
@@ -340,6 +341,11 @@ const SubjectManagement = () => {
                   <tr key={s.id} style={styles.tr}>
                     <td style={styles.td} data-label="Name"><strong>{s.name}</strong></td>
                     <td style={styles.td} data-label="Code">{s.code || '-'}</td>
+                    <td style={styles.td} data-label="Classes">
+                      <div style={{ fontSize: '12px', color: '#6b7280', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.classLevelNames?.join(', ')}>
+                        {s.classLevelNames && s.classLevelNames.length > 0 ? s.classLevelNames.join(', ') : 'None'}
+                      </div>
+                    </td>
                     <td style={styles.td} data-label="Order">{s.displayOrder}</td>
                     <td style={styles.td} data-label="Actions">
                       <button 

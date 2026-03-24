@@ -4,6 +4,7 @@ export interface SubjectDto {
     code?: string;
     displayOrder: number;
     classLevelIds?: string[];
+    classLevelNames?: string[];
 }
 
 export interface SubjectCreateDto {
@@ -55,6 +56,7 @@ export interface ClassLevelDto {
     orderIndex: number;
     gradingSchemaId?: string;
     subjectIds?: string[];
+    subjectNames?: string[];
 }
 
 export interface ClassLevelCreateDto {

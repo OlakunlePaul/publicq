@@ -28,6 +28,7 @@ public static class ServiceRegistration
         // Add services to the container.
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
+        services.AddRouting(options => options.LowercaseUrls = true);
         
         services.AddSwaggerGen(c =>
         {
@@ -43,7 +44,10 @@ public static class ServiceRegistration
                 var xmlFile = $"{assembly!.GetName().Name}.xml";
                 var directory = Path.GetDirectoryName(assembly.Location)!;
                 xmlFile = Path.Combine(directory, xmlFile);
-                c.IncludeXmlComments(xmlFile);
+                if (File.Exists(xmlFile))
+                {
+                    c.IncludeXmlComments(xmlFile);
+                }
             }
         });
         

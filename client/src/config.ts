@@ -5,8 +5,8 @@ export const config = {
     const rawUrl = process.env.REACT_APP_API_BASE_URL;
     if (!rawUrl) return `${window.location.protocol}//${window.location.host}/api/`;
     
-    // Ensure protocol is present
-    if (!rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
+    // Ensure protocol is present if it's not a relative path
+    if (!rawUrl.startsWith('/') && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
       return `https://${rawUrl.replace(/^\/+/, '')}`;
     }
     return rawUrl;
@@ -17,9 +17,9 @@ export const config = {
     const rawUrl = process.env.REACT_APP_API_BASE_URL;
     if (!rawUrl) return `${window.location.protocol}//${window.location.host}/static/pages`;
     
-    // Ensure protocol is present
+    // Ensure protocol is present if it's not a relative path
     let baseUrl = rawUrl;
-    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+    if (!baseUrl.startsWith('/') && !baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
       baseUrl = `https://${baseUrl.replace(/^\/+/, '')}`;
     }
     // Remove trailing /api/ or /api if it exists

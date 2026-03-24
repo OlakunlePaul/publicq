@@ -103,6 +103,8 @@ try
         await permissionService.SeedPermissionsAsync();
 
         await PageSeeder.SeedAsync(app.Services);
+
+        await TestDataSeeder.SeedTestDataAsync(scope.ServiceProvider);
     }
     Console.WriteLine("Database and Page seeding completed successfully.");
 }

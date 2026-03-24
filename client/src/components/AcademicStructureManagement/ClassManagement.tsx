@@ -351,6 +351,7 @@ const ClassManagement = () => {
               <tr>
                 <th style={styles.th}>Name</th>
                 <th style={styles.th}>Section/Arm</th>
+                <th style={styles.th}>Subjects</th>
                 <th style={styles.th}>Sort Order</th>
                 <th style={styles.th}>Actions</th>
               </tr>
@@ -363,6 +364,11 @@ const ClassManagement = () => {
                   <tr key={c.id} style={styles.tr}>
                     <td style={styles.td} data-label="Name"><strong>{c.name}</strong></td>
                     <td style={styles.td} data-label="Section/Arm">{c.sectionOrArm || '-'}</td>
+                    <td style={styles.td} data-label="Subjects">
+                      <div style={{ fontSize: '12px', color: '#6b7280', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.subjectNames?.join(', ')}>
+                        {c.subjectNames && c.subjectNames.length > 0 ? c.subjectNames.join(', ') : 'None'}
+                      </div>
+                    </td>
                     <td style={styles.td} data-label="Order">{c.orderIndex}</td>
                     <td style={styles.td} data-label="Actions">
                       <button 

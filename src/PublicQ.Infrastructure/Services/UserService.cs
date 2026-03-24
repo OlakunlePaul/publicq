@@ -823,6 +823,7 @@ public class UserService(
         page.Data.AddRange(pageItems);
 
         await PopulateUserRolesAsync(page.Data, cancellationToken);
+        await PopulateUserEnrollmentAsync(page.Data, cancellationToken);
         
         var message = pageItems.Count == 0 ? "No users found." : "Users retrieved successfully.";
         return Response<PaginatedResponse<User>, GenericOperationStatuses>.Success(
@@ -872,6 +873,42 @@ public class UserService(
             if (!user.Roles.Contains(UserRolesNames.Student))
             {
                 user.Roles.Add(UserRolesNames.Student);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Populates enrollment information (Class, Session, Term) for a list of users.
+    /// </summary>
+    private async Task PopulateUserEnrollmentAsync(List<User> users, CancellationToken cancellationToken)
+    {
+        var userIds = users.Select(u => u.Id).ToList();
+        
+        var enrollments = await dbContext.StudentAssessments
+            .AsNoTracking()
+            .Include(sa => sa.ClassLevel)
+            .Include(sa => sa.Session)
+            .Include(sa => sa.Term)
+            .Where(sa => userIds.Contains(sa.StudentId))
+            .OrderByDescending(sa => sa.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var enrollmentLookup = enrollments
+            .GroupBy(sa => sa.StudentId)
+            .ToDictionary(g => g.Key, g => g.First());
+
+        foreach (var user in users)
+        {
+            if (enrollmentLookup.TryGetValue(user.Id, out var enrollment))
+            {
+                user.ClassName = enrollment.ClassLevel?.Name;
+                user.SessionName = enrollment.Session?.Name;
+                user.TermName = enrollment.Term?.Name;
+                
+                if (enrollment.ClassLevel != null && !string.IsNullOrEmpty(enrollment.ClassLevel.SectionOrArm))
+                {
+                    user.ClassName += $" ({enrollment.ClassLevel.SectionOrArm})";
+                }
             }
         }
     }
@@ -1033,6 +1070,7 @@ public class UserService(
             .ToListAsync(cancellationToken);
 
         await PopulateUserRolesAsync(pageItems, cancellationToken);
+        await PopulateUserEnrollmentAsync(pageItems, cancellationToken);
 
         var response = new PaginatedResponse<User>
         {

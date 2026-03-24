@@ -37,6 +37,21 @@ public class User
     public bool HasCredential { get; init; }
     
     /// <summary>
+    /// Current class name (if enrolled).
+    /// </summary>
+    public string? ClassName { get; set; }
+
+    /// <summary>
+    /// Current session name (if enrolled).
+    /// </summary>
+    public string? SessionName { get; set; }
+
+    /// <summary>
+    /// Current term name (if enrolled).
+    /// </summary>
+    public string? TermName { get; set; }
+
+    /// <summary>
     /// Assigned roles of the user.
     /// </summary>
     public IList<string> Roles { get; init; } = new List<string>();

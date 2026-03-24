@@ -410,6 +410,8 @@ const UserTable: React.FC<UserTableProps> = ({
                 <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>ID</th>
                 <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>Email</th>
                 <th className={userTableStyles.th}>Full Name</th>
+                <th className={userTableStyles.th}>Class</th>
+                <th className={userTableStyles.th}>Term</th>
                 <th className={userTableStyles.th}>Admission No</th>
                 <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>Date of Birth</th>
                 <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>User Type</th>
@@ -443,6 +445,12 @@ const UserTable: React.FC<UserTableProps> = ({
                     </td>
                     <td className={userTableStyles.td} data-label="Full Name">
                       <div className={userTableStyles.userName}>{user.fullName || '-'}</div>
+                    </td>
+                    <td className={userTableStyles.td} data-label="Class">
+                      <div style={{ fontSize: '13px', fontWeight: 500 }}>{user.className || '-'}</div>
+                    </td>
+                    <td className={userTableStyles.td} data-label="Term">
+                      <div style={{ fontSize: '12px', color: '#6b7280' }}>{user.termName || '-'}</div>
                     </td>
                     <td className={userTableStyles.td} data-label="Admission No">
                       <div className={userTableStyles.admissionNumber}>

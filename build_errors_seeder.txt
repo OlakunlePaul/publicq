@@ -1,0 +1,7 @@
+C:\Users\hp\publicq\src\PublicQ.Infrastructure\Persistence\Seeders\TestDataSeeder.cs(154,26): error CS0103: The name 'ModerationStatus' does not exist in the current context [C:\Users\hp\publicq\src\PublicQ.Infrastructure\PublicQ.Infrastructure.csproj]
+
+Build FAILED.
+    2 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:05.73

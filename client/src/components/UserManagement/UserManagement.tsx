@@ -209,6 +209,11 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
       setValidationError('Password must be at least 8 characters long (or leave empty)');
       return false;
     }
+
+    if (isStudent && !formData.classLevelId) {
+      setValidationError('Class is required for students');
+      return false;
+    }
     if (!isStudent && formData.password.length > VALIDATION_CONSTRAINTS.USER.PASSWORD_MAX_LENGTH) {
       setValidationError(`Password must not exceed ${VALIDATION_CONSTRAINTS.USER.PASSWORD_MAX_LENGTH} characters`);
       return false;
@@ -413,25 +418,28 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
               }}
             />
           </div>
-          <div className={userManagementStyles.formGroup}>
-            <label className={userManagementStyles.formLabel}>
-              Class: <span style={{color: '#dc2626'}}>*</span>
-            </label>
-            <select
-              name="classLevelId"
-              value={formData.classLevelId}
-              onChange={handleSelectChange}
-              className={userManagementStyles.formInput}
-              style={{ backgroundColor: 'white' }}
-            >
-              <option value="">Select Class</option>
-              {classLevels.map(cl => (
-                <option key={cl.id} value={cl.id}>
-                  {cl.name} {cl.sectionOrArm ? `(${cl.sectionOrArm})` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
+          {isStudent && (
+            <div className={userManagementStyles.formGroup}>
+              <label className={userManagementStyles.formLabel}>
+                Class: <span style={{color: '#dc2626'}}>*</span>
+              </label>
+              <select
+                name="classLevelId"
+                value={formData.classLevelId}
+                onChange={handleSelectChange}
+                className={userManagementStyles.formInput}
+                style={{ backgroundColor: 'white' }}
+                required
+              >
+                <option value="">Select Class</option>
+                {classLevels.map(cl => (
+                  <option key={cl.id} value={cl.id}>
+                    {cl.name} {cl.sectionOrArm ? `(${cl.sectionOrArm})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {isStudent ? (
             <div className={userManagementStyles.formGroup}>
               <label className={cn(
