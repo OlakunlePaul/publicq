@@ -42,13 +42,14 @@ public static class TestDataSeeder
         }
 
         // 2. Ensure Active Term exists
-        var testTerm = await dbContext.Terms.FirstOrDefaultAsync(t => t.IsActive && t.SessionId == testSession.Id);
+        var sessionId = testSession.Id;
+        var testTerm = await dbContext.Terms.FirstOrDefaultAsync(t => t.IsActive && t.SessionId == sessionId);
         if (testTerm == null)
         {
             testTerm = new TermEntity
             {
                 Id = Guid.NewGuid(),
-                SessionId = testSession.Id,
+                SessionId = sessionId,
                 Name = "First Term",
                 StartDate = DateTime.UtcNow.AddMonths(-3),
                 EndDate = DateTime.UtcNow.AddMonths(1),
@@ -140,18 +141,22 @@ public static class TestDataSeeder
         }
 
         // 7. Ensure Student Enrollment (StudentAssessmentEntity)
+        var studentId = studentEntity.Id;
+        var termId = testTerm.Id;
+        var classId = testClass.Id;
+        
         var studentEnrollment = await dbContext.StudentAssessments
-            .FirstOrDefaultAsync(sa => sa.StudentId == studentEntity.Id && sa.SessionId == testSession.Id && sa.TermId == testTerm.Id);
+            .FirstOrDefaultAsync(sa => sa.StudentId == studentId && sa.SessionId == sessionId && sa.TermId == termId);
         
         if (studentEnrollment == null)
         {
             studentEnrollment = new StudentAssessmentEntity
             {
                 Id = Guid.NewGuid(),
-                StudentId = studentEntity.Id,
-                SessionId = testSession.Id,
-                TermId = testTerm.Id,
-                ClassLevelId = testClass.Id,
+                StudentId = studentId,
+                SessionId = sessionId,
+                TermId = termId,
+                ClassLevelId = classId,
                 Status = ModerationStatus.Draft,
                 CreatedAt = DateTime.UtcNow
             };
@@ -177,15 +182,16 @@ public static class TestDataSeeder
         }
 
         // Link Parent to Student
+        var parentId = parentUser.Id;
         var parentLink = await dbContext.ParentStudentLinks
-            .FirstOrDefaultAsync(l => l.ParentId == parentUser.Id && l.StudentId == studentEntity.Id);
+            .FirstOrDefaultAsync(l => l.ParentId == parentId && l.StudentId == studentId);
         if (parentLink == null)
         {
             parentLink = new ParentStudentLinkEntity
             {
                 Id = Guid.NewGuid(),
-                ParentId = parentUser.Id,
-                StudentId = studentEntity.Id,
+                ParentId = parentId,
+                StudentId = studentId,
                 Relationship = "Father"
             };
             await dbContext.ParentStudentLinks.AddAsync(parentLink);

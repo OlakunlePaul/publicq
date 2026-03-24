@@ -240,7 +240,7 @@ const CreateUserModal = ({ isOpen, loading = false, error, onConfirm, onCancel }
           fullName: formData.fullName.trim(),
           ...(formData.password.trim() && { password: formData.password.trim() }),
           ...(formData.dateOfBirth.trim() && { dateOfBirth: formData.dateOfBirth.trim() }),
-          classLevelId: formData.classLevelId
+          classLevelId: formData.classLevelId || undefined
         };
         onConfirm(userRequest, false);
       }
