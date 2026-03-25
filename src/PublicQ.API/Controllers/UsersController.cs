@@ -54,6 +54,29 @@ public class UsersController(
     }
 
     /// <summary>
+    /// Student login using admission ID or student ID.
+    /// </summary>
+    [HttpPost("student/login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> StudentLoginAsync(
+        [FromBody] StudentLoginRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.AdmissionId))
+        {
+            return Response<string, GenericOperationStatuses>.Failure(GenericOperationStatuses.BadRequest,
+                    "Invalid login request. Please provide Admission Number or Student ID.")
+                .ToActionResult();
+        }
+
+        var loginResponse = await userService.LoginStudentAsync(
+            request.AdmissionId,
+            cancellationToken);
+
+        return loginResponse.ToActionResult();
+    }
+
+    /// <summary>
     /// Gets the roles assigned to a specific user.
     /// </summary>
     /// <param name="userId">User ID</param>
