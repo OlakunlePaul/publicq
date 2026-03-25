@@ -38,9 +38,9 @@ function parseQuestionsFromText(rawText: string): ParsedQuestion[] {
 
   for (const line of lines) {
     // Match question pattern: starts with a number followed by . or )
-    const questionMatch = line.match(/^\d+[\.\)]\s+(.+)/);
+    const questionMatch = line.match(/^\d+[.)]\s+(.+)/);
     // Match option pattern: starts with a letter followed by . or ) or ]
-    const optionMatch = line.match(/^[a-zA-Z][\.\)\]]\s+(.+)/);
+    const optionMatch = line.match(/^[a-zA-Z][.)\]]\s+(.+)/);
 
     if (questionMatch) {
       // Save previous question
