@@ -6,6 +6,7 @@ import { QuestionCard } from "./QuestionCard";
 import { QuestionForm } from "./QuestionForm";
 import { answerCreateDtoToReturnDto, QuestionCreateDto, questionCreateDtoToUpdateDto, questionDtoToCreateDto, QuestionUpdateDto } from "../../models/assessment-modules-create";
 import { StaticFileDto } from "../../models/static-file";
+import { WordImportModal } from "./WordImportModal";
 
 type PreviewFile = File | StaticFileDto;
 
@@ -26,6 +27,7 @@ export const QuestionList = ({ moduleId, moduleVersionId, moduleVersionIsPublish
   const [editingQuestion, setEditingQuestion] = useState<QuestionCreateDto | null>(null);
   const [answerAttachmentNames, setAnswerAttachmentNames] = useState<Record<string, string>>({});
   const [answerAttachmentUrls, setAnswerAttachmentUrls] = useState<Record<string, string>>({});
+  const [showWordImport, setShowWordImport] = useState(false);
 
   const loadQuestions = useCallback(async () => {
     setIsLoading(true);
@@ -132,6 +134,30 @@ export const QuestionList = ({ moduleId, moduleVersionId, moduleVersionIsPublish
       onQuestionsChange?.(filteredQuestions);
       return filteredQuestions;
     });
+  };
+
+  const handleWordImport = async (importedQuestions: QuestionCreateDto[]) => {
+    let successCount = 0;
+    for (const q of importedQuestions) {
+      try {
+        const response = await questionService.createQuestion(q);
+        if (!response.isFailed) {
+          setQuestions(prev => {
+            const updated = [...prev, response.data];
+            onQuestionsChange?.(updated);
+            return updated;
+          });
+          successCount++;
+        }
+      } catch (err) {
+        console.error('Failed to import question:', err);
+      }
+    }
+    setShowWordImport(false);
+    if (successCount > 0) {
+      // Reload to get fresh data from backend
+      loadQuestions();
+    }
   };
 
   const handleQuestionEdit = async (question: QuestionDto) => {
@@ -288,6 +314,18 @@ export const QuestionList = ({ moduleId, moduleVersionId, moduleVersionIsPublish
           >
             + Add Question
           </button>
+          <button
+            onClick={() => setShowWordImport(true)}
+            style={{ ...styles.bottomAddButton, backgroundColor: '#27ae60', marginLeft: '12px' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#219a52';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#27ae60';
+            }}
+          >
+            📄 Import from Word
+          </button>
         </div>
       )}
 
@@ -321,6 +359,16 @@ export const QuestionList = ({ moduleId, moduleVersionId, moduleVersionIsPublish
             setAnswerAttachmentUrls({}); // Clear answer attachment URLs
           }}
           onSuccess={handleQuestionUpdated}
+        />
+      )}
+
+      {showWordImport && (
+        <WordImportModal
+          moduleId={moduleId}
+          moduleVersionId={moduleVersionId}
+          startingOrder={questions.length}
+          onImport={handleWordImport}
+          onClose={() => setShowWordImport(false)}
         />
       )}
     </div>
