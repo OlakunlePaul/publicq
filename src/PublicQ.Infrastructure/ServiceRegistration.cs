@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -47,6 +48,16 @@ public static class ServiceRegistration
         services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+
+        // Persist Data Protection keys so password reset tokens survive container restarts.
+        // Without this, tokens are stored in-memory and lost on every Railway redeploy.
+        var keysDirectory = Path.Combine(
+            Environment.OSVersion.Platform == PlatformID.Unix ? "/app" : ".",
+            "keys");
+        Directory.CreateDirectory(keysDirectory);
+        services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(keysDirectory))
+            .SetApplicationName("PublicQ");
 
         services.AddDbLogger();
         services.AddAuth(config);
