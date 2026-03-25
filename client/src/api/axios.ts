@@ -124,6 +124,15 @@ api.interceptors.response.use(
 
       return Promise.reject(transformedError);
     }
+
+    // Generic error message extraction from backend Response object
+    if (error.response?.data && typeof error.response.data === 'object') {
+      const data = error.response.data as any;
+      // If it's our standard Response object, use its message or errors
+      if (data.message || (data.errors && data.errors.length > 0)) {
+        error.message = data.message || data.errors[0];
+      }
+    }
     
     return Promise.reject(error);
   }

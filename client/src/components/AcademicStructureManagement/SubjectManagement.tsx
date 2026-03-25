@@ -64,15 +64,23 @@ const SubjectFormModal = ({ isOpen, subject, classLevels, onConfirm, onCancel, a
     }
   };
 
+  const toggleAllClasses = () => {
+    if ((formData.classLevelIds?.length || 0) === classLevels.length) {
+      setFormData({ ...formData, classLevelIds: [] });
+    } else {
+      setFormData({ ...formData, classLevelIds: classLevels.map(cl => cl.id) });
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
     <div style={styles.modalOverlay}>
-      <div style={{ ...styles.modal, width: '500px' }}>
+      <div style={{ ...styles.modal, width: '600px', maxWidth: '95%' }}>
         <h3 style={styles.modalTitle}>{subject ? 'Edit Subject' : 'Create New Subject'}</h3>
         {error && <ValidationMessage type="error" message={error} />}
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           <div>
             <div style={styles.formGroup}>
               <label style={styles.formLabel}>Subject Name:</label>
@@ -102,35 +110,65 @@ const SubjectFormModal = ({ isOpen, subject, classLevels, onConfirm, onCancel, a
                 value={formData.displayOrder}
                 onChange={(e) => setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 })}
               />
+              <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Lower numbers appear first on report cards.</p>
             </div>
           </div>
 
           <div>
-            <label style={styles.formLabel}>Link to Classes:</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <label style={styles.formLabel}>Link to Classes:</label>
+              {classLevels.length > 0 && (
+                <button 
+                  onClick={toggleAllClasses}
+                  style={{ fontSize: '12px', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
+                  {(formData.classLevelIds?.length || 0) === classLevels.length ? 'Deselect All' : 'Select All'}
+                </button>
+              )}
+            </div>
             <div style={{ 
-              maxHeight: '300px', 
+              height: '240px', 
               overflowY: 'auto', 
               border: '1px solid #d1d5db', 
-              borderRadius: '6px',
-              padding: '10px'
+              borderRadius: '8px',
+              padding: '12px',
+              backgroundColor: '#f9fafb'
             }}>
               {classLevels.length === 0 ? (
                 <p style={{ fontSize: '12px', color: '#6b7280' }}>No classes available. Create classes first.</p>
               ) : (
-                classLevels.map(cl => (
-                  <div key={cl.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                    <input 
-                      type="checkbox" 
-                      id={`class-${cl.id}`}
-                      checked={formData.classLevelIds?.includes(cl.id)}
-                      onChange={() => toggleClass(cl.id)}
-                      style={{ marginRight: '8px' }}
-                    />
-                    <label htmlFor={`class-${cl.id}`} style={{ fontSize: '14px', cursor: 'pointer' }}>
-                      {cl.name} {cl.sectionOrArm ? `(${cl.sectionOrArm})` : ''}
-                    </label>
-                  </div>
-                ))
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '4px' }}>
+                  {classLevels.map(cl => (
+                    <div 
+                      key={cl.id} 
+                      onClick={() => toggleClass(cl.id)}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        padding: '6px 8px', 
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        backgroundColor: formData.classLevelIds?.includes(cl.id) ? '#eff6ff' : 'transparent',
+                        transition: 'background-color 0.2s'
+                      }}
+                    >
+                      <input 
+                        type="checkbox" 
+                        id={`class-${cl.id}`}
+                        checked={formData.classLevelIds?.includes(cl.id)}
+                        onChange={(e) => { e.stopPropagation(); toggleClass(cl.id); }}
+                        style={{ marginRight: '10px', cursor: 'pointer' }}
+                      />
+                      <label 
+                        htmlFor={`class-${cl.id}`} 
+                        onClick={(e) => e.preventDefault()}
+                        style={{ fontSize: '13px', cursor: 'pointer', color: '#374151', flex: 1 }}
+                      >
+                        {cl.name} {cl.sectionOrArm ? `(${cl.sectionOrArm})` : ''}
+                      </label>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -177,7 +215,7 @@ const SubjectManagement = () => {
         setSubjects((subjectResp.data || []).sort((a, b) => a.displayOrder - b.displayOrder));
       }
       if (classResp.isSuccess) {
-        setClassLevels(classResp.data || []);
+        setClassLevels((classResp.data || []).sort((a, b) => a.orderIndex - b.orderIndex));
       }
     } catch (err: any) {
       setError('Failed to load subjects or classes: ' + err.message);
@@ -191,6 +229,15 @@ const SubjectManagement = () => {
   }, [loadSubjects]);
 
   const handleSave = async (data: SubjectCreateDto) => {
+    // Client-side validation: Check for duplicate name if creating new
+    if (!formModal.subject) {
+      const duplicate = subjects.find(s => s.name.trim().toLowerCase() === data.name.trim().toLowerCase());
+      if (duplicate) {
+        setFormModal({ ...formModal, apiError: `Subject '${data.name}' already exists. Please find and edit the existing subject to link it to more classes.` });
+        return;
+      }
+    }
+
     try {
       let resp;
       if (formModal.subject) {
