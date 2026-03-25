@@ -768,6 +768,7 @@ public class UserService(
                 u.FullName,
                 u.DateOfBirth,
                 u.CreatedAtUtc,
+                AdmissionNumber = (string?)null,
                 HasCredential = true
             });
 
@@ -787,6 +788,7 @@ public class UserService(
                 FullName = e.FullName,
                 DateOfBirth = e.DateOfBirth,
                 CreatedAtUtc = e.CreatedAtUtc,
+                AdmissionNumber = e.AdmissionNumber,
                 HasCredential = false
             });
 
@@ -810,6 +812,7 @@ public class UserService(
                 Email = x.Email!,
                 FullName = x.FullName,
                 DateOfBirth = x.DateOfBirth,
+                AdmissionNumber = x.AdmissionNumber,
                 HasCredential = x.HasCredential
             })
             .ToListAsync(cancellationToken);
