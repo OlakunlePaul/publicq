@@ -174,7 +174,7 @@ const SubjectManagement = () => {
       ]);
       
       if (subjectResp.isSuccess) {
-        setSubjects(subjectResp.data || []);
+        setSubjects((subjectResp.data || []).sort((a, b) => a.displayOrder - b.displayOrder));
       }
       if (classResp.isSuccess) {
         setClassLevels(classResp.data || []);

@@ -22,6 +22,7 @@ public class AcademicStructureService(
     {
         var subjects = await dbContext.Subjects
             .Include(s => s.ClassLevels)
+            .OrderBy(s => s.DisplayOrder)
             .Select(s => new SubjectDto(
                 s.Id, 
                 s.Name, 
@@ -183,6 +184,7 @@ public class AcademicStructureService(
     {
         var classLevels = await dbContext.ClassLevels
             .Include(c => c.Subjects)
+            .OrderBy(c => c.OrderIndex)
             .Select(c => new ClassLevelDto(
                 c.Id, 
                 c.Name, 

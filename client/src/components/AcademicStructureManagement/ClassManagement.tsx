@@ -192,7 +192,7 @@ const ClassManagement = () => {
       ]);
 
       if (classResp.isSuccess) {
-        setClasses(classResp.data || []);
+        setClasses((classResp.data || []).sort((a, b) => a.orderIndex - b.orderIndex));
       }
       if (schemaResp.isSuccess) {
         setSchemas(schemaResp.data || []);
