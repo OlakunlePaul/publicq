@@ -44,6 +44,11 @@ const AdmissionNumberManagement: React.FC<AdmissionNumberManagementProps> = ({
       return;
     }
 
+    if (!admissionConfig.format.includes('{0000}') && !admissionConfig.format.includes('0000')) {
+      setError('Format must include a sequence placeholder like {0000} or at least 0000');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
@@ -66,7 +71,20 @@ const AdmissionNumberManagement: React.FC<AdmissionNumberManagementProps> = ({
   const generatePreview = (format: string, sequence: number) => {
     const year = new Date().getFullYear().toString();
     const sequenceStr = (sequence + 1).toString().padStart(4, '0');
-    return format.replace('{YYYY}', year).replace('{0000}', sequenceStr);
+    
+    let result = format.replace('{YYYY}', year);
+    
+    // Match backend resilient logic
+    if (result.includes('{0000}')) {
+      return result.replace('{0000}', sequenceStr);
+    }
+    
+    if (result.includes('0000')) {
+      const lastIndex = result.lastIndexOf('0000');
+      return result.substring(0, lastIndex) + sequenceStr + result.substring(lastIndex + 4);
+    }
+    
+    return result + '-' + sequenceStr;
   };
 
   const styles = {
@@ -213,8 +231,14 @@ const AdmissionNumberManagement: React.FC<AdmissionNumberManagementProps> = ({
               You can use any prefix (e.g., <strong>DISC</strong>, <strong>ADM</strong>, <strong>PQ</strong>) and arrange the placeholders as needed.
               <br/><br/>
               Available placeholders: 
-              <strong>{'{YYYY}'}</strong> (Current Year), 
-              <strong>{'{0000}'}</strong> (Sequential Number - e.g., 0001)
+              Available placeholders: 
+              <ul style={{marginTop: '8px', paddingLeft: '20px'}}>
+                <li><strong>{'{YYYY}'}</strong> - Current Year (e.g., 2026)</li>
+                <li><strong>{'{0000}'}</strong> - Sequential Number (e.g., 0001). <strong>Highly Recommended</strong></li>
+              </ul>
+              <div style={{marginTop: '8px', padding: '8px', backgroundColor: '#fff7ed', border: '1px solid #ffedd5', borderRadius: '4px', color: '#9a3412'}}>
+                <strong>Tip:</strong> Always include <strong>{'{0000}'}</strong> in your format to ensure student IDs increment correctly (e.g., DISC/{'{0000}'}).
+              </div>
             </div>
             
             <div style={styles.previewBox}>

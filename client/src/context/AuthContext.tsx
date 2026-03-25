@@ -23,6 +23,7 @@ const defaultAuthContext: AuthContextType = {
   token: null,
   saveToken: (token: string) => { },
   login: async () => { },
+  loginStudent: async () => { },
   logout: () => { },
   userRoles: [] as UserRole[],
   isAuthenticated: false
@@ -35,6 +36,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login = async (credentials: LoginRequest) => {
     const token: string = await authService.login(credentials);
+    saveToken(token);
+  };
+
+  const loginStudent = async (admissionId: string) => {
+    const token: string = await authService.loginStudent(admissionId);
     saveToken(token);
   };
 
@@ -62,6 +68,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       token,
       saveToken,
       login,
+      loginStudent,
       logout,
       isAuthenticated: !!token,
       userRoles: userRoles

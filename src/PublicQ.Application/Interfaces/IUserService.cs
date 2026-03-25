@@ -21,6 +21,16 @@ public interface IUserService
         string password);
 
     /// <summary>
+    /// Login a student using their Admission Number or Student ID.
+    /// </summary>
+    /// <param name="admissionId">Student ID or Admission Number</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Returns a token wrapped in <see cref="Response{TData, TStatus}"/></returns>
+    Task<Response<string, GenericOperationStatuses>> LoginStudentAsync(
+        string admissionId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Register a new user.
     /// </summary>
     /// <remarks>

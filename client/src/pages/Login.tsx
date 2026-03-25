@@ -11,8 +11,10 @@ import PasswordInput from '../components/Shared/PasswordInput';
 import loginStyles from './Login.module.css';
 
 const Login = () => {
+  const [loginType, setLoginType] = useState<'staff' | 'student'>('staff');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [admissionId, setAdmissionId] = useState('');
   const [error, setError] = useState('');
   const [touched, setTouched] = useState<{[key: string]: boolean}>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,16 +22,21 @@ const Login = () => {
   const [forgetPasswordEmail, setForgetPasswordEmail] = useState('');
   const [forgetPasswordMessage, setForgetPasswordMessage] = useState('');
   const [isForgetPasswordSubmitting, setIsForgetPasswordSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { login, loginStudent } = useAuth();
   const navigate = useNavigate();
   const emailInputRef = useRef<HTMLInputElement>(null);
+  const studentInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-focus on email input when component mounts
+  // Auto-focus on input when component mounts or login type changes
   useEffect(() => {
-    if (emailInputRef.current) {
+    if (showForgetPassword) return;
+    
+    if (loginType === 'staff' && emailInputRef.current) {
       emailInputRef.current.focus();
+    } else if (loginType === 'student' && studentInputRef.current) {
+      studentInputRef.current.focus();
     }
-  }, []);
+  }, [loginType, showForgetPassword]);
 
   const getFieldError = (fieldName: string) => {
     if (!touched[fieldName]) return null;
@@ -41,6 +48,9 @@ const Login = () => {
         break;
       case 'password':
         if (!password.trim()) return 'Password is required';
+        break;
+      case 'admissionId':
+        if (!admissionId.trim()) return 'Admission Number or ID is required';
         break;
     }
     return null;
@@ -57,32 +67,43 @@ const Login = () => {
     
     setError('');
 
-    // Mark all fields as touched for validation display
-    setTouched({
-      email: true,
-      password: true,
-    });
+    if (loginType === 'staff') {
+      // Mark all fields as touched for validation display
+      setTouched({
+        email: true,
+        password: true,
+      });
 
-    // Basic validation
-    if (!username.trim() || !password.trim()) {
-      setError('Please fill in all fields');
-      return;
-    }
+      // Basic validation
+      if (!username.trim() || !password.trim()) {
+        setError('Please fill in all fields');
+        return;
+      }
 
-    if (!/\S+@\S+\.\S+/.test(username)) {
-      setError('Please enter a valid email address');
-      return;
+      if (!/\S+@\S+\.\S+/.test(username)) {
+        setError('Please enter a valid email address');
+        return;
+      }
+    } else {
+      setTouched({ admissionId: true });
+      if (!admissionId.trim()) {
+        setError('Please enter your Admission Number or Student ID');
+        return;
+      }
     }
 
     setIsSubmitting(true);
 
-    const loginData: UserLoginRequest = {
-      email: username,
-      password,
-    };
-
     try {
-      await login(loginData);
+      if (loginType === 'staff') {
+        const loginData: UserLoginRequest = {
+          email: username,
+          password,
+        };
+        await login(loginData);
+      } else {
+        await loginStudent(admissionId);
+      }
       
       const searchParams = new URLSearchParams(window.location.search);
       const redirectTo = searchParams.get('redirectTo');
@@ -105,7 +126,7 @@ const Login = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [username, password, isSubmitting, login, navigate]);
+  }, [username, password, admissionId, loginType, isSubmitting, login, loginStudent, navigate]);
 
   const handleForgetPassword = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,6 +164,13 @@ const Login = () => {
     setForgetPasswordEmail('');
     setForgetPasswordMessage('');
     setError('');
+    setTouched({});
+  };
+
+  const switchLoginType = (type: 'staff' | 'student') => {
+    setLoginType(type);
+    setError('');
+    setTouched({});
   };
 
   // Handle Ctrl+Enter keyboard shortcut
@@ -166,56 +194,110 @@ const Login = () => {
           <p className={loginStyles.subtitle}>
             {showForgetPassword 
               ? 'Enter your email to receive a password reset link' 
-              : 'Sign in to access your assessment modules'
+              : loginType === 'staff' 
+                ? 'Sign in to access your assessment modules'
+                : 'Enter your ID to access your assessments'
             }
           </p>
         </div>
 
+        {!showForgetPassword && (
+          <div className={loginStyles.loginToggle}>
+            <button
+              type="button"
+              className={cn(
+                loginStyles.toggleButton,
+                loginType === 'staff' && loginStyles.toggleButtonActive
+              )}
+              onClick={() => switchLoginType('staff')}
+            >
+              <img src="https://cdn-icons-png.flaticon.com/512/91/91212.png" alt="" className={loginStyles.toggleIcon} />
+              Staff Login
+            </button>
+            <button
+              type="button"
+              className={cn(
+                loginStyles.toggleButton,
+                loginType === 'student' && loginStyles.toggleButtonActive
+              )}
+              onClick={() => switchLoginType('student')}
+            >
+              <img src="https://cdn-icons-png.flaticon.com/512/354/354637.png" alt="" className={loginStyles.toggleIcon} />
+              Student Login
+            </button>
+          </div>
+        )}
+
         {!showForgetPassword ? (
           <form onSubmit={handleLogin} className={loginStyles.form}>
-            <div className={loginStyles.inputGroup}>
-              <input
-                ref={emailInputRef}
-                type="email"
-                placeholder="Email address"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className={cn(
-                  loginStyles.input,
-                  touched.email && getFieldError('email') && loginStyles['input--error']
-                )}
-                onBlur={() => handleFieldTouch('email')}
-              />
-              {touched.email && getFieldError('email') && (
-                <div className={loginStyles.errorMessage}>{getFieldError('email')}</div>
-              )}
-            </div>
+            {loginType === 'staff' ? (
+              <>
+                <div className={loginStyles.inputGroup}>
+                  <input
+                    ref={emailInputRef}
+                    type="email"
+                    placeholder="Email address"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className={cn(
+                      loginStyles.input,
+                      touched.email && getFieldError('email') && loginStyles['input--error']
+                    )}
+                    onBlur={() => handleFieldTouch('email')}
+                  />
+                  {touched.email && getFieldError('email') && (
+                    <div className={loginStyles.errorMessage}>{getFieldError('email')}</div>
+                  )}
+                </div>
 
-            <div className={loginStyles.inputGroup}>
-              <PasswordInput
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={cn(
-                  loginStyles.input,
-                  touched.password && getFieldError('password') && loginStyles['input--error']
-                )}
-                onBlur={() => handleFieldTouch('password')}
-              />
-              {touched.password && getFieldError('password') && (
-                <div className={loginStyles.errorMessage}>{getFieldError('password')}</div>
-              )}
-            </div>
+                <div className={loginStyles.inputGroup}>
+                  <PasswordInput
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={cn(
+                      loginStyles.input,
+                      touched.password && getFieldError('password') && loginStyles['input--error']
+                    )}
+                    onBlur={() => handleFieldTouch('password')}
+                  />
+                  {touched.password && getFieldError('password') && (
+                    <div className={loginStyles.errorMessage}>{getFieldError('password')}</div>
+                  )}
+                </div>
 
-            <div className={loginStyles.forgotPassword}>
-              <button
-                type="button"
-                onClick={() => setShowForgetPassword(true)}
-                className={loginStyles.forgotPasswordLink}
-              >
-                Forgot password?
-              </button>
-            </div>
+                <div className={loginStyles.forgotPassword}>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgetPassword(true)}
+                    className={loginStyles.forgotPasswordLink}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className={loginStyles.inputGroup}>
+                <input
+                  ref={studentInputRef}
+                  type="text"
+                  placeholder="Admission Number / Student ID"
+                  value={admissionId}
+                  onChange={(e) => setAdmissionId(e.target.value)}
+                  className={cn(
+                    loginStyles.input,
+                    touched.admissionId && getFieldError('admissionId') && loginStyles['input--error']
+                  )}
+                  onBlur={() => handleFieldTouch('admissionId')}
+                />
+                {touched.admissionId && getFieldError('admissionId') && (
+                  <div className={loginStyles.errorMessage}>{getFieldError('admissionId')}</div>
+                )}
+                <p className={loginStyles.subtitle} style={{marginTop: '0.5rem', opacity: 0.8}}>
+                  Students do not need a password to login.
+                </p>
+              </div>
+            )}
 
             <button
               type="submit"

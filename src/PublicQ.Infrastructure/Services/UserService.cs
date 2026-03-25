@@ -33,6 +33,8 @@ public class UserService(
     ILogger<UserService> logger,
     IUserConfigurationProvider userConfigurationProvider) : IUserService
 {
+    private static readonly SemaphoreSlim _admissionNumberLock = new SemaphoreSlim(1, 1);
+
     /// <summary>
     /// Default user role for new users.
     /// </summary>
@@ -86,6 +88,51 @@ public class UserService(
         if (tokenResponse.IsFailed)
         {
             logger.LogError("Token generation failed for user {UserId}: {Errors}", userId, tokenResponse.Errors);
+            return Response<string, GenericOperationStatuses>.Failure(
+                tokenResponse.Status,
+                tokenResponse.Message,
+                tokenResponse.Errors);
+        }
+
+        return Response<string, GenericOperationStatuses>
+            .Success(tokenResponse.Data!, tokenResponse.Status, tokenResponse.Message);
+    }
+
+    /// <summary>
+    /// <see cref="IUserService.LoginStudentAsync"/>
+    /// </summary>
+    public async Task<Response<string, GenericOperationStatuses>> LoginStudentAsync(
+        string admissionId,
+        CancellationToken cancellationToken)
+    {
+        Guard.AgainstNullOrWhiteSpace(admissionId, nameof(admissionId));
+
+        var student = await dbContext.Students
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => 
+                s.Id.ToUpper() == admissionId.ToUpper() || 
+                (s.AdmissionNumber != null && s.AdmissionNumber.ToUpper() == admissionId.ToUpper()), 
+                cancellationToken);
+
+        if (student == null)
+        {
+            logger.LogDebug("Student with ID/AdmissionNumber '{AdmissionId}' not found", admissionId);
+            return Response<string, GenericOperationStatuses>.Failure(
+                GenericOperationStatuses.Unauthorized,
+                "Invalid Admission Number or Student ID.");
+        }
+
+        var roles = new List<string> { UserRolesNames.Student };
+
+        var tokenResponse = tokenService.IssueToken(
+            student.Id,
+            student.Email ?? student.Id, 
+            student.FullName ?? student.Id, 
+            roles);
+
+        if (tokenResponse.IsFailed)
+        {
+            logger.LogError("Token generation failed for student {StudentId}: {Errors}", student.Id, tokenResponse.Errors);
             return Response<string, GenericOperationStatuses>.Failure(
                 tokenResponse.Status,
                 tokenResponse.Message,
@@ -1690,44 +1737,68 @@ public class UserService(
     /// </summary>
     private async Task<string> GenerateAdmissionNumberAsync(CancellationToken cancellationToken)
     {
-        var configResult = await userConfigurationProvider.GetConfigurationAsync<AdmissionNumberConfiguration>(
-            UserConfigTypes.AdmissionNumber, cancellationToken);
-            
-        var format = "EN-{YYYY}-{0000}";
-        var sequence = 0;
-            
-        if (configResult.IsSuccess && configResult.Data != null)
+        await _admissionNumberLock.WaitAsync(cancellationToken);
+        try
         {
-            format = configResult.Data.Format;
-            sequence = configResult.Data.LastSequenceNumber;
-        }
-        
-        sequence++;
-        
-        if (configResult.IsSuccess)
-        {
-            var configData = configResult.Data;
-            if (configData == null)
+            var configResult = await userConfigurationProvider.GetConfigurationAsync<AdmissionNumberConfiguration>(
+                UserConfigTypes.AdmissionNumber, cancellationToken);
+                
+            var format = "EN-{YYYY}-{0000}";
+            var sequence = 0;
+                
+            if (configResult.IsSuccess && configResult.Data != null)
             {
-                // Create new configuration if missing
-                configData = new AdmissionNumberConfiguration
+                format = configResult.Data.Format;
+                sequence = configResult.Data.LastSequenceNumber;
+            }
+            
+            sequence++;
+            
+            if (configResult.IsSuccess)
+            {
+                var configData = configResult.Data;
+                if (configData == null)
                 {
-                    Format = format,
-                    LastSequenceNumber = sequence
-                };
+                    // Create new configuration if missing
+                    configData = new AdmissionNumberConfiguration
+                    {
+                        Format = format,
+                        LastSequenceNumber = sequence
+                    };
+                }
+                else
+                {
+                    configData.LastSequenceNumber = sequence;
+                }
+                
+                await userConfigurationProvider.SetConfigurationAsync(configData, cancellationToken);
             }
-            else
+
+            var year = DateTime.UtcNow.Year.ToString();
+            var numStr = sequence.ToString("D4"); 
+            
+            var result = format.Replace("{YYYY}", year);
+            
+            // Primary: Standard placeholder with braces
+            if (result.Contains("{0000}"))
             {
-                configData.LastSequenceNumber = sequence;
+                return result.Replace("{0000}", numStr);
             }
             
-            await userConfigurationProvider.SetConfigurationAsync(configData, cancellationToken);
+            // Secondary Fallback: Last occurrence of 0000 if user forgot braces
+            if (result.Contains("0000"))
+            {
+                int lastIndex = result.LastIndexOf("0000");
+                return result.Remove(lastIndex, 4).Insert(lastIndex, numStr);
+            }
+            
+            // Final Fallback: Append to avoid duplicates
+            return $"{result}-{numStr}";
         }
-
-        var year = DateTime.UtcNow.Year.ToString();
-        var numStr = sequence.ToString("D4"); 
-        
-        return format.Replace("{YYYY}", year).Replace("{0000}", numStr);
+        finally
+        {
+            _admissionNumberLock.Release();
+        }
     }
 
     private async Task EnrollStudentInClassAsync(string studentId, Guid classLevelId, CancellationToken cancellationToken)
