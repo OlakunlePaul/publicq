@@ -162,6 +162,18 @@ const ClassFormModal = ({ isOpen, classLevel, schemas, subjects, onConfirm, onCa
   );
 };
 
+// Color palette for subject chips — 8 visually distinct pairs
+const chipColors = [
+  { bg: '#dbeafe', text: '#1e40af' },  // blue
+  { bg: '#dcfce7', text: '#166534' },  // green
+  { bg: '#fef3c7', text: '#92400e' },  // amber
+  { bg: '#fce7f3', text: '#9d174d' },  // pink
+  { bg: '#e0e7ff', text: '#3730a3' },  // indigo
+  { bg: '#ccfbf1', text: '#115e59' },  // teal
+  { bg: '#fee2e2', text: '#991b1b' },  // red
+  { bg: '#f3e8ff', text: '#6b21a8' },  // purple
+];
+
 const ClassManagement = () => {
   const [classes, setClasses] = useState<ClassLevelDto[]>([]);
   const [schemas, setSchemas] = useState<GradingSchemaDto[]>([]);
@@ -365,8 +377,28 @@ const ClassManagement = () => {
                     <td style={styles.td} data-label="Name"><strong>{c.name}</strong></td>
                     <td style={styles.td} data-label="Section/Arm">{c.sectionOrArm || '-'}</td>
                     <td style={styles.td} data-label="Subjects">
-                      <div style={{ fontSize: '12px', color: '#6b7280', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.subjectNames?.join(', ')}>
-                        {c.subjectNames && c.subjectNames.length > 0 ? c.subjectNames.join(', ') : 'None'}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {c.subjectNames && c.subjectNames.length > 0 ? (
+                          c.subjectNames.map((name, idx) => (
+                            <span
+                              key={idx}
+                              style={{
+                                display: 'inline-block',
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                backgroundColor: chipColors[idx % chipColors.length].bg,
+                                color: chipColors[idx % chipColors.length].text,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {name}
+                            </span>
+                          ))
+                        ) : (
+                          <span style={{ fontSize: '12px', color: '#9ca3af', fontStyle: 'italic' }}>No subjects linked</span>
+                        )}
                       </div>
                     </td>
                     <td style={styles.td} data-label="Order">{c.orderIndex}</td>

@@ -145,12 +145,25 @@ const SubjectFormModal = ({ isOpen, subject, classLevels, onConfirm, onCancel, a
   );
 };
 
+// Color palette for class chips — 8 visually distinct pairs
+const chipColors = [
+  { bg: '#dbeafe', text: '#1e40af' },  // blue
+  { bg: '#dcfce7', text: '#166534' },  // green
+  { bg: '#fef3c7', text: '#92400e' },  // amber
+  { bg: '#fce7f3', text: '#9d174d' },  // pink
+  { bg: '#e0e7ff', text: '#3730a3' },  // indigo
+  { bg: '#ccfbf1', text: '#115e59' },  // teal
+  { bg: '#fee2e2', text: '#991b1b' },  // red
+  { bg: '#f3e8ff', text: '#6b21a8' },  // purple
+];
+
 const SubjectManagement = () => {
   const [subjects, setSubjects] = useState<SubjectDto[]>([]);
   const [classLevels, setClassLevels] = useState<ClassLevelDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formModal, setFormModal] = useState<{ isOpen: boolean; apiError: string; subject?: SubjectDto }>({ isOpen: false, apiError: '' });
+  const [classFilter, setClassFilter] = useState<string>('all');
 
   const loadSubjects = useCallback(async () => {
     setLoading(true);
@@ -318,6 +331,39 @@ const SubjectManagement = () => {
           Create Subject
         </button>
       </div>
+
+      {/* Class Filter */}
+      <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <label style={{ fontSize: '14px', fontWeight: 600, color: '#374151' }}>Filter by Class:</label>
+        <select
+          value={classFilter}
+          onChange={(e) => setClassFilter(e.target.value)}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '8px',
+            border: '1px solid #d1d5db',
+            fontSize: '14px',
+            color: '#374151',
+            backgroundColor: '#fff',
+            cursor: 'pointer',
+            minWidth: '180px',
+          }}
+        >
+          <option value="all">All Classes</option>
+          {classLevels.map(cl => (
+            <option key={cl.id} value={cl.id}>{cl.name}{cl.sectionOrArm ? ` (${cl.sectionOrArm})` : ''}</option>
+          ))}
+          <option value="none">Unlinked (No Class)</option>
+        </select>
+        {classFilter !== 'all' && (
+          <button
+            onClick={() => setClassFilter('all')}
+            style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#f9fafb', cursor: 'pointer', fontSize: '13px', color: '#6b7280' }}
+          >
+            ✕ Clear
+          </button>
+        )}
+      </div>
       
       {error && <ValidationMessage type="error" message={error} />}
       
@@ -337,13 +383,39 @@ const SubjectManagement = () => {
               {subjects.length === 0 ? (
                 <tr><td colSpan={4} style={styles.td}>No subjects found.</td></tr>
               ) : (
-                 subjects.map(s => (
+               subjects
+                .filter(s => {
+                  if (classFilter === 'all') return true;
+                  if (classFilter === 'none') return !s.classLevelIds || s.classLevelIds.length === 0;
+                  return s.classLevelIds?.includes(classFilter);
+                })
+                .map(s => (
                   <tr key={s.id} style={styles.tr}>
                     <td style={styles.td} data-label="Name"><strong>{s.name}</strong></td>
                     <td style={styles.td} data-label="Code">{s.code || '-'}</td>
                     <td style={styles.td} data-label="Classes">
-                      <div style={{ fontSize: '12px', color: '#6b7280', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.classLevelNames?.join(', ')}>
-                        {s.classLevelNames && s.classLevelNames.length > 0 ? s.classLevelNames.join(', ') : 'None'}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {s.classLevelNames && s.classLevelNames.length > 0 ? (
+                          s.classLevelNames.map((name, idx) => (
+                            <span
+                              key={idx}
+                              style={{
+                                display: 'inline-block',
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                backgroundColor: chipColors[idx % chipColors.length].bg,
+                                color: chipColors[idx % chipColors.length].text,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {name}
+                            </span>
+                          ))
+                        ) : (
+                          <span style={{ fontSize: '12px', color: '#9ca3af', fontStyle: 'italic' }}>No class linked</span>
+                        )}
                       </div>
                     </td>
                     <td style={styles.td} data-label="Order">{s.displayOrder}</td>
