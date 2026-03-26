@@ -43,24 +43,12 @@ function parseQuestionsFromText(rawText: string): ParsedQuestion[] {
     const parts = rawLine.split(/(?=\s+[a-zA-Z][.)\]](?:\s+|$))/).map(p => p.trim()).filter(p => p.length > 0);
 
     for (const line of parts) {
-      // Match question pattern: starts with a number followed by . or )
-      const questionMatch = line.match(/^\d+[.)]\s+(.+)/);
       // Match option pattern: starts with a letter followed by . or ) or ]
       const optionMatch = line.match(/^[a-zA-Z][.)\]]\s*(.+)/);
 
-      if (questionMatch) {
-        // Save previous question
-        if (currentQuestion) {
-          finalizeQuestion(currentQuestion);
-          questions.push(currentQuestion);
-        }
-        currentQuestion = {
-          text: questionMatch[1].trim(),
-          type: QuestionType.SingleChoice,
-          answers: [],
-          selected: true,
-        };
-      } else if (optionMatch && currentQuestion) {
+      if (optionMatch) {
+        if (!currentQuestion) continue; // Ignore loose options before any question text
+        
         let answerText = optionMatch[1].trim();
         let isCorrect = false;
 
@@ -76,9 +64,37 @@ function parseQuestionsFromText(rawText: string): ParsedQuestion[] {
         }
 
         currentQuestion.answers.push({ text: answerText, isCorrect });
-      } else if (currentQuestion && currentQuestion.answers.length === 0) {
-        // Continuation of multi-line question text
-        currentQuestion.text += ' ' + line;
+      } else {
+        // It's not an option. It's either a new question or a continuation.
+        // Match optional manual numbering at the beginning of the line to strip it
+        const numberMatch = line.match(/^\d+[.)]\s+(.+)/);
+        const textContent = numberMatch ? numberMatch[1].trim() : line.trim();
+
+        // If the line explicitly starts with a number, OR if the current question already had options,
+        // it means we are starting a NEW question. (Because options always come after the question text).
+        if (numberMatch || (currentQuestion && currentQuestion.answers.length > 0)) {
+          if (currentQuestion) {
+            finalizeQuestion(currentQuestion);
+            questions.push(currentQuestion);
+          }
+          currentQuestion = {
+            text: textContent,
+            type: QuestionType.SingleChoice,
+            answers: [],
+            selected: true,
+          };
+        } else if (!currentQuestion) {
+          // First line of the document
+          currentQuestion = {
+            text: textContent,
+            type: QuestionType.SingleChoice,
+            answers: [],
+            selected: true,
+          };
+        } else {
+          // Continuation of current multi-line question text
+          currentQuestion.text += ' ' + textContent;
+        }
       }
     }
   }
