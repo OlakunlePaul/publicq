@@ -262,7 +262,7 @@ function AppContent() {
         } />
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={ROUTES.MY_EXAMS} element={<MyExams />} />
-        <Route path={`${ROUTES.EXAM}:examId`} element={<ExamExecutionPage />} />
+        <Route path={ROUTES.EXAM} element={<ExamExecutionPage />} />
         <Route path={ROUTES.QUESTIONS} element={<Questions />} />
         <Route path={ROUTES.MODULE_CREATE} element={
           <RoleGuard requiredRoles={[...UserPolicies.Contributors]} redirectTo={ROUTES.LOGIN}>

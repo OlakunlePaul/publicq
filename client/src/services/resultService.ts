@@ -67,20 +67,20 @@ export const resultService = {
   },
 
   getReportCard: async (assessmentId: string): Promise<StudentAssessment> => {
-    const r = await api.get<StudentAssessment>(`results/report-card/${assessmentId}`);
-    return r.data;
+    const r = await api.get<{ isSuccess: boolean; data: StudentAssessment }>(`results/report-card/${assessmentId}`);
+    return r.data.data;
   },
 
   getClassResults: async (sessionId: string, termId: string, classLevelId: string): Promise<StudentAssessment[]> => {
-    const r = await api.get<StudentAssessment[]>('results/class', {
+    const r = await api.get<{ isSuccess: boolean; data: StudentAssessment[] }>('results/class', {
       params: { sessionId, termId, classLevelId }
     });
-    return r.data;
+    return r.data.data || [];
   },
 
   getParentChildrenResults: async (): Promise<StudentAssessment[]> => {
-    const r = await api.get<StudentAssessment[]>('results/parent/children');
-    return r.data;
+    const r = await api.get<{ isSuccess: boolean; data: StudentAssessment[] }>('results/parent/children');
+    return r.data.data || [];
   },
 
   updateStatus: async (assessmentId: string, status: ModerationStatus): Promise<void> => {
