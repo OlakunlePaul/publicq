@@ -116,7 +116,8 @@ public class ModuleProgressEntity
     /// IMPORTANT: This is a computed property and not stored in the database. Questions Responses
     /// must be loaded to calculate this value.
     /// </remarks>
-    public decimal? ScorePercentage => QuestionResponses.Count(qr => qr.IsCorrect ?? false) /
+    public decimal? ScorePercentage => AssessmentModuleVersion?.Questions == null ? 0 : 
+        QuestionResponses.Count(qr => qr.IsCorrect ?? false) /
         (decimal)(AssessmentModuleVersion.Questions.Count == 0 ? 1 : AssessmentModuleVersion.Questions.Count) * 100;
     
     /// <summary>

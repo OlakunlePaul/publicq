@@ -399,6 +399,9 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 .Include(eta => eta.Assignment)
                 .Include(eta => eta.ModuleProgress)
                     .ThenInclude(mp => mp.QuestionResponses)
+                .Include(eta => eta.ModuleProgress)
+                    .ThenInclude(mp => mp.AssessmentModuleVersion)
+                        .ThenInclude(amv => amv.Questions)
                 .ToListAsync(cancellationToken);
         
             foreach (var assessment in assessments)
