@@ -236,6 +236,11 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
 
     public async Task<Response<GenericOperationStatuses>> SaveBulkScoresAsync(BulkScoreEntryDto request, CancellationToken cancellationToken)
     {
+        var classLevel = await dbContext.ClassLevels
+            .Include(c => c.GradingSchema)
+                .ThenInclude(s => s != null ? s.GradeRanges : null)
+            .FirstOrDefaultAsync(c => c.Id == request.ClassLevelId, cancellationToken);
+            
         foreach (var entry in request.Scores)
         {
             var student = await dbContext.Students.FirstOrDefaultAsync(s => s.Id == entry.StudentId || s.AdmissionNumber == entry.StudentId, cancellationToken);
@@ -279,7 +284,11 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             score.TestScore = (entry.TestScore ?? 0) > 40 ? 40 : (entry.TestScore ?? 0);
             score.ExamScore = (entry.ExamScore ?? 0) > 60 ? 60 : (entry.ExamScore ?? 0);
             score.TotalScore = score.TestScore + score.ExamScore;
-            score.SubjectRemark = entry.SubjectRemark;
+            
+            // Re-calculate Grade and Remark immediately
+            var gradeRange = classLevel?.GradingSchema?.GradeRanges?.FirstOrDefault(r => score.TotalScore >= r.MinScore && score.TotalScore <= r.MaxScore);
+            score.Grade = gradeRange?.Grade ?? "-";
+            score.SubjectRemark = gradeRange?.Remark ?? "-";
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

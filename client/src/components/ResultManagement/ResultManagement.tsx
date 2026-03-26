@@ -306,6 +306,7 @@ const ResultManagement: React.FC = () => {
       const resp = await resultService.saveBulkScores(payload);
       if (resp.isSuccess) {
         setSuccess('Scores saved successfully.');
+        handleFetchStudents();
       } else {
         setError(resp.message || 'Failed to save scores.');
       }
