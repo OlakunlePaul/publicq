@@ -453,7 +453,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
         }
         catch (Exception ex)
         {
-            return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.BadRequest, $"Sync failed: {ex.Message} {ex.InnerException?.Message}");
+            return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.BadRequest, $"Sync failed: {ex.Message} {ex.InnerException?.Message} | Trace: {ex.StackTrace}");
         }
     }
 
