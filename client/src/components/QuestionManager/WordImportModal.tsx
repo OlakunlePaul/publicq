@@ -31,48 +31,55 @@ interface Props {
  * If no options are found, the question defaults to FreeText type.
  */
 function parseQuestionsFromText(rawText: string): ParsedQuestion[] {
-  const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  // Split the raw text into non-empty lines
+  const rawLines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const questions: ParsedQuestion[] = [];
 
   let currentQuestion: ParsedQuestion | null = null;
 
-  for (const line of lines) {
-    // Match question pattern: starts with a number followed by . or )
-    const questionMatch = line.match(/^\d+[.)]\s+(.+)/);
-    // Match option pattern: starts with a letter followed by . or ) or ]
-    const optionMatch = line.match(/^[a-zA-Z][.)\]]\s+(.+)/);
+  for (const rawLine of rawLines) {
+    // Check if the line contains inline options (e.g., "1. Question a) Opt A b) Opt B")
+    // We split the line by looking ahead for a space followed by a letter, a punctuation (. or ) or ]), and either a space or end of string.
+    const parts = rawLine.split(/(?=\s+[a-zA-Z][.)\]](?:\s+|$))/).map(p => p.trim()).filter(p => p.length > 0);
 
-    if (questionMatch) {
-      // Save previous question
-      if (currentQuestion) {
-        finalizeQuestion(currentQuestion);
-        questions.push(currentQuestion);
-      }
-      currentQuestion = {
-        text: questionMatch[1].trim(),
-        type: QuestionType.SingleChoice,
-        answers: [],
-        selected: true,
-      };
-    } else if (optionMatch && currentQuestion) {
-      let answerText = optionMatch[1].trim();
-      let isCorrect = false;
+    for (const line of parts) {
+      // Match question pattern: starts with a number followed by . or )
+      const questionMatch = line.match(/^\d+[.)]\s+(.+)/);
+      // Match option pattern: starts with a letter followed by . or ) or ]
+      const optionMatch = line.match(/^[a-zA-Z][.)\]]\s*(.+)/);
 
-      // Check for correct answer marker (trailing asterisk, or wrapped in ** **)
-      if (answerText.endsWith('*') || answerText.endsWith('**')) {
-        isCorrect = true;
-        answerText = answerText.replace(/\*+$/, '').trim();
-      }
-      // Also check for "correct" or "(correct)" marker
-      if (/\(correct\)/i.test(answerText)) {
-        isCorrect = true;
-        answerText = answerText.replace(/\s*\(correct\)\s*/i, '').trim();
-      }
+      if (questionMatch) {
+        // Save previous question
+        if (currentQuestion) {
+          finalizeQuestion(currentQuestion);
+          questions.push(currentQuestion);
+        }
+        currentQuestion = {
+          text: questionMatch[1].trim(),
+          type: QuestionType.SingleChoice,
+          answers: [],
+          selected: true,
+        };
+      } else if (optionMatch && currentQuestion) {
+        let answerText = optionMatch[1].trim();
+        let isCorrect = false;
 
-      currentQuestion.answers.push({ text: answerText, isCorrect });
-    } else if (currentQuestion && currentQuestion.answers.length === 0) {
-      // Continuation of multi-line question text
-      currentQuestion.text += ' ' + line;
+        // Check for correct answer marker (trailing asterisk, or wrapped in ** **)
+        if (answerText.endsWith('*') || answerText.endsWith('**')) {
+          isCorrect = true;
+          answerText = answerText.replace(/\*+$/, '').trim();
+        }
+        // Also check for "correct" or "(correct)" marker
+        if (/\(correct\)/i.test(answerText)) {
+          isCorrect = true;
+          answerText = answerText.replace(/\s*\(correct\)\s*/i, '').trim();
+        }
+
+        currentQuestion.answers.push({ text: answerText, isCorrect });
+      } else if (currentQuestion && currentQuestion.answers.length === 0) {
+        // Continuation of multi-line question text
+        currentQuestion.text += ' ' + line;
+      }
     }
   }
 
