@@ -383,63 +383,71 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
 
     public async Task<Response<GenericOperationStatuses>> SyncOnlineScoresAsync(Guid sessionId, Guid termId, Guid classLevelId, CancellationToken cancellationToken)
     {
-        var assessments = await dbContext.StudentAssessments
-            .Where(a => a.SessionId == sessionId && a.TermId == termId && a.ClassLevelId == classLevelId)
-            .Include(a => a.SubjectScores)
-            .ToListAsync(cancellationToken);
-
-        if (!assessments.Any()) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "No assessments found for this class.");
-
-        var studentIds = assessments.Select(a => a.StudentId).ToList();
-
-        var onlineScores = await dbContext.StudentAssignments
-            .Where(eta => studentIds.Contains(eta.StudentId) && eta.Assignment.IsPublished && eta.Assignment.SubjectId != null)
-            .Include(eta => eta.Assignment)
-            .Include(eta => eta.ModuleProgress)
-                .ThenInclude(mp => mp.QuestionResponses)
-            .ToListAsync(cancellationToken);
-
-        foreach (var assessment in assessments)
+        try 
         {
-            var studentScores = onlineScores.Where(s => s.StudentId == assessment.StudentId).ToList();
-            
-            foreach (var onlineScore in studentScores)
+            var assessments = await dbContext.StudentAssessments
+                .Where(a => a.SessionId == sessionId && a.TermId == termId && a.ClassLevelId == classLevelId)
+                .Include(a => a.SubjectScores)
+                .ToListAsync(cancellationToken);
+
+            if (!assessments.Any()) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "No assessments found for this class.");
+
+            var studentIds = assessments.Select(a => a.StudentId).ToList();
+
+            var onlineScores = await dbContext.StudentAssignments
+                .Where(eta => studentIds.Contains(eta.StudentId) && eta.Assignment.IsPublished && eta.Assignment.SubjectId != null)
+                .Include(eta => eta.Assignment)
+                .Include(eta => eta.ModuleProgress)
+                    .ThenInclude(mp => mp.QuestionResponses)
+                .ToListAsync(cancellationToken);
+
+            foreach (var assessment in assessments)
             {
-                var subjectId = onlineScore.Assignment.SubjectId!.Value;
+                var studentScores = onlineScores.Where(s => s.StudentId == assessment.StudentId).ToList();
                 
-                decimal totalPercentage = 0;
-                int completedModules = 0;
-
-                foreach (var mp in onlineScore.ModuleProgress.Where(mp => mp.CompletedAtUtc != null))
+                foreach (var onlineScore in studentScores)
                 {
-                    totalPercentage += mp.ScorePercentage ?? 0;
-                    completedModules++;
-                }
+                    var subjectId = onlineScore.Assignment.SubjectId!.Value;
+                    
+                    decimal totalPercentage = 0;
+                    int completedModules = 0;
 
-                if (completedModules == 0) continue;
-
-                decimal averagePercentage = totalPercentage / completedModules;
-                decimal scaledScore = (averagePercentage / 100) * 60;
-
-                var scoreEntity = assessment.SubjectScores.FirstOrDefault(s => s.SubjectId == subjectId);
-                if (scoreEntity == null)
-                {
-                    scoreEntity = new SubjectScoreEntity
+                    foreach (var mp in onlineScore.ModuleProgress.Where(mp => mp.CompletedAtUtc != null))
                     {
-                        Id = Guid.NewGuid(),
-                        StudentAssessmentId = assessment.Id,
-                        SubjectId = subjectId
-                    };
-                    dbContext.SubjectScores.Add(scoreEntity);
+                        totalPercentage += mp.ScorePercentage ?? 0;
+                        completedModules++;
+                    }
+
+                    if (completedModules == 0) continue;
+
+                    decimal averagePercentage = totalPercentage / completedModules;
+                    decimal scaledScore = (averagePercentage / 100) * 60;
+
+                    var scoreEntity = assessment.SubjectScores.FirstOrDefault(s => s.SubjectId == subjectId);
+                    if (scoreEntity == null)
+                    {
+                        scoreEntity = new SubjectScoreEntity
+                        {
+                            Id = Guid.NewGuid(),
+                            StudentAssessmentId = assessment.Id,
+                            SubjectId = subjectId
+                        };
+                        dbContext.SubjectScores.Add(scoreEntity);
+                        assessment.SubjectScores.Add(scoreEntity);
+                    }
+
+                    scoreEntity.ExamScore = Math.Round(scaledScore, 2);
+                    scoreEntity.TotalScore = (scoreEntity.TestScore ?? 0) + scoreEntity.ExamScore;
                 }
-
-                scoreEntity.ExamScore = Math.Round(scaledScore, 2);
-                scoreEntity.TotalScore = (scoreEntity.TestScore ?? 0) + scoreEntity.ExamScore;
             }
-        }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Online scores synchronized successfully.");
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Online scores synchronized successfully.");
+        }
+        catch (Exception ex)
+        {
+            return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.BadRequest, $"Sync failed: {ex.Message} {ex.InnerException?.Message}");
+        }
     }
 
     private static StudentAssessmentDto MapToDto(StudentAssessmentEntity a)

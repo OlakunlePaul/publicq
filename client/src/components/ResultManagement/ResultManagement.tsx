@@ -603,9 +603,10 @@ const ResultManagement: React.FC = () => {
                   const testStr = scores[stu.studentId]?.testScore || '0';
                   const examStr = scores[stu.studentId]?.examScore || '0';
                   const total = (parseInt(testStr) || 0) + (parseInt(examStr) || 0);
-                  
-                  const statusMap = ['Draft', 'Moderated', 'Approved', 'Published'];
-                  const statusLabel = statusMap[stu.status] || 'Unknown';
+                                    const statusMap = ['Draft', 'Moderated', 'Approved', 'Published'];
+                      const statusLabel = typeof stu.status === 'string' 
+                          ? stu.status 
+                          : statusMap[stu.status as unknown as number] || 'Unknown';
                   
                   return (
                     <tr key={stu.id} style={trStyle}>
