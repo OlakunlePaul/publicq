@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState, useEffect } from 'react';
+import { createContext, ReactNode, useContext, useState, useEffect, useMemo } from 'react';
 import { LoginRequest } from '../models/loginRequest';
 import { AuthContextType } from '../models/AuthContextType';
 import { CONSTANTS } from '../constants/contstants';
@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   // Get user roles based on current token
-  const userRoles = token ? getTokenRoles() : [];
+  const userRoles = useMemo(() => token ? getTokenRoles() : [] as UserRole[], [token]);
 
   return (
     <AuthContext.Provider value={{

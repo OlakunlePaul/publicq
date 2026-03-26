@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AssessmentModuleDto, AssessmentModuleVersionDto } from "../models/assessment-module";
 import { assessmentService } from "../services/assessmentService";
@@ -15,9 +15,9 @@ const ModuleBuilderPage = () => {
   const [showModuleEditForm, setShowModuleEditForm] = useState(false);
   const [isLoadingModule, setIsLoadingModule] = useState(false);
 
-  const handleBackToModules = () => {
+  const handleBackToModules = useCallback(() => {
     window.location.href = '/admin#assessments';
-  };
+  }, []);
 
   // Add mobile responsive styles
   useEffect(() => {
@@ -138,6 +138,24 @@ const ModuleBuilderPage = () => {
     }
   }
 
+  const handleQuestionsChange = useCallback((questions: any) => {
+    setModule(prev => ({
+      ...prev!,
+      latestVersion: {
+        ...prev!.latestVersion,
+        questions: questions
+      }
+    }));
+  }, []);
+
+  const handleVersionDataLoaded = useCallback((completeVersionData: any) => {
+    // Update the module with complete version data including static files
+    setModule(prev => ({
+      ...prev!,
+      latestVersion: completeVersionData
+    }));
+  }, []);
+
   // Show loading state when we have a moduleId but are still loading the module
   if (moduleId && isLoadingModule) {
     return (
@@ -210,23 +228,9 @@ const ModuleBuilderPage = () => {
             moduleVersionId={module.latestVersion.id}
             moduleId={module.id}
             moduleVersionIsPublished={module.latestVersion.isPublished}
-            onQuestionsChange={(questions) => {
-            setModule(prev => ({
-              ...prev!,
-              latestVersion: {
-                ...prev!.latestVersion,
-                questions: questions
-              }
-            }));
-          }}
-          onVersionDataLoaded={(completeVersionData) => {
-            // Update the module with complete version data including static files
-            setModule(prev => ({
-              ...prev!,
-              latestVersion: completeVersionData
-            }));
-          }}
-        />
+            onQuestionsChange={handleQuestionsChange}
+            onVersionDataLoaded={handleVersionDataLoaded}
+          />
         </div>
       </div>
       
