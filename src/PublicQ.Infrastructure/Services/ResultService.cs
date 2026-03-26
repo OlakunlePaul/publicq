@@ -400,22 +400,28 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 .Include(eta => eta.ModuleProgress)
                     .ThenInclude(mp => mp.QuestionResponses)
                 .ToListAsync(cancellationToken);
-
+        
             foreach (var assessment in assessments)
             {
-                var studentScores = onlineScores.Where(s => s.StudentId == assessment.StudentId).ToList();
+                var studentScores = onlineScores.Where(s => s != null && s.StudentId == assessment.StudentId).ToList();
                 
                 foreach (var onlineScore in studentScores)
                 {
-                    var subjectId = onlineScore.Assignment.SubjectId!.Value;
+                    if (onlineScore.Assignment == null || onlineScore.Assignment.SubjectId == null)
+                        continue;
+
+                    var subjectId = onlineScore.Assignment.SubjectId.Value;
                     
                     decimal totalPercentage = 0;
                     int completedModules = 0;
 
-                    foreach (var mp in onlineScore.ModuleProgress.Where(mp => mp.CompletedAtUtc != null))
+                    if (onlineScore.ModuleProgress != null)
                     {
-                        totalPercentage += mp.ScorePercentage ?? 0;
-                        completedModules++;
+                        foreach (var mp in onlineScore.ModuleProgress.Where(mp => mp != null && mp.CompletedAtUtc != null))
+                        {
+                            totalPercentage += mp.ScorePercentage ?? 0;
+                            completedModules++;
+                        }
                     }
 
                     if (completedModules == 0) continue;
@@ -423,7 +429,8 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                     decimal averagePercentage = totalPercentage / completedModules;
                     decimal scaledScore = (averagePercentage / 100) * 60;
 
-                    var scoreEntity = assessment.SubjectScores.FirstOrDefault(s => s.SubjectId == subjectId);
+                    assessment.SubjectScores ??= new List<SubjectScoreEntity>();
+                    var scoreEntity = assessment.SubjectScores.FirstOrDefault(s => s != null && s.SubjectId == subjectId);
                     if (scoreEntity == null)
                     {
                         scoreEntity = new SubjectScoreEntity
