@@ -284,10 +284,10 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             score.TestScore = (entry.TestScore ?? 0) > 40 ? 40 : (entry.TestScore ?? 0);
             score.ExamScore = (entry.ExamScore ?? 0) > 60 ? 60 : (entry.ExamScore ?? 0);
             score.TotalScore = score.TestScore + score.ExamScore;
-            
             // Re-calculate Grade and Remark immediately
-            var gradeRange = classLevel?.GradingSchema?.GradeRanges?.FirstOrDefault(r => score.TotalScore >= r.MinScore && score.TotalScore <= r.MaxScore);
-            score.Grade = gradeRange?.Grade ?? "-";
+            var scoreVal = (int)Math.Round(score.TotalScore.Value);
+            var gradeRange = classLevel?.GradingSchema?.GradeRanges?.FirstOrDefault(r => scoreVal >= r.MinScore && scoreVal <= r.MaxScore);
+            score.Grade = gradeRange?.Symbol ?? "-";
             score.SubjectRemark = gradeRange?.Remark ?? "-";
         }
 
