@@ -232,8 +232,21 @@ const ResultManagement: React.FC = () => {
         
       // Initialize scores state
       const initialScores: Record<string, { testScore: string, examScore: string }> = {};
+      const subjectObj = subjects.find(s => s.id === selectedSubject);
+
       assessments.forEach(stu => {
-        initialScores[stu.studentId] = { testScore: '', examScore: '' };
+        let defaultTest = '';
+        let defaultExam = '';
+        
+        if (subjectObj && stu.subjectScores) {
+          const existingScore = stu.subjectScores.find((s: any) => s.subjectName === subjectObj.name);
+          if (existingScore) {
+            defaultTest = existingScore.testScore != null ? String(existingScore.testScore) : '';
+            defaultExam = existingScore.examScore != null ? String(existingScore.examScore) : '';
+          }
+        }
+        
+        initialScores[stu.studentId] = { testScore: defaultTest, examScore: defaultExam };
       });
       setScores(initialScores);
       
@@ -343,12 +356,12 @@ const ResultManagement: React.FC = () => {
     setSuccess('');
 
     try {
-      const resp = await resultService.syncOnlineScores(selectedSession, selectedTerm, selectedClass);
-      if (resp.isSuccess) {
-        setSuccess(resp.message || 'Online scores synchronized successfully.');
-        handleFetchStudents(); // Refresh the grid
+      const res = await resultService.syncOnlineScores(selectedSession, selectedTerm, selectedClass);
+      if (res.isSuccess) {
+        setSuccess('Online scores synced successfully!');
+        handleFetchStudents();
       } else {
-        setError(resp.message || 'Failed to sync online scores.');
+        setError(res.message || 'Failed to sync online scores.');
       }
     } catch (err: any) {
       setError('Error occurred during sync: ' + err.message);
