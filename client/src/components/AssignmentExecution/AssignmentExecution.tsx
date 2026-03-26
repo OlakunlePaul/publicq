@@ -123,7 +123,12 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
     // If completed, show completion time in local timezone
     if (memberState.completedAtUtc) {
       // Convert UTC string to local Date object
-      const completedTime = new Date(memberState.completedAtUtc + 'Z'); // Ensure it's treated as UTC
+      // Ensure it's treated as UTC by checking if 'Z' is missing
+      const dateStr = memberState.completedAtUtc.endsWith('Z') ? 
+        memberState.completedAtUtc : 
+        memberState.completedAtUtc + 'Z';
+      
+      const completedTime = new Date(dateStr);
       const localDateString = completedTime.toLocaleDateString();
       const localTimeString = completedTime.toLocaleTimeString([], { 
         hour: '2-digit', 
