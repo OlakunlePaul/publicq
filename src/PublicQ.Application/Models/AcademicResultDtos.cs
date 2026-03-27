@@ -44,7 +44,7 @@ public record BulkScoreEntryDto
 public record StudentSubjectScoreDto
 {
     public string StudentId { get; init; } = string.Empty;
-    public Guid? SubjectId { get; init; } // Optional if present in root
+    public string? SubjectName { get; init; }
     public decimal? TestScore { get; init; }
     public decimal? ExamScore { get; init; }
     public decimal? TotalScore { get; init; }
