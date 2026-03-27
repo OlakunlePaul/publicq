@@ -4,7 +4,7 @@ namespace PublicQ.Application.Models.Academic;
 
 public record StudentAssessmentDto(
     Guid Id,
-    string ExamTakerId,
+    string StudentId,
     string StudentName,
     string AdmissionNumber,
     string SessionName,

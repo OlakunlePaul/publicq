@@ -229,6 +229,8 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 StudentId = assessment.StudentId,
                 TestScore = s.TestScore,
                 ExamScore = s.ExamScore,
+                TotalScore = s.TotalScore,
+                Grade = s.Grade,
                 SubjectRemark = s.SubjectRemark
             }).ToList()
         }, GenericOperationStatuses.Completed);

@@ -47,6 +47,8 @@ public record StudentSubjectScoreDto
     public Guid? SubjectId { get; init; } // Optional if present in root
     public decimal? TestScore { get; init; }
     public decimal? ExamScore { get; init; }
+    public decimal? TotalScore { get; init; }
+    public string? Grade { get; init; }
     public string? SubjectRemark { get; init; }
 }
 
