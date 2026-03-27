@@ -20,6 +20,7 @@ public class PermissionService(
         ("Security.Settings", "Manage system security and passwords"),
         ("Results.View", "View academic results"),
         ("Results.Edit", "Enter and edit student scores"),
+        ("Results.Submit", "Permission to push drafts into moderation"),
         ("Results.Approve", "Moderators/Admins only: Approve and publish results"),
         ("Academic.Settings", "Manage subjects, classes, and sessions"),
         ("Admissions.Settings", "Manage admission number format"),
@@ -131,7 +132,7 @@ public class PermissionService(
             var managerPermissionNames = new[] 
             { 
                 "Users.View", "Users.Manage", "Results.View", "Results.Edit", 
-                "Results.Approve", "Academic.Settings", "Admissions.Settings", 
+                "Results.Submit", "Results.Approve", "Academic.Settings", "Admissions.Settings", 
                 "Settings.Branding", "Communications.Send" 
             };
             await AssignPermissionsToRole(managerRole.Id, managerPermissionNames);
@@ -141,7 +142,7 @@ public class PermissionService(
         var teacherRole = await roleManager.FindByNameAsync("Teacher");
         if (teacherRole != null)
         {
-            var teacherPermissionNames = new[] { "Users.View", "Results.View", "Results.Edit" };
+            var teacherPermissionNames = new[] { "Users.View", "Results.View", "Results.Edit", "Results.Submit" };
             await AssignPermissionsToRole(teacherRole.Id, teacherPermissionNames);
         }
 

@@ -11,8 +11,11 @@ import ReportCardView from './ReportCardView';
 import PrintableReportCard from './PrintableReportCard';
 import ResultUpload from './ResultUpload';
 import BroadsheetView from './BroadsheetView';
+import { useAuth } from '../../context/AuthContext';
+import { UserRole } from '../../models/UserRole';
 
 const ResultManagement: React.FC = () => {
+  const { userRoles } = useAuth();
   const [sessions, setSessions] = useState<SessionDto[]>([]);
   const [terms, setTerms] = useState<TermDto[]>([]);
   const [classes, setClasses] = useState<ClassLevelDto[]>([]);
@@ -565,16 +568,21 @@ const ResultManagement: React.FC = () => {
             style={{ padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
             disabled={loading || !selectedClass}
           >Submit Drafts for Moderation</button>
-          <button 
-            onClick={() => handleBatchStatusUpdate(1, 2)}
-            style={{ padding: '8px 16px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-            disabled={loading || !selectedClass}
-          >Approve Moderated Results</button>
-          <button 
-            onClick={() => handleBatchStatusUpdate(2, 3)}
-            style={{ padding: '8px 16px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-            disabled={loading || !selectedClass}
-          >Publish Approved Results (Visible to Parents)</button>
+          
+          {userRoles.some(r => r === UserRole.MANAGER || r === UserRole.ADMINISTRATOR) && (
+            <>
+              <button 
+                onClick={() => handleBatchStatusUpdate(1, 2)}
+                style={{ padding: '8px 16px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                disabled={loading || !selectedClass}
+              >Approve Moderated Results</button>
+              <button 
+                onClick={() => handleBatchStatusUpdate(2, 3)}
+                style={{ padding: '8px 16px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                disabled={loading || !selectedClass}
+              >Publish Approved Results (Visible to Parents)</button>
+            </>
+          )}
         </div>
       </div>
 
