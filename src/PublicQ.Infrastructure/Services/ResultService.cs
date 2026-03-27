@@ -227,6 +227,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             SubjectScores = assessment.SubjectScores.Select(s => new StudentSubjectScoreDto
             {
                 StudentId = assessment.StudentId,
+                SubjectName = s.Subject?.Name,
                 TestScore = s.TestScore,
                 ExamScore = s.ExamScore,
                 TotalScore = s.TotalScore,
