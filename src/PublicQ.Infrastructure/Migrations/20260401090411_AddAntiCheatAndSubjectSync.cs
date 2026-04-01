@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -15,35 +15,35 @@ namespace PublicQ.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_AssessmentModuleVersions_AssessmentModules_AssessmentModuleId",
+                name: "FK_AssessmentModuleVersions_AssessmentModules_AssessmentModule~",
                 table: "AssessmentModuleVersions");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_AssessmentQuestions_AssessmentModuleVersions_AssessmentModuleVersionId",
+                name: "FK_AssessmentQuestions_AssessmentModuleVersions_AssessmentModu~",
                 table: "AssessmentQuestions");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_ModuleProgress_AssessmentModuleVersions_AssessmentModuleVersionId",
+                name: "FK_ModuleProgress_AssessmentModuleVersions_AssessmentModuleVer~",
                 table: "ModuleProgress");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_PossibleAnswerEntityStaticFileEntity_AssessmentPossibleAnswers_PossibleAnswersId",
+                name: "FK_PossibleAnswerEntityStaticFileEntity_AssessmentPossibleAnsw~",
                 table: "PossibleAnswerEntityStaticFileEntity");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_PossibleAnswerEntityStaticFileEntity_StaticFiles_AssociatedStaticFilesId",
+                name: "FK_PossibleAnswerEntityStaticFileEntity_StaticFiles_Associated~",
                 table: "PossibleAnswerEntityStaticFileEntity");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_QuestionEntityStaticFileEntity_AssessmentQuestions_QuestionsId",
+                name: "FK_QuestionEntityStaticFileEntity_AssessmentQuestions_Question~",
                 table: "QuestionEntityStaticFileEntity");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_QuestionEntityStaticFileEntity_StaticFiles_AssociatedStaticFilesId",
+                name: "FK_QuestionEntityStaticFileEntity_StaticFiles_AssociatedStatic~",
                 table: "QuestionEntityStaticFileEntity");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_StaticFiles_AssessmentModuleVersions_AssessmentModuleVersionEntityId",
+                name: "FK_StaticFiles_AssessmentModuleVersions_AssessmentModuleVersio~",
                 table: "StaticFiles");
 
             migrationBuilder.DeleteData(
@@ -4900,7 +4900,7 @@ namespace PublicQ.Infrastructure.Migrations
                 });
 
             migrationBuilder.AddForeignKey(
-                name: "FK_AssessmentModuleVersions_AssessmentModules_AssessmentModuleId",
+                name: "FK_AssessmentModuleVersions_AssessmentModules_AssessmentModule~",
                 table: "AssessmentModuleVersions",
                 column: "AssessmentModuleId",
                 principalTable: "AssessmentModules",
@@ -4908,7 +4908,7 @@ namespace PublicQ.Infrastructure.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_AssessmentQuestions_AssessmentModuleVersions_AssessmentModuleVersionId",
+                name: "FK_AssessmentQuestions_AssessmentModuleVersions_AssessmentModu~",
                 table: "AssessmentQuestions",
                 column: "AssessmentModuleVersionId",
                 principalTable: "AssessmentModuleVersions",
@@ -4916,7 +4916,7 @@ namespace PublicQ.Infrastructure.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ModuleProgress_AssessmentModuleVersions_AssessmentModuleVersionId",
+                name: "FK_ModuleProgress_AssessmentModuleVersions_AssessmentModuleVer~",
                 table: "ModuleProgress",
                 column: "AssessmentModuleVersionId",
                 principalTable: "AssessmentModuleVersions",
@@ -4924,7 +4924,7 @@ namespace PublicQ.Infrastructure.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_PossibleAnswerEntityStaticFileEntity_AssessmentPossibleAnswers_PossibleAnswersId",
+                name: "FK_PossibleAnswerEntityStaticFileEntity_AssessmentPossibleAnsw~",
                 table: "PossibleAnswerEntityStaticFileEntity",
                 column: "PossibleAnswersId",
                 principalTable: "AssessmentPossibleAnswers",
@@ -4932,7 +4932,7 @@ namespace PublicQ.Infrastructure.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_PossibleAnswerEntityStaticFileEntity_StaticFiles_AssociatedStaticFilesId",
+                name: "FK_PossibleAnswerEntityStaticFileEntity_StaticFiles_Associated~",
                 table: "PossibleAnswerEntityStaticFileEntity",
                 column: "AssociatedStaticFilesId",
                 principalTable: "StaticFiles",
@@ -4940,7 +4940,7 @@ namespace PublicQ.Infrastructure.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_QuestionEntityStaticFileEntity_AssessmentQuestions_QuestionsId",
+                name: "FK_QuestionEntityStaticFileEntity_AssessmentQuestions_Question~",
                 table: "QuestionEntityStaticFileEntity",
                 column: "QuestionsId",
                 principalTable: "AssessmentQuestions",
@@ -4948,7 +4948,7 @@ namespace PublicQ.Infrastructure.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_QuestionEntityStaticFileEntity_StaticFiles_AssociatedStaticFilesId",
+                name: "FK_QuestionEntityStaticFileEntity_StaticFiles_AssociatedStatic~",
                 table: "QuestionEntityStaticFileEntity",
                 column: "AssociatedStaticFilesId",
                 principalTable: "StaticFiles",
@@ -4956,7 +4956,7 @@ namespace PublicQ.Infrastructure.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_StaticFiles_AssessmentModuleVersions_AssessmentModuleVersionEntityId",
+                name: "FK_StaticFiles_AssessmentModuleVersions_AssessmentModuleVersio~",
                 table: "StaticFiles",
                 column: "AssessmentModuleVersionEntityId",
                 principalTable: "AssessmentModuleVersions",
