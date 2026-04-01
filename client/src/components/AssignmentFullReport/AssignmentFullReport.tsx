@@ -801,14 +801,14 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
   const generateStudentPerformanceData = () => {
     if (!assignmentReport?.examTakerReports) return [];
     
-    return assignmentReport.examTakerReports.map(student => ({
+    return assignmentReport.examTakerReports?.map(student => ({
       name: student.displayName,
       score: student.overallAverageScore || 0,
       timeSpent: student.totalTimeSpentMinutes,
       completedAssignments: student.completedAssignments,
       totalAssignments: student.totalAssignments,
       completionRate: student.totalAssignments > 0 ? (student.completedAssignments / student.totalAssignments) * 100 : 0
-    }));
+    })) || [];
   };
 
   // Generate time distribution chart data
@@ -824,15 +824,15 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
     ];
 
     return timeRanges.map(range => {
-      const count = assignmentReport.examTakerReports.filter(student => 
+      const count = assignmentReport.examTakerReports?.filter(student => 
         student.totalTimeSpentMinutes >= range.min && student.totalTimeSpentMinutes <= range.max
-      ).length;
+      ).length || 0;
       
       return {
         timeRange: range.label,
         students: count,
-        percentage: assignmentReport.examTakerReports.length > 0 
-          ? (count / assignmentReport.examTakerReports.length) * 100 
+        percentage: (assignmentReport.examTakerReports?.length || 0) > 0 
+          ? (count / (assignmentReport.examTakerReports?.length || 1)) * 100 
           : 0
       };
     });
@@ -850,16 +850,16 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
     ];
 
     return scoreRanges.map(range => {
-      const studentsInRange = assignmentReport.examTakerReports.filter(student => {
+      const studentsInRange = assignmentReport.examTakerReports?.filter(student => {
         const score = student.overallAverageScore || 0;
         return score >= range.min && score <= range.max;
-      });
+      }) || [];
       
       return {
         scoreRange: range.label,
         students: studentsInRange.length,
-        percentage: assignmentReport.examTakerReports.length > 0 
-          ? (studentsInRange.length / assignmentReport.examTakerReports.length) * 100 
+        percentage: (assignmentReport.examTakerReports?.length || 0) > 0 
+          ? (studentsInRange.length / (assignmentReport.examTakerReports?.length || 1)) * 100 
           : 0,
         color: range.color
       };
@@ -872,7 +872,7 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
       return (
         <div style={styles.tooltip}>
           <p style={styles.tooltipLabel}>{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload?.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.color, margin: '4px 0' }}>
               {`${entry.dataKey}: ${entry.value}${entry.dataKey.includes('Rate') || entry.dataKey.includes('Score') || entry.dataKey.includes('percentage') ? '%' : ''}`}
             </p>
@@ -886,13 +886,13 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
   // Generate individual student module progress chart data
   const generateStudentModuleProgressData = (student: any) => {
     const moduleProgress = getModuleProgress(student);
-    return moduleProgress.moduleReports.map((module: any) => ({
+    return moduleProgress.moduleReports?.map((module: any) => ({
       name: module.moduleTitle.length > 15 ? module.moduleTitle.substring(0, 15) + '...' : module.moduleTitle,
       score: module.score || 0,
       passingScore: module.passingScore || 0,
       status: module.status,
       passed: module.passed
-    }));
+    })) || [];
   };
 
   // Generate individual student performance summary for pie chart
@@ -916,7 +916,7 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
   // Get module progress for the current assignment
   const getModuleProgress = (student: any) => {
     // Find the assignment progress for the current assignment being viewed
-    const currentAssignmentProgress = student.assignmentProgress.find(
+    const currentAssignmentProgress = student.assignmentProgress?.find(
       (ap: any) => ap.assignmentId === assignmentId
     );
     
@@ -924,14 +924,14 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
       return {
         completedModules: currentAssignmentProgress.completedModules,
         totalModules: currentAssignmentProgress.totalModules,
-        moduleReports: currentAssignmentProgress.moduleReports
+        moduleReports: currentAssignmentProgress.moduleReports || []
       };
     }
     
     // Fallback: if no specific assignment found, aggregate all modules
-    const totalCompleted = student.assignmentProgress.reduce((sum: number, ap: any) => sum + ap.completedModules, 0);
-    const totalModules = student.assignmentProgress.reduce((sum: number, ap: any) => sum + ap.totalModules, 0);
-    const allModules = student.assignmentProgress.flatMap((ap: any) => ap.moduleReports);
+    const totalCompleted = student.assignmentProgress?.reduce((sum: number, ap: any) => sum + ap.completedModules, 0) || 0;
+    const totalModules = student.assignmentProgress?.reduce((sum: number, ap: any) => sum + ap.totalModules, 0) || 0;
+    const allModules = student.assignmentProgress?.flatMap((ap: any) => ap.moduleReports || []) || [];
     
     return {
       completedModules: totalCompleted,
@@ -1186,16 +1186,16 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={timeDistributionData.filter(d => d.students > 0)}
+                  data={timeDistributionData?.filter(d => (d.students || 0) > 0) || []}
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
                   innerRadius={40}
                   fill="#8884d8"
                   dataKey="students"
-                  label={(entry: any) => `${entry.timeRange}: ${entry.students}`}
+                  label={(entry: any) => `${entry.timeRange || ''}: ${entry.students || 0}`}
                 >
-                  {timeDistributionData.map((entry, index) => (
+                  {timeDistributionData?.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill="#22c55e" />
                   ))}
                 </Pie>
@@ -1249,7 +1249,7 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
         <h3 style={styles.sectionTitle}>Individual Reports</h3>
         
         <div style={styles.studentsCardsContainer}>
-          {assignmentReport.examTakerReports.map((student) => {
+          {assignmentReport.examTakerReports?.map((student) => {
             const moduleProgress = getModuleProgress(student);
             const inProgressModules = moduleProgress.moduleReports.filter((m: any) => 
               m.status === ModuleStatus.InProgress || m.status === 'InProgress'
@@ -1292,33 +1292,33 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
                         <span style={styles.studentStatLabel}>Status:</span>
                         <span style={{
                           ...styles.statusBadge,
-                          backgroundColor: student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.isLocked ? '#fee2e2' :
+                          backgroundColor: student.assignmentProgress?.find((ap: any) => ap.assignmentId === assignmentId)?.isLocked ? '#fee2e2' :
                             (moduleProgress.completedModules === moduleProgress.totalModules && moduleProgress.totalModules > 0) ? '#dcfce7' : 
                             isStudentInProgress ? '#dcfce7' : '#fef3c7',
-                          color: student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.isLocked ? '#991b1b' :
+                          color: student.assignmentProgress?.find((ap: any) => ap.assignmentId === assignmentId)?.isLocked ? '#991b1b' :
                             (moduleProgress.completedModules === moduleProgress.totalModules && moduleProgress.totalModules > 0) ? '#166534' : 
                             isStudentInProgress ? '#166534' : '#92400e'
                         }}>
-                          {student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.isLocked ? 'EXAM LOCKED' :
+                          {student.assignmentProgress?.find((ap: any) => ap.assignmentId === assignmentId)?.isLocked ? 'EXAM LOCKED' :
                             (moduleProgress.completedModules === moduleProgress.totalModules && moduleProgress.totalModules > 0) ? 'Completed' : 
                             isStudentInProgress ? 'In Progress' : 'Not Started'}
                         </span>
                       </div>
 
-                      {student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.tabSwitchCount !== undefined && 
-                       student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)!.tabSwitchCount > 0 && (
+                      {student.assignmentProgress?.find((ap: any) => ap.assignmentId === assignmentId)?.tabSwitchCount !== undefined && 
+                       (student.assignmentProgress?.find((ap: any) => ap.assignmentId === assignmentId)?.tabSwitchCount || 0) > 0 && (
                         <div style={styles.studentStatItem}>
                           <span style={styles.studentStatLabel}>Tab Switches:</span>
                           <span style={{
                             ...styles.studentStatValue,
-                            color: student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.isLocked ? '#dc2626' : '#92400e'
+                            color: student.assignmentProgress?.find((ap: any) => ap.assignmentId === assignmentId)?.isLocked ? '#dc2626' : '#92400e'
                           }}>
-                            {student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.tabSwitchCount} violations
+                            {student.assignmentProgress?.find((ap: any) => ap.assignmentId === assignmentId)?.tabSwitchCount} violations
                           </span>
                         </div>
                       )}
 
-                      {student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.isLocked && (
+                      {student.assignmentProgress?.find((ap: any) => ap.assignmentId === assignmentId)?.isLocked && (
                         <div style={styles.studentStatItem}>
                           <button 
                             onClick={(e) => {
@@ -1368,7 +1368,7 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
                                   dataKey="value"
                                   label={({ name, value }) => (value && Number(value) > 0) ? `${name}: ${value}` : ''}
                                 >
-                                  {generateStudentPerformanceSummary(student).map((entry, index) => (
+                                  {generateStudentPerformanceSummary(student)?.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={entry.color} />
                                   ))}
                                 </Pie>
@@ -1419,12 +1419,12 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
 
                       <h5 style={styles.detailsTitle}>Assignment Progress Details</h5>
                       <div style={styles.assignmentsList}>
-                        {student.assignmentProgress.map((assignment) => (
+                        {student.assignmentProgress?.map((assignment: any) => (
                           <div key={assignment.assignmentId} style={styles.assignmentCard} className="assignment-card">
-                            {assignment.moduleReports.length > 0 && (
+                            {(assignment.moduleReports?.length || 0) > 0 && (
                               <div style={styles.modulesList}>
                                 <p><strong>Module Details:</strong></p>
-                                {assignment.moduleReports.map((module) => (
+                                {assignment.moduleReports?.map((module: any) => (
                                   <div key={module.moduleId} style={styles.moduleItem}>
                                     <div style={styles.moduleName}>{module.moduleTitle}</div>
                                     <div style={styles.moduleDetails}>
