@@ -38,6 +38,11 @@ export interface GroupMember {
    * Assessment module that this member is associated with.
    */
   assessmentModule?: AssessmentModuleDto;
+
+  /**
+   * Optional subject tag from the assessment module.
+   */
+  subjectId?: string;
 }
 
 /**

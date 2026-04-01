@@ -65,7 +65,8 @@ public class GroupMemberEntity
                 .Select(sf => sf.FileUrl)
                 .ToHashSet() ?? [],
             AssessmentModuleDescription = latestVersion?.Description ?? string.Empty,
-            AssessmentModuleId = AssessmentModuleId
+            AssessmentModuleId = AssessmentModuleId,
+            SubjectId = AssessmentModule.SubjectId
         };
     }
 }

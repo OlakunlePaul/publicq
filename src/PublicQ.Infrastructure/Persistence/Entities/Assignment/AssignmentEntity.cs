@@ -124,6 +124,12 @@ public class AssignmentEntity
     /// Only published assignments appear in student dashboards and can be attempted.
     /// </remarks>
     public bool IsPublished { get; set; }
+
+    /// <summary>
+    /// Maximum number of tab switches allowed before the exam is locked.
+    /// Default is 3. Set to 0 to disable tab switch monitoring.
+    /// </summary>
+    public int MaxTabSwitches { get; set; } = 3;
     
     // Foreign Keys
     /// <summary>
@@ -248,7 +254,8 @@ public class AssignmentEntity
             CreatedByUser = CreatedByUser,
             UpdatedByUser = UpdatedByUser,
             CreatedAtUtc = CreatedAtUtc,
-            UpdatedAtUtc = UpdatedAtUtc
+            UpdatedAtUtc = UpdatedAtUtc,
+            MaxTabSwitches = MaxTabSwitches
         };
     }
     

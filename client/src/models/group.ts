@@ -28,6 +28,11 @@ export interface GroupBase {
    * If it is locked, exam takers cannot launch modules out of order.
    */
   isMemberOrderLocked: boolean;
+
+  /**
+   * Optional subject tag for this group.
+   */
+  subjectId?: string;
 }
 
 /**

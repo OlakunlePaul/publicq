@@ -55,7 +55,8 @@ public class GroupService(
             CreatedByUser = createdByUser,
             CreatedAtUtc = DateTime.UtcNow,
             WaitModuleCompletion = groupDto.WaitModuleCompletion,
-            IsMemberOrderLocked = groupDto.IsMemberOrderLocked
+            IsMemberOrderLocked = groupDto.IsMemberOrderLocked,
+            SubjectId = groupDto.SubjectId
         };
         
         var orderNumbersToValidate = groupDto
@@ -172,6 +173,7 @@ public class GroupService(
         currentGroup.Description = groupDto.Description;
         currentGroup.IsMemberOrderLocked = groupDto.IsMemberOrderLocked;
         currentGroup.WaitModuleCompletion = groupDto.WaitModuleCompletion;
+        currentGroup.SubjectId = groupDto.SubjectId;
         
         var result= dbContext
             .Groups

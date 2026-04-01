@@ -40,6 +40,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
     groupId: '',
     subjectId: '',
     classLevelId: '',
+    maxTabSwitches: 3,
   });
   const [error, setError] = useState('');
   const [groups, setGroups] = useState<Group[]>([]);
@@ -69,6 +70,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           groupId: assignment.groupId,
           subjectId: assignment.subjectId || '',
           classLevelId: assignment.classLevelId || '',
+          maxTabSwitches: assignment.maxTabSwitches || 3,
         });
       } else {
         // Set default dates: start date = today, end date = next week
@@ -87,6 +89,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           groupId: '',
           subjectId: '',
           classLevelId: '',
+          maxTabSwitches: 3,
         });
       }
       setError('');
@@ -156,6 +159,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           randomizeAnswers: formData.randomizeAnswers,
           groupId: assignment.groupId,
           subjectId: formData.subjectId || undefined,
+          maxTabSwitches: formData.maxTabSwitches,
         });
       } else {
         // Create new assignment
@@ -170,6 +174,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           groupId: formData.groupId,
           subjectId: formData.subjectId || undefined,
           classLevelId: formData.classLevelId || undefined,
+          maxTabSwitches: formData.maxTabSwitches,
         });
       }
     }
@@ -476,6 +481,32 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
               />
               Randomize answer order
             </label>
+          </div>
+
+          <div className={cssStyles.formGroup} style={{ marginTop: '1rem', borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}>
+            <label className={cssStyles.formLabel} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '1.25rem' }}>🛡️</span> Browser Lockdown (Anti-Cheat)
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+              <div style={{ flex: 1 }}>
+                <label className={cssStyles.formLabel} style={{ fontSize: '0.875rem', color: '#4b5563' }}>
+                  Max Tab Switches Allowed:
+                </label>
+                <input
+                  type="number"
+                  name="maxTabSwitches"
+                  value={formData.maxTabSwitches}
+                  onChange={handleInputChange}
+                  className={cssStyles.formInput}
+                  min="0"
+                  max="50"
+                  style={{ width: '100px' }}
+                />
+              </div>
+              <p className={cssStyles.formHelpText} style={{ flex: 2, margin: 0 }}>
+                Set to 0 to disable monitoring. Recommended: 3. If a student switches tabs/windows more than this limit, the exam will be automatically locked.
+              </p>
+            </div>
           </div>
 
           {error && <p className={cssStyles.formError}>{error}</p>}

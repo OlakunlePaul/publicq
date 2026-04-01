@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using PublicQ.Application.Models.Exam;
+using PublicQ.Infrastructure.Persistence.Entities.Academic;
 using PublicQ.Infrastructure.Persistence.Entities.Group;
 
 namespace PublicQ.Infrastructure.Persistence.Entities.Module;
@@ -52,6 +53,17 @@ public class AssessmentModuleEntity
     /// One module can belong to multiple groups through GroupMemberEntity.
     /// </summary>
     public HashSet<GroupMemberEntity> GroupMembers { get; set; } = [];
+
+    /// <summary>
+    /// Optional subject tag for this assessment module.
+    /// Used to filter modules by subject when presenting them to students.
+    /// </summary>
+    public Guid? SubjectId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the subject this module is tagged with.
+    /// </summary>
+    public SubjectEntity? Subject { get; set; }
     
     /// <summary>
     /// Converts the entity to a Data Transfer Object (DTO).
@@ -69,7 +81,8 @@ public class AssessmentModuleEntity
             CreatedByUser = CreatedByUser,
             CreatedAtUtc = CreatedAtUtc,
             HasPublishedVersions = Versions.Any(v => v.IsPublished),
-            LatestVersion = latestVersion?.ConvertToDto() ?? new AssessmentModuleVersionDto()
+            LatestVersion = latestVersion?.ConvertToDto() ?? new AssessmentModuleVersionDto(),
+            SubjectId = SubjectId
         };
     }
 }

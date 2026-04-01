@@ -84,7 +84,8 @@ public class AssignmentService(
                 RandomizeAnswers = assignmentCreateDto.RandomizeAnswers,
                 ShowResultsImmediately = assignmentCreateDto.ShowResultsImmediately,
                 SubjectId = assignmentCreateDto.SubjectId,
-                ClassLevelId = assignmentCreateDto.ClassLevelId
+                ClassLevelId = assignmentCreateDto.ClassLevelId,
+                MaxTabSwitches = assignmentCreateDto.MaxTabSwitches
             };
 
             logger.LogDebug("Adding new assignment to the database: {@AssignmentEntity}", assignmentToCreate);
@@ -218,6 +219,7 @@ public class AssignmentService(
         assignmentToUpdate.ShowResultsImmediately = updateDto.ShowResultsImmediately;
         assignmentToUpdate.SubjectId = updateDto.SubjectId;
         assignmentToUpdate.ClassLevelId = updateDto.ClassLevelId;
+        assignmentToUpdate.MaxTabSwitches = updateDto.MaxTabSwitches;
         assignmentToUpdate.UpdatedAtUtc = DateTime.UtcNow;
         assignmentToUpdate.UpdatedByUser = updatedByUser;
 
@@ -703,21 +705,32 @@ public class AssignmentService(
     {
         logger.LogInformation("Recording tab switch for assignment {AssignmentId}, student {StudentId}", assignmentId, studentId);
 
-        var assignment = await dbContext.StudentAssignments
+        var studentAssignment = await dbContext.StudentAssignments
+            .Include(eta => eta.Assignment)
             .FirstOrDefaultAsync(eta => eta.AssignmentId == assignmentId && eta.StudentId == studentId, cancellationToken);
 
-        if (assignment == null)
+        if (studentAssignment == null)
         {
             logger.LogWarning("Record tab switch failed. No assignment tracking found for student {StudentId} in assignment {AssignmentId}", studentId, assignmentId);
             return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assignment tracking record not found.");
         }
 
-        assignment.TabSwitchCount++;
-        assignment.LastTabSwitchAtUtc = DateTime.UtcNow;
+        studentAssignment.TabSwitchCount++;
+        studentAssignment.LastTabSwitchAtUtc = DateTime.UtcNow;
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Tab switch recorded.");
+        var maxAllowed = studentAssignment.Assignment.MaxTabSwitches;
+        if (maxAllowed > 0 && studentAssignment.TabSwitchCount >= maxAllowed)
+        {
+            logger.LogWarning("Student {StudentId} exceeded max tab switches ({Count}/{Max}) for assignment {AssignmentId}",
+                studentId, studentAssignment.TabSwitchCount, maxAllowed, assignmentId);
+            return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.Conflict, 
+                $"LOCKED: Tab switch limit exceeded ({studentAssignment.TabSwitchCount}/{maxAllowed}). Exam has been locked.");
+        }
+
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, 
+            $"Tab switch recorded ({studentAssignment.TabSwitchCount}/{maxAllowed}).");
     }
    
     /// <summary>

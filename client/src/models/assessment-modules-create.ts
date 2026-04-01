@@ -8,6 +8,7 @@ export interface AssessmentModuleCreateDto {
   passingScorePercentage: number;
   durationInMinutes: number;
   createdByUserId: string;
+  subjectId?: string; // Guid
 }
 
 export interface AssessmentModuleVersionCreateDto {

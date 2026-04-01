@@ -64,6 +64,10 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
   const [canScrollDown, setCanScrollDown] = useState(false);
   const [celebratingModules, setCelebratingModules] = useState<Set<string>>(new Set());
   const [launching, setLaunching] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [maxTabSwitches, setMaxTabSwitches] = useState(0);
+  const [showTabWarning, setShowTabWarning] = useState(false);
 
   const convertToEnum = useCallback((status: ModuleStatus | string): ModuleStatus => {
     return typeof status === 'string' 
@@ -167,6 +171,9 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
           };
           
           setGroup(groupData);
+          setIsLocked(groupStateResponse.data.isLocked);
+          setTabSwitchCount(groupStateResponse.data.tabSwitchCount);
+          setMaxTabSwitches(groupStateResponse.data.maxTabSwitches);
           
           // The group state should already contain the member states with their current status
           const memberStates = groupStateResponse.data.groupMembers.map((member) => ({
@@ -290,7 +297,15 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
         // Tab was switched or browser minimized - record this event
         if (assignment && user && user.id) {
           try {
-            await assignmentService.recordTabSwitch(assignment.id, user.id);
+            const response = await assignmentService.recordTabSwitch(assignment.id, user.id);
+            if (response.isFailed && response.message === 'LOCKED') {
+              setIsLocked(true);
+            } else {
+              setTabSwitchCount(prev => prev + 1);
+              setShowTabWarning(true);
+              // Hide warning after 5 seconds
+              setTimeout(() => setShowTabWarning(false), 5000);
+            }
           } catch (error) {
             console.error('Failed to record tab switch:', error);
           }
@@ -1544,9 +1559,74 @@ const styles: Record<string, React.CSSProperties> = {
     animation: 'spin 1s linear infinite',
   },
   loadingText: {
-    fontSize: '16px',
+    fontSize: '18px',
     color: '#6b7280',
-    fontStyle: 'italic',
+  },
+  lockoutOverlay: {
+    position: 'fixed' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    zIndex: 10000,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    backdropFilter: 'blur(8px)',
+  },
+  lockoutCard: {
+    backgroundColor: 'white',
+    borderRadius: '16px',
+    padding: '40px',
+    maxWidth: '500px',
+    width: '100%',
+    textAlign: 'center' as const,
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    border: '4px solid #fecaca',
+  },
+  lockoutStats: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '20px',
+    margin: '20px 0',
+    padding: '16px',
+    backgroundColor: '#fef2f2',
+    borderRadius: '12px',
+  },
+  lockoutStat: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+  },
+  lockoutStatLabel: {
+    fontSize: '0.75rem',
+    textTransform: 'uppercase' as const,
+    color: '#991b1b',
+    fontWeight: 'bold',
+    letterSpacing: '0.05em',
+  },
+  lockoutStatValue: {
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+    color: '#dc2626',
+  },
+  warningToast: {
+    position: 'fixed' as const,
+    top: '20px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    backgroundColor: '#fffbeb',
+    color: '#92400e',
+    padding: '16px 24px',
+    borderRadius: '12px',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    border: '1px solid #fde68a',
+    zIndex: 9999,
+    maxWidth: '400px',
+    width: 'calc(100% - 40px)',
+    animation: 'slideDown 0.3s ease-out, shake 0.5s ease-in-out 0.3s',
   },
   errorContainer: {
     textAlign: 'center',

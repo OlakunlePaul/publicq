@@ -77,6 +77,12 @@ public class GroupEntity
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     
     /// <summary>
+    /// Optional subject tag for this group.
+    /// When set, only modules with the same subject should be added.
+    /// </summary>
+    public Guid? SubjectId { get; set; }
+
+    /// <summary>
     /// Navigation property for assignments associated with this group.
     /// </summary>
     public ICollection<AssignmentEntity> Assignments { get; set; } = new List<AssignmentEntity>();
@@ -90,6 +96,7 @@ public class GroupEntity
             Description = Description,
             WaitModuleCompletion = WaitModuleCompletion,
             IsMemberOrderLocked = IsMemberOrderLocked,
+            SubjectId = SubjectId,
             GroupMembers = GroupMemberEntities.Select(member => member.ToGroupMemberDto()).ToHashSet(),
             CreatedByUser = CreatedByUser,
             CreatedAtUtc = CreatedAtUtc,

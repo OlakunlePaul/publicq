@@ -69,6 +69,12 @@ export interface AssignmentBase {
    * This links the online exam assignment to a specific physical class.
    */
   classLevelId?: string;
+
+  /**
+   * Maximum number of tab switches allowed before the exam is locked.
+   * Default is 3. Set to 0 to disable.
+   */
+  maxTabSwitches: number;
 }
 
 /**

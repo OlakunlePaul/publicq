@@ -39,4 +39,10 @@ public class GroupMemberDto
     /// Assessment module identifier that this member is associated with.
     /// </summary>
     public Guid AssessmentModuleId { get; set; }
+
+    /// <summary>
+    /// Optional subject tag from the assessment module.
+    /// Used to filter modules by subject when presenting them to students.
+    /// </summary>
+    public Guid? SubjectId { get; set; }
 }

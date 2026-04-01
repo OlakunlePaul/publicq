@@ -264,6 +264,20 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<GroupEntity>()
             .HasIndex(g => g.NormalizedTitle)
             .IsUnique();
+
+        // Subject tag on groups (optional)
+        modelBuilder.Entity<GroupEntity>()
+            .HasOne<SubjectEntity>()
+            .WithMany()
+            .HasForeignKey(g => g.SubjectId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Subject tag on assessment modules (optional)
+        modelBuilder.Entity<AssessmentModuleEntity>()
+            .HasOne(m => m.Subject)
+            .WithMany()
+            .HasForeignKey(m => m.SubjectId)
+            .OnDelete(DeleteBehavior.SetNull);
         
         modelBuilder.Entity<GroupMemberEntity>()
             .HasOne(m => m.AssessmentModule)

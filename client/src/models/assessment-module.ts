@@ -7,6 +7,7 @@ export interface AssessmentModuleDto {
   createdByUser: string;
   createdAtUtc: string; // ISO date string
   latestVersion: AssessmentModuleVersionDto;
+  subjectId?: string; // Guid
 }
 
 export interface AssessmentModuleVersionDto {

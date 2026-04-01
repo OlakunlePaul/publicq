@@ -26,4 +26,10 @@ public class GroupBaseDto
     /// If it is locked, exam takers cannot launch modules out of order.
     /// </summary>
     public bool IsMemberOrderLocked { get; set; }
+
+    /// <summary>
+    /// Optional subject tag for this group.
+    /// When set, only modules with the matching subject are shown to students.
+    /// </summary>
+    public Guid? SubjectId { get; set; }
 }

@@ -17,6 +17,75 @@ import { calculateModuleTimeRemaining, formatDateToLocal } from '../../utils/dat
 import { cn } from '../../utils/cn';
 import cssStyles from './Questions.module.css';
 
+// Inline styles for lockout and warning UI
+const inlineStyles = {
+  lockoutOverlay: {
+    position: 'fixed' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    zIndex: 10000,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    backdropFilter: 'blur(8px)',
+  },
+  lockoutCard: {
+    backgroundColor: 'white',
+    borderRadius: '16px',
+    padding: '40px',
+    maxWidth: '500px',
+    width: '100%',
+    textAlign: 'center' as const,
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    border: '4px solid #fecaca',
+  },
+  lockoutStats: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '20px',
+    margin: '20px 0',
+    padding: '16px',
+    backgroundColor: '#fef2f2',
+    borderRadius: '12px',
+  },
+  lockoutStat: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+  },
+  lockoutStatLabel: {
+    fontSize: '0.75rem',
+    textTransform: 'uppercase' as const,
+    color: '#991b1b',
+    fontWeight: 'bold',
+    letterSpacing: '0.05em',
+  },
+  lockoutStatValue: {
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+    color: '#dc2626',
+  },
+  warningToast: {
+    position: 'fixed' as const,
+    top: '20px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    backgroundColor: '#fffbeb',
+    color: '#92400e',
+    padding: '16px 24px',
+    borderRadius: '12px',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    border: '1px solid #fde68a',
+    zIndex: 9999,
+    maxWidth: '400px',
+    width: 'calc(100% - 40px)',
+  },
+};
+
 interface QuestionsProps {
   // Demo mode props (optional)
   demoMode?: boolean;
@@ -63,6 +132,10 @@ const Questions: React.FC<QuestionsProps> = ({
   const [, setWindowWidth] = useState(window.innerWidth);
   const [timerStartTime, setTimerStartTime] = useState<Date | null>(null);
   const [initialTimeRemaining, setInitialTimeRemaining] = useState<number | null>(null);
+  const [isLocked, setIsLocked] = useState(false);
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [maxTabSwitches, setMaxTabSwitches] = useState(0);
+  const [showTabWarning, setShowTabWarning] = useState(false);
 
   // Handle window resize for responsive grid
   useEffect(() => {
@@ -148,8 +221,20 @@ const Questions: React.FC<QuestionsProps> = ({
 
       if (moduleVersionResponse.isSuccess && moduleVersionResponse.data) {
         setModuleVersion(moduleVersionResponse.data);
+        // Set lock status if available from somewhere, but ideally we should get it from a general state
+        // For now, let's assume we might need to fetch it if not in state
       } else {
         setError('Failed to load module data: ' + (moduleVersionResponse.message || 'Unknown error'));
+      }
+      
+      // Fetch assignment lock status
+      if (state.assignment.id && state.user.id) {
+        const groupState = await sessionService.getGroupState(state.user.id, state.assignment.id);
+        if (groupState.isSuccess && groupState.data) {
+          setIsLocked(groupState.data.isLocked);
+          setTabSwitchCount(groupState.data.tabSwitchCount);
+          setMaxTabSwitches(groupState.data.maxTabSwitches);
+        }
       }
     } catch (err: any) {
       setError('Failed to load questions: ' + (err.response?.data?.message || err.message));
@@ -803,8 +888,15 @@ const Questions: React.FC<QuestionsProps> = ({
         // Tab was switched or browser minimized - record this event
         if (state?.assignment?.id && state?.user?.id) {
           try {
-            await assignmentService.recordTabSwitch(state.assignment.id, state.user.id);
-            // Optionally show a notification/warning here
+            const response = await assignmentService.recordTabSwitch(state.assignment.id, state.user.id);
+            if (response.isFailed && response.message === 'LOCKED') {
+              setIsLocked(true);
+            } else {
+              setTabSwitchCount(prev => prev + 1);
+              setShowTabWarning(true);
+              // Hide warning after 5 seconds
+              setTimeout(() => setShowTabWarning(false), 5000);
+            }
           } catch (error) {
             console.error('Failed to record tab switch:', error);
           }
@@ -938,7 +1030,63 @@ const Questions: React.FC<QuestionsProps> = ({
   }
 
   return (
-    <div className={cn(cssStyles.container, "questions-container")}>
+    <div className={cn(cssStyles.pageContainer, isTimeBoxHidden && cssStyles.timeHidden)}>
+      {/* Lockout Overlay */}
+      {isLocked && (
+        <div style={inlineStyles.lockoutOverlay}>
+          <div style={inlineStyles.lockoutCard}>
+            <span style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔒</span>
+            <h2 style={{ color: '#dc2626', fontSize: '2rem', margin: '0.5rem 0' }}>Exam Locked</h2>
+            <p style={{ margin: '1rem 0', fontSize: '1.1rem', color: '#4b5563' }}>
+              This exam has been automatically locked due to multiple security violations (switching tabs or windows).
+            </p>
+            <div style={inlineStyles.lockoutStats}>
+              <div style={inlineStyles.lockoutStat}>
+                <span style={inlineStyles.lockoutStatLabel}>Tab Switches:</span>
+                <span style={inlineStyles.lockoutStatValue}>{tabSwitchCount} / {maxTabSwitches}</span>
+              </div>
+            </div>
+            <p style={{ margin: '1.5rem 0', fontSize: '0.9rem', color: '#6b7280', fontStyle: 'italic' }}>
+              Please contact your invigilator or administrator to unlock your exam.
+            </p>
+            <button 
+              onClick={() => navigate(-1)}
+              style={{ 
+                backgroundColor: '#374151', 
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1f2937'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#374151'}
+            >
+              Return to Dashboard
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Switch Warning Toast */}
+      {showTabWarning && !isLocked && (
+        <div style={inlineStyles.warningToast}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+            <div>
+              <div style={{ fontWeight: 'bold' }}>Security Warning!</div>
+              <div style={{ fontSize: '0.85rem' }}>
+                Switching tabs is not allowed. Violation {tabSwitchCount} of {maxTabSwitches}.
+                {tabSwitchCount >= maxTabSwitches - 1 && <strong> Final Warning!</strong>}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={cn(cssStyles.container, "questions-container")}>
       <style>
         {`
           @keyframes shake {
@@ -1780,6 +1928,7 @@ const Questions: React.FC<QuestionsProps> = ({
         </div>
       )}
     </div>
+  </div>
   );
 };
 

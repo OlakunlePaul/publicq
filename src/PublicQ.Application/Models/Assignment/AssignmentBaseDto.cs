@@ -91,6 +91,12 @@ public abstract class AssignmentBaseDto
     public Guid? ClassLevelId { get; set; }
 
     /// <summary>
+    /// Maximum number of tab switches allowed before the exam is locked.
+    /// Default is 3. Set to 0 to disable tab switch monitoring.
+    /// </summary>
+    public int MaxTabSwitches { get; set; } = 3;
+
+    /// <summary>
     /// Gets the server's current UTC time.
     /// Used by clients to make date comparisons without relying on potentially manipulated local clocks.
     /// </summary>

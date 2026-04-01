@@ -32,4 +32,10 @@ public class AssessmentModuleDto
     /// Latest version of the test module.
     /// </summary>
     public AssessmentModuleVersionDto LatestVersion { get; set; }
+
+    /// <summary>
+    /// Optional subject tag for this assessment module.
+    /// Used to filter modules by subject when presenting them to students.
+    /// </summary>
+    public Guid? SubjectId { get; set; }
 }

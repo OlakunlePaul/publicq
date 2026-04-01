@@ -78,9 +78,16 @@ public class SessionService(
                 .ThenInclude(mpv => mpv.Questions)
             .ToListAsync(cancellationToken);
         
-        var groupMembersWithStatus = groupResponse
-            .Data!
-            .GroupMembers
+        var groupMembersToShow = groupResponse.Data!.GroupMembers.AsEnumerable();
+        
+        // Subject filter: only show modules matching the assignment's subject
+        if (assignment.SubjectId.HasValue)
+        {
+            groupMembersToShow = groupMembersToShow
+                .Where(g => g.SubjectId == assignment.SubjectId.Value);
+        }
+        
+        var groupMembersWithStatus = groupMembersToShow
             .Select(g => new GroupMemberStateWithUserProgressDto
             {
                 Id = g.Id,
@@ -369,7 +376,22 @@ public class SessionService(
                 .ThenInclude(assessmentModuleVersionEntity => assessmentModuleVersionEntity.Questions)
             .ToListAsync(cancellationToken);
 
-        var groupMemberStates = groupResponse.Data!.GroupMembers
+        var groupMembersToShow = groupResponse.Data!.GroupMembers.AsEnumerable();
+        
+        // KEY FIX: Filter modules by the assignment's subject tag.
+        // If the assignment is for "Biology", only show modules tagged as "Biology".
+        var assignmentSubjectId = studentAssignment.Assignment.SubjectId;
+        if (assignmentSubjectId.HasValue)
+        {
+            groupMembersToShow = groupMembersToShow
+                .Where(g => g.SubjectId == assignmentSubjectId.Value);
+            
+            logger.LogInformation(
+                "Subject filter applied: only showing modules with SubjectId {SubjectId} for assignment {AssignmentId}",
+                assignmentSubjectId.Value, assignmentId);
+        }
+        
+        var groupMemberStates = groupMembersToShow
             .Select(g =>
             {
                 var progress = userProgress.FirstOrDefault(up => up.GroupMemberId == g.Id);
@@ -405,7 +427,10 @@ public class SessionService(
             Description = groupResponse.Data.Description,
             IsMemberOrderLocked = groupResponse.Data.IsMemberOrderLocked,
             WaitModuleCompletion = groupResponse.Data.WaitModuleCompletion,
-            GroupMembers = groupMemberStates
+            GroupMembers = groupMemberStates,
+            IsLocked = studentAssignment.IsLocked,
+            TabSwitchCount = studentAssignment.TabSwitchCount,
+            MaxTabSwitches = studentAssignment.Assignment.MaxTabSwitches
         };
         
         return Response<GroupStateDto, GenericOperationStatuses>.Success(

@@ -9,6 +9,8 @@ import type { AssessmentModuleDto } from "../../models/assessment-module";
 import { AssessmentModuleVersionUpdateDto } from "../../models/assessment-modules-update";
 import { VALIDATION_CONSTRAINTS } from "../../constants/contstants";
 import { parseFileUploadError } from "../../utils/fileUploadErrorHandler";
+import { academicStructureService } from "../../services/academicStructureService";
+import { SubjectDto } from "../../models/academic";
 
 type PreviewFile = File | StaticFileDto;
 
@@ -23,14 +25,29 @@ export const ModuleForm = ({ onSuccess, onBackToModules }: Props) => {
     description: "",
     passingScorePercentage: 70,
     durationInMinutes: 60,
-    createdByUserId: "user-id-placeholder"
+    createdByUserId: "user-id-placeholder",
+    subjectId: ""
   });
+
+  const [subjects, setSubjects] = useState<SubjectDto[]>([]);
 
   const [errors, setErrors] = useState<string[]>([]);
   const [staticFiles, setStaticFiles] = useState<PreviewFile[]>([]);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touched, setTouched] = useState<{[key: string]: boolean}>({});
+
+  useEffect(() => {
+    const loadSubjects = async () => {
+      try {
+        const { data } = await academicStructureService.getSubjects();
+        setSubjects(data || []);
+      } catch (error) {
+        console.error("Failed to load subjects", error);
+      }
+    };
+    loadSubjects();
+  }, []);
 
   const validateForm = useCallback((): string[] => {
     const errors: string[] = [];
@@ -282,6 +299,24 @@ export const ModuleForm = ({ onSuccess, onBackToModules }: Props) => {
             {touched.description && getFieldError('description') && (
               <div style={styles.fieldError}>{getFieldError('description')}</div>
             )}
+          </FormGroup>
+
+          <FormGroup label="Subject Tag (Optional)">
+            <select
+              value={form.subjectId || ""}
+              onChange={(e) => setForm({ ...form, subjectId: e.target.value || undefined })}
+              style={styles.input}
+            >
+              <option value="">No subject tag</option>
+              {subjects.map(subject => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.name}
+                </option>
+              ))}
+            </select>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+              Tagging a module with a subject ensures it only appears in exam schedules for that specific subject.
+            </p>
           </FormGroup>
 
                 <ModuleVersionSettings

@@ -36,4 +36,19 @@ export interface GroupState {
    * Group member entities with their current states
    */
   groupMembers: GroupMemberState[];
+
+  /**
+   * Whether the assignment is locked due to anti-cheat violations.
+   */
+  isLocked: boolean;
+
+  /**
+   * Current number of tab switches recorded.
+   */
+  tabSwitchCount: number;
+
+  /**
+   * Maximum allowed tab switches.
+   */
+  maxTabSwitches: number;
 }

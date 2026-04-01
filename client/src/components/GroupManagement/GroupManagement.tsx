@@ -6,6 +6,8 @@ import { formatDateToLocal } from '../../utils/dateUtils';
 import GroupModuleManagement from './GroupModuleManagement';
 import { VALIDATION_CONSTRAINTS } from '../../constants/contstants';
 import { ValidationMessage } from '../Shared/ValidationComponents';
+import { SubjectDto } from '../../models/academic';
+import { academicStructureService } from '../../services/academicStructureService';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -29,7 +31,9 @@ const GroupFormModal = ({ isOpen, group, apiError, onConfirm, onCancel }: GroupF
     description: '',
     waitModuleCompletion: false,
     isMemberOrderLocked: false,
+    subjectId: '',
   });
+  const [subjects, setSubjects] = useState<SubjectDto[]>([]);
   const [error, setError] = useState('');
   const titleInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,6 +45,7 @@ const GroupFormModal = ({ isOpen, group, apiError, onConfirm, onCancel }: GroupF
           description: group.description,
           waitModuleCompletion: group.waitModuleCompletion,
           isMemberOrderLocked: group.isMemberOrderLocked,
+          subjectId: group.subjectId || '',
         });
       } else {
         setFormData({
@@ -48,8 +53,19 @@ const GroupFormModal = ({ isOpen, group, apiError, onConfirm, onCancel }: GroupF
           description: '',
           waitModuleCompletion: false,
           isMemberOrderLocked: false,
+          subjectId: '',
         });
       }
+
+      const loadSubjects = async () => {
+        try {
+          const { data } = await academicStructureService.getSubjects();
+          setSubjects(data || []);
+        } catch (error) {
+          console.error('Failed to load subjects', error);
+        }
+      };
+      loadSubjects();
       setError('');
       
       // Auto-focus on title input when modal opens
@@ -225,6 +241,25 @@ const GroupFormModal = ({ isOpen, group, apiError, onConfirm, onCancel }: GroupF
             </label>
             <p style={styles.formHelpText}>
               When enabled, exam takers cannot launch modules out of order and must complete them sequentially.
+            </p>
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.formLabel}>Subject (Filter):</label>
+            <select
+              name="subjectId"
+              value={formData.subjectId}
+              onChange={handleInputChange as any}
+              style={styles.formInput}
+            >
+              <option value="">No subject filter</option>
+              {subjects.map(subject => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.name}
+                </option>
+              ))}
+            </select>
+            <p style={styles.formHelpText}>
+              If selected, this folder will be primarily associated with this subject.
             </p>
           </div>
           <p style={styles.keyboardShortcuts}>

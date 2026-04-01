@@ -108,6 +108,11 @@ public class StudentAssignmentEntity
     /// The timestamp of the last recorded browser focus loss.
     /// </summary>
     public DateTime? LastTabSwitchAtUtc { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the student is locked out of the assignment.
+    /// </summary>
+    public bool IsLocked { get; set; }
     /// <summary>
     /// Converts this entity to a data transfer object (DTO) for reporting purposes.
     /// </summary>
