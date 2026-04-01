@@ -69,4 +69,9 @@ export interface ExamTakerAssignmentReport {
    * The last time the student switched tabs or lost focus on the browser.
    */
   lastTabSwitchAtUtc?: string;
+
+  /**
+   * Gets or sets a value indicating whether the student is locked out of the assignment.
+   */
+  isLocked: boolean;
 }

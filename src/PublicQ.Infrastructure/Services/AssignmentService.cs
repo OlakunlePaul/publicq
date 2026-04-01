@@ -723,14 +723,45 @@ public class AssignmentService(
         var maxAllowed = studentAssignment.Assignment.MaxTabSwitches;
         if (maxAllowed > 0 && studentAssignment.TabSwitchCount >= maxAllowed)
         {
-            logger.LogWarning("Student {StudentId} exceeded max tab switches ({Count}/{Max}) for assignment {AssignmentId}",
+            logger.LogWarning("Locking student {StudentId} for assignment {AssignmentId}. Tab switches: {Count}/{Max}",
                 studentId, studentAssignment.TabSwitchCount, maxAllowed, assignmentId);
+            
+            studentAssignment.IsLocked = true;
+            await dbContext.SaveChangesAsync(cancellationToken);
+
             return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.Conflict, 
                 $"LOCKED: Tab switch limit exceeded ({studentAssignment.TabSwitchCount}/{maxAllowed}). Exam has been locked.");
         }
 
-        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, 
-            $"Tab switch recorded ({studentAssignment.TabSwitchCount}/{maxAllowed}).");
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Tab switch recorded.");
+    }
+
+    /// <inheritdoc cref="IAssignmentService.UnlockAssignmentAsync"/>
+    public async Task<Response<GenericOperationStatuses>> UnlockAssignmentAsync(
+        Guid assignmentId,
+        string studentId,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Unlocking assignment {AssignmentId} for student {StudentId}", assignmentId, studentId);
+
+        var studentAssignment = await dbContext.StudentAssignments
+            .FirstOrDefaultAsync(eta => eta.AssignmentId == assignmentId && eta.StudentId == studentId, cancellationToken);
+
+        if (studentAssignment == null)
+        {
+            logger.LogWarning("Unlock failed. No assignment tracking found for student {StudentId} in assignment {AssignmentId}", studentId, assignmentId);
+            return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assignment tracking record not found.");
+        }
+
+        studentAssignment.TabSwitchCount = 0;
+        studentAssignment.IsLocked = false;
+        studentAssignment.LastTabSwitchAtUtc = null;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Successfully unlocked student {StudentId} in assignment {AssignmentId}", studentId, assignmentId);
+
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Student session unlocked successfully.");
     }
    
     /// <summary>

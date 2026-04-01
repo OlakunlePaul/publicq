@@ -78,4 +78,9 @@ public class ExamTakerAssignmentReportDto
     /// The last time the student switched tabs or lost focus on the browser.
     /// </summary>
     public DateTime? LastTabSwitchAtUtc { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the student is locked out of the assignment.
+    /// </summary>
+    public bool IsLocked { get; set; }
 }

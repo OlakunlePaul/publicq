@@ -145,4 +145,16 @@ public interface IAssignmentService
         Guid assignmentId,
         string studentId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Unlocks a student's assignment session and resets their tab switch count.
+    /// </summary>
+    /// <param name="assignmentId">The ID of the assignment.</param>
+    /// <param name="studentId">The ID of the student.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>A response containing the operation status.</returns>
+    Task<Response<GenericOperationStatuses>> UnlockAssignmentAsync(
+        Guid assignmentId,
+        string studentId,
+        CancellationToken cancellationToken = default);
 }

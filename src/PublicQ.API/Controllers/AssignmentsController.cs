@@ -317,4 +317,26 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
         var response = await assignmentService.RecordTabSwitchAsync(id, StudentId, cancellationToken);
         return response.ToActionResult();
     }
+
+    /// <summary>
+    /// Unlocks a student's assignment session and resets their tab switch count.
+    /// </summary>
+    /// <param name="id">The assignment ID.</param>
+    /// <param name="StudentId">The student ID.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>An <see cref="IActionResult"/> with the operation status.</returns>
+    [Authorize(Constants.ContributorsPolicy)]
+    [HttpPost("{id:guid}/proctoring/unlock/{StudentId}")]
+    public async Task<IActionResult> UnlockAssignmentAsync(Guid id, string StudentId, CancellationToken cancellationToken)
+    {
+        if (id == Guid.Empty || string.IsNullOrWhiteSpace(StudentId))
+        {
+            return Response<GenericOperationStatuses>
+                .Failure(GenericOperationStatuses.BadRequest, "Assignment ID and Exam Taker ID are required.")
+                .ToActionResult();
+        }
+
+        var response = await assignmentService.UnlockAssignmentAsync(id, StudentId, cancellationToken);
+        return response.ToActionResult();
+    }
 }

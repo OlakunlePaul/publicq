@@ -16,6 +16,7 @@ import {
   Scatter
 } from 'recharts';
 import { reportingService } from '../../services/reportingService';
+import { assignmentService } from '../../services/assignmentService';
 import { AssignmentReport } from '../../models/reporting';
 import { ModuleStatus } from '../../models/module-status';
 import { formatDateToLocal } from '../../utils/dateUtils';
@@ -114,6 +115,29 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
       document.head.removeChild(style);
     };
   }, []);
+
+  // Handle Exam Unlock
+  const handleUnlock = async (studentId: string, studentName: string) => {
+    if (!window.confirm(`Are you sure you want to unlock the exam for ${studentName}? This will reset their violation count and allow them to resume immediately.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await assignmentService.unlockAssignment(assignmentId, studentId);
+      
+      if (response.isSuccess) {
+        alert(`Successfully unlocked exam for ${studentName}.`);
+        await fetchAssignmentReport(); // Refresh data
+      } else {
+        alert(response.message || 'Failed to unlock exam.');
+      }
+    } catch (error) {
+      alert('An error occurred while trying to unlock the exam.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handle PDF export - Single long page approach
   const handleExportPDF = async () => {
@@ -687,15 +711,45 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
                         <span style={styles.studentStatLabel}>Status:</span>
                         <span style={{
                           ...styles.statusBadge,
-                          backgroundColor: (moduleProgress.completedModules === moduleProgress.totalModules && moduleProgress.totalModules > 0) ? '#dcfce7' : 
+                          backgroundColor: student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.isLocked ? '#fee2e2' :
+                            (moduleProgress.completedModules === moduleProgress.totalModules && moduleProgress.totalModules > 0) ? '#dcfce7' : 
                             isStudentInProgress ? '#dcfce7' : '#fef3c7',
-                          color: (moduleProgress.completedModules === moduleProgress.totalModules && moduleProgress.totalModules > 0) ? '#166534' : 
+                          color: student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.isLocked ? '#991b1b' :
+                            (moduleProgress.completedModules === moduleProgress.totalModules && moduleProgress.totalModules > 0) ? '#166534' : 
                             isStudentInProgress ? '#166534' : '#92400e'
                         }}>
-                          {(moduleProgress.completedModules === moduleProgress.totalModules && moduleProgress.totalModules > 0) ? 'Completed' : 
+                          {student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.isLocked ? 'EXAM LOCKED' :
+                            (moduleProgress.completedModules === moduleProgress.totalModules && moduleProgress.totalModules > 0) ? 'Completed' : 
                             isStudentInProgress ? 'In Progress' : 'Not Started'}
                         </span>
                       </div>
+
+                      {student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.tabSwitchCount !== undefined && 
+                       student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)!.tabSwitchCount > 0 && (
+                        <div style={styles.studentStatItem}>
+                          <span style={styles.studentStatLabel}>Tab Switches:</span>
+                          <span style={{
+                            ...styles.studentStatValue,
+                            color: student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.isLocked ? '#dc2626' : '#92400e'
+                          }}>
+                            {student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.tabSwitchCount} violations
+                          </span>
+                        </div>
+                      )}
+
+                      {student.assignmentProgress.find(ap => ap.assignmentId === assignmentId)?.isLocked && (
+                        <div style={styles.studentStatItem}>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUnlock(student.studentId, student.displayName);
+                            }}
+                            style={styles.unlockButton}
+                          >
+                            🔓 Unlock Student
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -952,6 +1006,19 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 500,
     margin: '4px 0 0 0',
     color: '#6b7280',
+  },
+  unlockButton: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '6px 12px',
+    backgroundColor: '#dc2626',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'background-color 0.2s',
   },
   loadingContainer: {
     display: 'flex',

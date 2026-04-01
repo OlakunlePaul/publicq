@@ -184,6 +184,7 @@ export const DEMO_ASSIGNMENT: Assignment = {
   showResultsImmediately: true,
   randomizeQuestions: false,
   randomizeAnswers: false,
+  maxTabSwitches: 0,
   groupId: 'demo-group-123',
   groupTitle: 'Demo Group',
   isPublished: true,

@@ -70,5 +70,10 @@ export const assignmentService = {
   recordTabSwitch: async (assignmentId: string, studentId: string): Promise<Response<GenericOperationStatuses>> => {
     const response = await axios.post<Response<GenericOperationStatuses>>(`assignments/${assignmentId}/proctoring/tab-switch/${studentId}`);
     return response.data;
+  },
+
+  unlockAssignment: async (assignmentId: string, studentId: string): Promise<Response<GenericOperationStatuses>> => {
+    const response = await axios.post<Response<GenericOperationStatuses>>(`assignments/${assignmentId}/proctoring/unlock/${studentId}`);
+    return response.data;
   }
 };

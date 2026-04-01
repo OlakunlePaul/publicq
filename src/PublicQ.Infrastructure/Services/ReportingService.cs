@@ -578,7 +578,9 @@ public class ReportingService(
                 TabSwitchCount = kvp.Key.StudentAssignments
                     .FirstOrDefault(eta => eta.AssignmentId == kvp.Key.Id)?.TabSwitchCount ?? 0,
                 LastTabSwitchAtUtc = kvp.Key.StudentAssignments
-                    .FirstOrDefault(eta => eta.AssignmentId == kvp.Key.Id)?.LastTabSwitchAtUtc
+                    .FirstOrDefault(eta => eta.AssignmentId == kvp.Key.Id)?.LastTabSwitchAtUtc,
+                IsLocked = kvp.Key.StudentAssignments
+                    .FirstOrDefault(eta => eta.AssignmentId == kvp.Key.Id)?.IsLocked ?? false
             };
            assignmentReports.Add(assignmentReport);
         }
