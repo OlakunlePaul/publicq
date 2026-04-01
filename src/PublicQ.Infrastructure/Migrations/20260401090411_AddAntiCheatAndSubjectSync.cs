@@ -19,19 +19,6 @@ namespace PublicQ.Infrastructure.Migrations
                 nullable: false,
                 defaultValue: false);
 
-            migrationBuilder.AddColumn<int>(
-                name: "TabSwitchCount",
-                table: "ExamTakerAssignments",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.AddColumn<DateTime>(
-                name: "LastTabSwitchAtUtc",
-                table: "ExamTakerAssignments",
-                type: "timestamp with time zone",
-                nullable: true);
-
             // 2. Add Anti-Cheat and Subject columns to Assignments
             migrationBuilder.AddColumn<int>(
                 name: "MaxTabSwitches",
@@ -40,11 +27,6 @@ namespace PublicQ.Infrastructure.Migrations
                 nullable: false,
                 defaultValue: 3);
 
-            migrationBuilder.AddColumn<Guid>(
-                name: "SubjectId",
-                table: "Assignments",
-                type: "uuid",
-                nullable: true);
 
             migrationBuilder.AddColumn<Guid>(
                 name: "ClassLevelId",
@@ -82,10 +64,6 @@ namespace PublicQ.Infrastructure.Migrations
                 table: "Assignments",
                 column: "ClassLevelId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Assignments_SubjectId",
-                table: "Assignments",
-                column: "SubjectId");
 
             // 6. Add Foreign Keys
             migrationBuilder.AddForeignKey(
@@ -104,13 +82,6 @@ namespace PublicQ.Infrastructure.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.SetNull);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_Assignments_Subjects_SubjectId",
-                table: "Assignments",
-                column: "SubjectId",
-                principalTable: "Subjects",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Groups_Subjects_SubjectId",
@@ -132,9 +103,6 @@ namespace PublicQ.Infrastructure.Migrations
                 name: "FK_Assignments_ClassLevels_ClassLevelId",
                 table: "Assignments");
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_Assignments_Subjects_SubjectId",
-                table: "Assignments");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_Groups_Subjects_SubjectId",
@@ -152,9 +120,6 @@ namespace PublicQ.Infrastructure.Migrations
                 name: "IX_Assignments_ClassLevelId",
                 table: "Assignments");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Assignments_SubjectId",
-                table: "Assignments");
 
             migrationBuilder.DropColumn(
                 name: "SubjectId",
@@ -168,13 +133,6 @@ namespace PublicQ.Infrastructure.Migrations
                 name: "IsLocked",
                 table: "ExamTakerAssignments");
 
-            migrationBuilder.DropColumn(
-                name: "LastTabSwitchAtUtc",
-                table: "ExamTakerAssignments");
-
-            migrationBuilder.DropColumn(
-                name: "TabSwitchCount",
-                table: "ExamTakerAssignments");
 
             migrationBuilder.DropColumn(
                 name: "ClassLevelId",
@@ -184,9 +142,6 @@ namespace PublicQ.Infrastructure.Migrations
                 name: "MaxTabSwitches",
                 table: "Assignments");
 
-            migrationBuilder.DropColumn(
-                name: "SubjectId",
-                table: "Assignments");
         }
     }
 }
