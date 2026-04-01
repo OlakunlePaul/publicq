@@ -5,10 +5,6 @@ import { formatDateToLocal } from '../../utils/dateUtils';
 import AssignmentFullReport from '../AssignmentFullReport/AssignmentFullReport';
 import cssStyles from './ReportsSummary.module.css';
 
-// Utility function for conditional class names
-const cn = (...classes: (string | undefined | false)[]): string => 
-  classes.filter(Boolean).join(' ');
-
 const AssignmentsReports: React.FC = () => {
   const [assignments, setAssignments] = useState<AssignmentSummaryReport[]>([]);
   const [loading, setLoading] = useState(false);
