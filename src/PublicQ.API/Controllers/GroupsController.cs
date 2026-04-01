@@ -212,8 +212,20 @@ public class GroupsController(IGroupService groupService) : ControllerBase
     [HttpPatch]
     public async Task<IActionResult> UpdateGroupAsync(
         [FromBody] GroupUpdateDto groupUpdateDto,
+        [FromServices] IValidator<GroupUpdateDto> validator,
         CancellationToken cancellationToken)
     {
+        var validationResult = await validator.ValidateAsync(groupUpdateDto, cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            return Response<GroupUpdateDto, GenericOperationStatuses>
+                .Failure(GenericOperationStatuses.BadRequest,
+                    "Validation failed.",
+                    validationResult.Errors.Select(e => e.ErrorMessage).ToList())
+                .ToActionResult();
+        }
+
         if (groupUpdateDto.Id == Guid.Empty)
         {
             return Response<GroupUpdateDto, GenericOperationStatuses>

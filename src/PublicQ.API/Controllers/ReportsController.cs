@@ -55,6 +55,7 @@ public class ReportsController(IReportingService reportingService) : ControllerB
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns paginated response with <see cref="IndividualStudentReportDto"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
     [HttpGet("students")]
+    [HttpGet("exam-takers")]
     public async Task<IActionResult> GetAllStudentsAsync(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
@@ -132,6 +133,7 @@ public class ReportsController(IReportingService reportingService) : ControllerB
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns <see cref="StudentReportDto"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
     [HttpGet("students/{studentId}")]
+    [HttpGet("exam-takers/{studentId}")]
     public async Task<IActionResult> GetStudentReportAsync(string studentId, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(studentId))
@@ -157,6 +159,7 @@ public class ReportsController(IReportingService reportingService) : ControllerB
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns <see cref="StudentReportDto"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
     [HttpGet("students/{studentId}/assignments/{assignmentId:guid}")]
+    [HttpGet("exam-takers/{studentId}/assignments/{assignmentId:guid}")]
     public async Task<IActionResult> GetStudentReportAsync(
         string studentId, 
         Guid assignmentId, 

@@ -66,7 +66,7 @@ public class GroupMemberEntity
                 .ToHashSet() ?? [],
             AssessmentModuleDescription = latestVersion?.Description ?? string.Empty,
             AssessmentModuleId = AssessmentModuleId,
-            SubjectId = AssessmentModule.SubjectId
+            SubjectId = AssessmentModule.SubjectId ?? Group?.SubjectId
         };
     }
 }
