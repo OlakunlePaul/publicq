@@ -11,7 +11,8 @@ namespace PublicQ.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // 1. Add Anti-Cheat columns to StudentAssignments (ExamTakerAssignments)
+            // 1. Add IsLocked (anti-cheat) to ExamTakerAssignments
+            // NOTE: TabSwitchCount and LastTabSwitchAtUtc already exist from Phase25_GradingSchemaFix
             migrationBuilder.AddColumn<bool>(
                 name: "IsLocked",
                 table: "ExamTakerAssignments",
@@ -19,7 +20,8 @@ namespace PublicQ.Infrastructure.Migrations
                 nullable: false,
                 defaultValue: false);
 
-            // 2. Add Anti-Cheat and Subject columns to Assignments
+            // 2. Add MaxTabSwitches to Assignments
+            // NOTE: SubjectId and ClassLevelId already exist from Phase25/Phase26 migrations
             migrationBuilder.AddColumn<int>(
                 name: "MaxTabSwitches",
                 table: "Assignments",
@@ -27,28 +29,21 @@ namespace PublicQ.Infrastructure.Migrations
                 nullable: false,
                 defaultValue: 3);
 
-
-            migrationBuilder.AddColumn<Guid>(
-                name: "ClassLevelId",
-                table: "Assignments",
-                type: "uuid",
-                nullable: true);
-
-            // 3. Add SubjectId to AssessmentModules
+            // 3. Add SubjectId to AssessmentModules (new)
             migrationBuilder.AddColumn<Guid>(
                 name: "SubjectId",
                 table: "AssessmentModules",
                 type: "uuid",
                 nullable: true);
 
-            // 4. Add SubjectId to Groups
+            // 4. Add SubjectId to Groups (new)
             migrationBuilder.AddColumn<Guid>(
                 name: "SubjectId",
                 table: "Groups",
                 type: "uuid",
                 nullable: true);
 
-            // 5. Create Indices
+            // 5. Create indices for new columns
             migrationBuilder.CreateIndex(
                 name: "IX_Groups_SubjectId",
                 table: "Groups",
@@ -59,13 +54,7 @@ namespace PublicQ.Infrastructure.Migrations
                 table: "AssessmentModules",
                 column: "SubjectId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Assignments_ClassLevelId",
-                table: "Assignments",
-                column: "ClassLevelId");
-
-
-            // 6. Add Foreign Keys
+            // 6. Add Foreign Keys for new columns
             migrationBuilder.AddForeignKey(
                 name: "FK_AssessmentModules_Subjects_SubjectId",
                 table: "AssessmentModules",
@@ -73,15 +62,6 @@ namespace PublicQ.Infrastructure.Migrations
                 principalTable: "Subjects",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.SetNull);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Assignments_ClassLevels_ClassLevelId",
-                table: "Assignments",
-                column: "ClassLevelId",
-                principalTable: "ClassLevels",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
-
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Groups_Subjects_SubjectId",
@@ -100,11 +80,6 @@ namespace PublicQ.Infrastructure.Migrations
                 table: "AssessmentModules");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_Assignments_ClassLevels_ClassLevelId",
-                table: "Assignments");
-
-
-            migrationBuilder.DropForeignKey(
                 name: "FK_Groups_Subjects_SubjectId",
                 table: "Groups");
 
@@ -115,11 +90,6 @@ namespace PublicQ.Infrastructure.Migrations
             migrationBuilder.DropIndex(
                 name: "IX_AssessmentModules_SubjectId",
                 table: "AssessmentModules");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Assignments_ClassLevelId",
-                table: "Assignments");
-
 
             migrationBuilder.DropColumn(
                 name: "SubjectId",
@@ -133,15 +103,9 @@ namespace PublicQ.Infrastructure.Migrations
                 name: "IsLocked",
                 table: "ExamTakerAssignments");
 
-
-            migrationBuilder.DropColumn(
-                name: "ClassLevelId",
-                table: "Assignments");
-
             migrationBuilder.DropColumn(
                 name: "MaxTabSwitches",
                 table: "Assignments");
-
         }
     }
 }
