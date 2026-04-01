@@ -947,6 +947,45 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
 
   return (
     <div style={styles.container} className="assignment-execution-container">
+      {/* Anti-Cheat Lockout Overlay */}
+      {isLocked && (
+        <div style={styles.lockoutOverlay} className="assignment-execution-lockout-overlay">
+          <div style={styles.lockoutContent}>
+            <div style={styles.lockoutIcon}>🔒</div>
+            <h2 style={styles.lockoutTitle}>EXAM ACCESS REVOKED</h2>
+            <p style={styles.lockoutText}>
+              Your exam session has been locked due to multiple browser tab switches or focus loss violations.
+            </p>
+            <div style={styles.lockoutStats}>
+              <div style={styles.lockoutStatItem}>
+                <span style={styles.lockoutStatLabel}>Total Violations:</span>
+                <span style={styles.lockoutStatValue}>{tabSwitchCount} / {maxTabSwitches}</span>
+              </div>
+            </div>
+            <p style={styles.lockoutInstructions}>
+              Please contact your invigilator or instructor immediately to request an unlock.
+            </p>
+            <button onClick={onBack} style={styles.lockoutBackButton}>
+              Return to Dashboard
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Switch Warning Toast */}
+      {showTabWarning && !isLocked && (
+        <div style={styles.antiCheatWarning}>
+          <div style={styles.antiCheatWarningIcon}>⚠️</div>
+          <div style={styles.antiCheatWarningContent}>
+            <div style={styles.antiCheatWarningTitle}>Security Warning: Tab Switch Detected</div>
+            <div style={styles.antiCheatWarningText}>
+              Violation {tabSwitchCount} of {maxTabSwitches}. Switching tabs is prohibited during this exam.
+              Exceeding the limit will result in immediate lockout.
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>
         {`
           @keyframes shake {
@@ -1547,9 +1586,127 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: '400px',
-    gap: '16px',
+    padding: '60px',
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
   },
+  // Anti-Cheat Styles
+  lockoutOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.98)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+    padding: '20px',
+    textAlign: 'center',
+    color: 'white',
+    backdropFilter: 'blur(8px)',
+  },
+  lockoutContent: {
+    maxWidth: '500px',
+    width: '100%',
+    backgroundColor: '#1e293b',
+    padding: '40px',
+    borderRadius: '20px',
+    border: '1px solid #dc2626',
+    boxShadow: '0 0 50px rgba(220, 38, 38, 0.3)',
+  },
+  lockoutIcon: {
+    fontSize: '64px',
+    marginBottom: '20px',
+  },
+  lockoutTitle: {
+    fontSize: '28px',
+    fontWeight: 800,
+    color: '#ef4444',
+    marginBottom: '16px',
+    letterSpacing: '1px',
+  },
+  lockoutText: {
+    fontSize: '18px',
+    lineHeight: '1.6',
+    color: '#cbd5e1',
+    marginBottom: '24px',
+  },
+  lockoutStats: {
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    padding: '16px',
+    borderRadius: '12px',
+    marginBottom: '24px',
+  },
+  lockoutStatItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  lockoutStatLabel: {
+    color: '#94a3b8',
+    fontSize: '14px',
+  },
+  lockoutStatValue: {
+    color: '#f1f5f9',
+    fontSize: '20px',
+    fontWeight: 700,
+  },
+  lockoutInstructions: {
+    fontSize: '14px',
+    color: '#94a3b8',
+    marginBottom: '32px',
+    fontStyle: 'italic',
+  },
+  lockoutBackButton: {
+    padding: '12px 24px',
+    backgroundColor: '#3b82f6',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  },
+  antiCheatWarning: {
+    position: 'fixed',
+    top: '20px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 10000,
+    backgroundColor: '#fffbeb',
+    border: '1px solid #f59e0b',
+    borderRadius: '12px',
+    padding: '16px 20px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+    maxWidth: '600px',
+    width: '90%',
+    animation: 'shakeCenter 0.5s ease-in-out',
+  },
+  antiCheatWarningIcon: {
+    fontSize: '24px',
+  },
+  antiCheatWarningContent: {
+    flex: 1,
+  },
+  antiCheatWarningTitle: {
+    fontWeight: 700,
+    color: '#92400e',
+    fontSize: '15px',
+    marginBottom: '2px',
+  },
+  antiCheatWarningText: {
+    color: '#b45309',
+    fontSize: '13px',
+    lineHeight: '1.4',
+  },
+
   spinner: {
     width: '40px',
     height: '40px',
@@ -1562,72 +1719,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '18px',
     color: '#6b7280',
   },
-  lockoutOverlay: {
-    position: 'fixed' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    zIndex: 10000,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '20px',
-    backdropFilter: 'blur(8px)',
-  },
-  lockoutCard: {
-    backgroundColor: 'white',
-    borderRadius: '16px',
-    padding: '40px',
-    maxWidth: '500px',
-    width: '100%',
-    textAlign: 'center' as const,
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    border: '4px solid #fecaca',
-  },
-  lockoutStats: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '20px',
-    margin: '20px 0',
-    padding: '16px',
-    backgroundColor: '#fef2f2',
-    borderRadius: '12px',
-  },
-  lockoutStat: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-  },
-  lockoutStatLabel: {
-    fontSize: '0.75rem',
-    textTransform: 'uppercase' as const,
-    color: '#991b1b',
-    fontWeight: 'bold',
-    letterSpacing: '0.05em',
-  },
-  lockoutStatValue: {
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    color: '#dc2626',
-  },
-  warningToast: {
-    position: 'fixed' as const,
-    top: '20px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: '#fffbeb',
-    color: '#92400e',
-    padding: '16px 24px',
-    borderRadius: '12px',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-    border: '1px solid #fde68a',
-    zIndex: 9999,
-    maxWidth: '400px',
-    width: 'calc(100% - 40px)',
-    animation: 'slideDown 0.3s ease-out, shake 0.5s ease-in-out 0.3s',
-  },
+
   errorContainer: {
     textAlign: 'center',
     padding: '40px 20px',
