@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -31,10 +31,11 @@ namespace PublicQ.Infrastructure.Migrations
                 oldType: "timestamp with time zone",
                 oldNullable: true);
 
-            migrationBuilder.InsertData(
-                table: "UserConfigurations",
-                columns: new[] { "Id", "DataJson", "Type" },
-                values: new object[] { 1, "{\n  \"Format\": \"EN-{YYYY}-{0000}\",\n  \"LastSequenceNumber\": 0\n}", 1 });
+            migrationBuilder.Sql(
+                "INSERT INTO \"UserConfigurations\" (\"Id\", \"DataJson\", \"Type\") " +
+                "OVERRIDING SYSTEM VALUE " +
+                "VALUES (1, '{\n  \"Format\": \"EN-{YYYY}-{0000}\",\n  \"LastSequenceNumber\": 0\n}', 1) " +
+                "ON CONFLICT (\"Id\") DO NOTHING;");
         }
 
         /// <inheritdoc />
