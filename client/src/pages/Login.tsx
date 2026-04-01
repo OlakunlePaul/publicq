@@ -114,7 +114,11 @@ const Login = () => {
       }
 
       const roles = getTokenRoles();
-      if (UserPolicies.hasContributorAccess(roles) || UserPolicies.hasManagerAccess(roles) || UserPolicies.hasAdminAccess(roles)) {
+      
+      // Prioritize student redirect if logging in as a student
+      if (loginType === 'student' || roles.includes(UserRole.EXAM_TAKER)) {
+        navigate('/my-exams', { replace: true });
+      } else if (UserPolicies.hasContributorAccess(roles) || UserPolicies.hasManagerAccess(roles) || UserPolicies.hasAdminAccess(roles)) {
         navigate('/admin', { replace: true });
       } else if (roles.includes(UserRole.PARENT)) {
         navigate('/parent-dashboard', { replace: true });

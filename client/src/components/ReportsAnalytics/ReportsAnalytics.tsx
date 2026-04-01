@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ReportsSummary from './ReportsSummary';
 import UsersReports from './UsersReports';
+import AssignmentsReports from './AssignmentsReports';
 import cssStyles from './ReportsAnalytics.module.css';
 
 // Utility function for conditional class names
@@ -27,6 +28,11 @@ const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = () => {
       id: 'analytics',
       label: 'Analytics Dashboard',
       content: <ReportsSummary />
+    },
+    {
+      id: 'assignments',
+      label: 'Assignments',
+      content: <AssignmentsReports />
     },
     {
       id: 'users',
