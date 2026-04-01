@@ -799,9 +799,9 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
 
   // Generate student performance scatter plot data
   const generateStudentPerformanceData = () => {
-    if (!assignmentReport?.examTakerReports) return [];
+    if (!assignmentReport?.studentReports) return [];
     
-    return assignmentReport.examTakerReports?.map(student => ({
+    return assignmentReport.studentReports?.map(student => ({
       name: student.displayName,
       score: student.overallAverageScore || 0,
       timeSpent: student.totalTimeSpentMinutes,
@@ -813,7 +813,7 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
 
   // Generate time distribution chart data
   const generateTimeDistributionData = () => {
-    if (!assignmentReport?.examTakerReports) return [];
+    if (!assignmentReport?.studentReports) return [];
     
     const timeRanges = [
       { min: 0, max: 30, label: '0-30 min' },
@@ -824,15 +824,15 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
     ];
 
     return timeRanges.map(range => {
-      const count = assignmentReport.examTakerReports?.filter(student => 
+      const count = assignmentReport.studentReports?.filter(student => 
         student.totalTimeSpentMinutes >= range.min && student.totalTimeSpentMinutes <= range.max
       ).length || 0;
       
       return {
         timeRange: range.label,
         students: count,
-        percentage: (assignmentReport.examTakerReports?.length || 0) > 0 
-          ? (count / (assignmentReport.examTakerReports?.length || 1)) * 100 
+        percentage: (assignmentReport.studentReports?.length || 0) > 0 
+          ? (count / (assignmentReport.studentReports?.length || 1)) * 100 
           : 0
       };
     });
@@ -840,7 +840,7 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
 
   // Generate score distribution chart data
   const generateScoreDistributionData = () => {
-    if (!assignmentReport?.examTakerReports) return [];
+    if (!assignmentReport?.studentReports) return [];
     
     const scoreRanges = [
       { min: 0, max: 50, label: '0-50%', color: '#ef4444' },
@@ -850,7 +850,7 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
     ];
 
     return scoreRanges.map(range => {
-      const studentsInRange = assignmentReport.examTakerReports?.filter(student => {
+      const studentsInRange = assignmentReport.studentReports?.filter(student => {
         const score = student.overallAverageScore || 0;
         return score >= range.min && score <= range.max;
       }) || [];
@@ -858,8 +858,8 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
       return {
         scoreRange: range.label,
         students: studentsInRange.length,
-        percentage: (assignmentReport.examTakerReports?.length || 0) > 0 
-          ? (studentsInRange.length / (assignmentReport.examTakerReports?.length || 1)) * 100 
+        percentage: (assignmentReport.studentReports?.length || 0) > 0 
+          ? (studentsInRange.length / (assignmentReport.studentReports?.length || 1)) * 100 
           : 0,
         color: range.color
       };
@@ -1249,7 +1249,7 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
         <h3 style={styles.sectionTitle}>Individual Reports</h3>
         
         <div style={styles.studentsCardsContainer}>
-          {assignmentReport.examTakerReports?.map((student) => {
+          {assignmentReport.studentReports?.map((student) => {
             const moduleProgress = getModuleProgress(student);
             const inProgressModules = moduleProgress.moduleReports.filter((m: any) => 
               m.status === ModuleStatus.InProgress || m.status === 'InProgress'

@@ -109,8 +109,8 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
   const loadExamTakerReport = useCallback(async (examTaker: IndividualUserReport) => {
     try {
       setReportLoading(true);
-      setLoadingExamTakerId(examTaker.examTakerId);
-      const response = await reportingService.getExamTakerReport(examTaker.examTakerId);
+      setLoadingExamTakerId(examTaker.studentId);
+      const response = await reportingService.getExamTakerReport(examTaker.studentId);
       
       if (response.data) {
         setSelectedUserReport({ examTaker, report: response.data });
@@ -405,9 +405,9 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
       let title = 'Exam Takers & Reports Summary';
       
       if (selectedAssignmentReport) {
-        title = `${selectedAssignmentReport.examTaker.examTakerDisplayName} - ${selectedAssignmentReport.assignment.assignmentTitle} Details`;
+        title = `${selectedAssignmentReport.examTaker.studentDisplayName} - ${selectedAssignmentReport.assignment.assignmentTitle} Details`;
       } else if (selectedUserReport) {
-        title = `${selectedUserReport.examTaker.examTakerDisplayName} - User Report`;
+        title = `${selectedUserReport.examTaker.studentDisplayName} - User Report`;
       }
       
       pdf.text(title, pdfWidth / 2, 15, { align: 'center' });
@@ -457,9 +457,9 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
       let filename = `exam_takers_reports_${new Date().toISOString().split('T')[0]}.pdf`;
       
       if (selectedAssignmentReport) {
-        filename = `${selectedAssignmentReport.examTaker.examTakerDisplayName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${selectedAssignmentReport.assignment.assignmentTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_detailed_report.pdf`;
+        filename = `${selectedAssignmentReport.examTaker.studentDisplayName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${selectedAssignmentReport.assignment.assignmentTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_detailed_report.pdf`;
       } else if (selectedUserReport) {
-        filename = `${selectedUserReport.examTaker.examTakerDisplayName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_exam_taker_report.pdf`;
+        filename = `${selectedUserReport.examTaker.studentDisplayName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_exam_taker_report.pdf`;
       }
 
       // Save PDF
@@ -502,7 +502,7 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
   const loadAssignmentDetailedReport = async (examTaker: IndividualUserReport, assignment: ExamTakerAssignmentReport) => {
     try {
       setAssignmentReportLoading(true);
-      const response = await reportingService.getExamTakerReportByAssignment(examTaker.examTakerId, assignment.assignmentId);
+      const response = await reportingService.getExamTakerReportByAssignment(examTaker.studentId, assignment.assignmentId);
       
       if (response.data) {
         setSelectedAssignmentReport({ examTaker, assignment });
@@ -536,7 +536,7 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
       <div className={`${styles.modalOverlay} modal-overlay`} onClick={handleCloseReport}>
         <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
           <div className={styles.modalHeader}>
-            <h3 className={styles.modalTitle}>Report for {examTaker.examTakerDisplayName}</h3>
+            <h3 className={styles.modalTitle}>Report for {report.displayName || examTaker.studentDisplayName}</h3>
             <div className={`${styles.modalHeaderButtons} users-reports-modal-header-buttons`}>
               <button 
                 onClick={handleExportPDF}
@@ -564,7 +564,7 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
                       <strong>Name:</strong> {report.displayName || 'N/A'}
                     </div>
                     <div className={styles.infoItem}>
-                      <strong>Exam Taker ID:</strong> {examTaker.examTakerId}
+                      <strong>Exam Taker ID:</strong> {report.studentId || examTaker.studentId}
                     </div>
                   </div>
                 </div>
@@ -844,7 +844,7 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
                   <h4 className={styles.sectionTitle}>Assignment Information</h4>
                   <div className={styles.userInfoGrid}>
                     <div className={styles.infoItem}>
-                      <strong>Exam Taker:</strong> {examTaker.examTakerDisplayName}
+                      <strong>Exam Taker:</strong> {examTaker.studentDisplayName}
                     </div>
                     <div className={styles.infoItem}>
                       <strong>Assignment:</strong> {assignment.assignmentTitle}
@@ -1090,11 +1090,11 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
                                 className={styles.detailedReportButton}
                                 onClick={() => setMarkingModal({
                                   isOpen: true,
-                                  studentId: examTaker.examTakerId,
+                                  studentId: examTaker.studentId,
                                   assignmentId: assignment.assignmentId,
                                   moduleId: module.moduleId,
                                   moduleTitle: module.moduleTitle,
-                                  studentName: examTaker.examTakerDisplayName,
+                                  studentName: examTaker.studentDisplayName,
                                 })}
                               >
                                 Review Answers
@@ -1400,17 +1400,17 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
               <tbody>
                 {examTakers.map((examTaker) => (
                   <tr key={examTaker.id} className={styles.tr}>
-                    <td className={styles.td}>{examTaker.examTakerDisplayName}</td>
+                    <td className={styles.td}>{examTaker.studentDisplayName}</td>
                     <td className={styles.td}>
-                      <span className={styles.userIdText}>{examTaker.examTakerId}</span>
+                      <span className={styles.userIdText}>{examTaker.studentId}</span>
                     </td>
                     <td className={styles.td}>
                       <button 
                         onClick={() => loadExamTakerReport(examTaker)}
                         className={styles.reportButton}
-                        disabled={loadingExamTakerId === examTaker.examTakerId}
+                        disabled={loadingExamTakerId === examTaker.studentId}
                       >
-                        {loadingExamTakerId === examTaker.examTakerId ? 'Loading...' : 'View Report'}
+                        {loadingExamTakerId === examTaker.studentId ? 'Loading...' : 'View Report'}
                       </button>
                     </td>
                   </tr>

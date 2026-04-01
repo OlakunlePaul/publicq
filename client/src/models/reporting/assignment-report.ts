@@ -70,7 +70,7 @@ export interface AssignmentReport {
   isActive: boolean;
   
   /**
-   * Exam taker progress details for this assignment
+   * Student progress details for this assignment
    */
-  examTakerReports: ExamTakerReport[];
+  studentReports: ExamTakerReport[];
 }
