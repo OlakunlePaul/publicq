@@ -1,17 +1,15 @@
 import { useState, useRef, useCallback } from 'react';
 import mammoth from 'mammoth';
 import { v4 as uuidv4 } from 'uuid';
-import { QuestionCreateDto, PossibleAnswerCreateDto } from '../../models/assessment-modules-create';
+import { QuestionCreateDto } from '../../models/assessment-modules-create';
 import { QuestionType } from '../../models/question-types';
 import { 
   FileText, 
   Upload, 
   Image as ImageIcon, 
   Trash2, 
-  CheckCircle, 
   RefreshCcw, 
   X, 
-  Plus, 
   Check,
   AlertCircle
 } from 'lucide-react';
