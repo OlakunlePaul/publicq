@@ -14,6 +14,7 @@ interface ParsedQuestion {
   answers: { text: string; isCorrect: boolean }[];
   selected: boolean;
   images: File[];
+  originalNumber?: string;
 }
 
 interface Props {
@@ -97,14 +98,34 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
 
     // Split by option patterns or question number patterns.
     // Use a pattern that looks for a boundary or space followed by the delimiter.
+    // REQUIRE a space or start before AND a space after to reduce math collisions.
     const parts = line.split(/(?=(?:\s+)(?:[a-zA-Z][.)\]]|\d+[.)])\s+)/).map(p => p.trim()).filter(p => p.length > 0);
 
     for (const part of parts) {
-      const optionMatch = part.match(/^[a-zA-Z][.)\]]\s*(.+)/);
+      const optionMatch = part.match(/^([a-zA-Z])[.)\]]\s*(.+)/);
+      const numberMatch = part.match(/^(\d+)[.)]\s*(.+)/);
 
-      if (optionMatch) {
-        if (!currentQuestion) continue;
-        let answerText = optionMatch[1].trim();
+      if (numberMatch) {
+        // Start a new numbered question
+        if (currentQuestion) {
+          currentQuestion.images = [...currentImages];
+          currentImages = []; // Reset images for next question
+          finalizeQuestion(currentQuestion);
+          questions.push(currentQuestion);
+        }
+        
+        currentQuestion = {
+          id: uuidv4(),
+          text: numberMatch[2].trim(),
+          type: QuestionType.SingleChoice,
+          answers: [],
+          selected: true,
+          images: [],
+          originalNumber: numberMatch[1]
+        };
+      } else if (optionMatch && currentQuestion) {
+        // New option for the current question
+        let answerText = optionMatch[2].trim();
         let isCorrect = false;
 
         if (answerText.endsWith('*') || answerText.endsWith('**')) {
@@ -117,40 +138,31 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
         }
         currentQuestion.answers.push({ text: answerText, isCorrect });
       } else {
-        const numberMatch = part.match(/^\d+[.)]\s*(.+)/);
-        const textContent = numberMatch ? numberMatch[1].trim() : part.trim();
-
-        if (numberMatch || (currentQuestion && currentQuestion.answers.length > 0)) {
-          if (currentQuestion) {
-            currentQuestion.images = [...currentImages];
-            currentImages = []; // Reset images for next question
-            finalizeQuestion(currentQuestion);
-            questions.push(currentQuestion);
-          }
+        // supplementary text or math fragment - append to current context
+        const text = part.trim();
+        if (!currentQuestion) {
+          // Implicit first question? Just start one.
           currentQuestion = {
             id: uuidv4(),
-            text: textContent,
+            text: text,
             type: QuestionType.SingleChoice,
             answers: [],
             selected: true,
             images: []
           };
-        } else if (!currentQuestion) {
-          currentQuestion = {
-            id: uuidv4(),
-            text: textContent,
-            type: QuestionType.SingleChoice,
-            answers: [],
-            selected: true,
-            images: []
-          };
+        } else if (currentQuestion.answers.length > 0) {
+          // We have options, so append to the text of the last option
+          const lastAnswer = currentQuestion.answers[currentQuestion.answers.length - 1];
+          lastAnswer.text += ' ' + text;
         } else {
-          currentQuestion.text += '\n' + textContent;
+          // We don't have options yet, so append to the question text
+          currentQuestion.text += ' ' + text;
         }
       }
     }
   }
 
+  // Push the very last question
   if (currentQuestion) {
     currentQuestion.images = [...currentImages];
     finalizeQuestion(currentQuestion);
