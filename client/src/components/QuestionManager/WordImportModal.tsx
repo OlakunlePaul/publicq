@@ -4,11 +4,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { QuestionCreateDto, PossibleAnswerCreateDto } from '../../models/assessment-modules-create';
 import { QuestionType } from '../../models/question-types';
 
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 interface ParsedQuestion {
+  id: string;
   text: string;
   type: QuestionType;
   answers: { text: string; isCorrect: boolean }[];
   selected: boolean;
+  images: File[];
 }
 
 interface Props {
@@ -30,77 +35,122 @@ interface Props {
  * The correct answer is marked with an asterisk (*) at the end.
  * If no options are found, the question defaults to FreeText type.
  */
-function parseQuestionsFromText(rawText: string): ParsedQuestion[] {
-  // Split the raw text into non-empty lines
-  const rawLines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-  const questions: ParsedQuestion[] = [];
+/**
+ * Converts HTML tables found by Mammoth into Markdown tables.
+ */
+function convertTablesToMarkdown(html: string): string {
+  const tableRegex = /<table[^>]*>([\s\S]*?)<\/table>/gi;
+  return html.replace(tableRegex, (match, tableContent) => {
+    let markdownTable = '\n';
+    const rows = tableContent.match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi) || [];
+    
+    rows.forEach((row: string, rowIndex: number) => {
+      const cells = row.match(/<(td|th)[^>]*>([\s\S]*?)<\/\1>/gi) || [];
+      const cellTexts = cells.map((cell: string) => {
+        // Strip tags from inside the cell
+        return cell.replace(/<[^>]*>/g, '').trim();
+      });
+      
+      markdownTable += '| ' + cellTexts.join(' | ') + ' |\n';
+      
+      // Add separator after first row (assuming it's a header)
+      if (rowIndex === 0) {
+        markdownTable += '| ' + cellTexts.map(() => ' --- ').join(' | ') + ' |\n';
+      }
+    });
+    
+    return markdownTable + '\n';
+  });
+}
 
+function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): ParsedQuestion[] {
+  // Convert tables to markdown first
+  let processedHtml = convertTablesToMarkdown(html);
+  
+  // Strip other HTML tags except for our image placeholders (which we set to src="extracted-image-...")
+  // and basic paragraph breaks.
+  processedHtml = processedHtml.replace(/<\/p>/gi, '\n');
+  processedHtml = processedHtml.replace(/<br\s*\/?>/gi, '\n');
+  
+  // Identify images in the text and move them to the question gallery
+  // Current extraction logic finds <img> tags and pulls out their src (which we mapped to fileIds)
+  
+  const rawLines = processedHtml.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const questions: ParsedQuestion[] = [];
   let currentQuestion: ParsedQuestion | null = null;
+  let currentImages: File[] = [];
 
   for (const rawLine of rawLines) {
-    // Check if the line contains inline options (e.g., "1. Question a) Opt A b) Opt B")
-    // We split the line by looking ahead for a space followed by a letter, a punctuation (. or ) or ]), and either a space or end of string.
-    const parts = rawLine.split(/(?=\s+[a-zA-Z][.)\]](?:\s+|$))/).map(p => p.trim()).filter(p => p.length > 0);
+    // Check if the line is just an image placeholder
+    const imageMatch = rawLine.match(/<img[^>]+src=["'](extracted-image-[^"']+)["'][^>]*>/i);
+    if (imageMatch) {
+      const fileId = imageMatch[1];
+      if (imageMap[fileId]) {
+        currentImages.push(imageMap[fileId]);
+      }
+      continue;
+    }
 
-    for (const line of parts) {
-      // Match option pattern: starts with a letter followed by . or ) or ]
-      const optionMatch = line.match(/^[a-zA-Z][.)\]]\s*(.+)/);
+    // Strip remaining tags for cleaner text but keep numbering
+    const line = rawLine.replace(/<[^>]*>/g, '').trim();
+    if (!line) continue;
+
+    const parts = line.split(/(?=\s+[a-zA-Z][.)\]](?:\s+|$))/).map(p => p.trim()).filter(p => p.length > 0);
+
+    for (const part of parts) {
+      const optionMatch = part.match(/^[a-zA-Z][.)\]]\s*(.+)/);
 
       if (optionMatch) {
-        if (!currentQuestion) continue; // Ignore loose options before any question text
-        
+        if (!currentQuestion) continue;
         let answerText = optionMatch[1].trim();
         let isCorrect = false;
 
-        // Check for correct answer marker (trailing asterisk, or wrapped in ** **)
         if (answerText.endsWith('*') || answerText.endsWith('**')) {
           isCorrect = true;
           answerText = answerText.replace(/\*+$/, '').trim();
         }
-        // Also check for "correct" or "(correct)" marker
         if (/\(correct\)/i.test(answerText)) {
           isCorrect = true;
           answerText = answerText.replace(/\s*\(correct\)\s*/i, '').trim();
         }
-
         currentQuestion.answers.push({ text: answerText, isCorrect });
       } else {
-        // It's not an option. It's either a new question or a continuation.
-        // Match optional manual numbering at the beginning of the line to strip it
-        const numberMatch = line.match(/^\d+[.)]\s+(.+)/);
-        const textContent = numberMatch ? numberMatch[1].trim() : line.trim();
+        const numberMatch = part.match(/^\d+[.)]\s+(.+)/);
+        const textContent = numberMatch ? numberMatch[1].trim() : part.trim();
 
-        // If the line explicitly starts with a number, OR if the current question already had options,
-        // it means we are starting a NEW question. (Because options always come after the question text).
         if (numberMatch || (currentQuestion && currentQuestion.answers.length > 0)) {
           if (currentQuestion) {
+            currentQuestion.images = [...currentImages];
+            currentImages = []; // Reset images for next question
             finalizeQuestion(currentQuestion);
             questions.push(currentQuestion);
           }
           currentQuestion = {
+            id: uuidv4(),
             text: textContent,
             type: QuestionType.SingleChoice,
             answers: [],
             selected: true,
+            images: []
           };
         } else if (!currentQuestion) {
-          // First line of the document
           currentQuestion = {
+            id: uuidv4(),
             text: textContent,
             type: QuestionType.SingleChoice,
             answers: [],
             selected: true,
+            images: []
           };
         } else {
-          // Continuation of current multi-line question text
-          currentQuestion.text += ' ' + textContent;
+          currentQuestion.text += '\n' + textContent;
         }
       }
     }
   }
 
-  // Push the last question
   if (currentQuestion) {
+    currentQuestion.images = [...currentImages];
     finalizeQuestion(currentQuestion);
     questions.push(currentQuestion);
   }
@@ -144,8 +194,26 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
 
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const result = await mammoth.extractRawText({ arrayBuffer });
-      const questions = parseQuestionsFromText(result.value);
+      const imageMap: Record<string, File> = {};
+
+      const options = {
+        convertImage: mammoth.images.imgElement((image) => {
+          return image.read().then(async (imageBuffer) => {
+            const fileId = `extracted-image-${uuidv4()}`;
+            const contentType = image.contentType;
+            const extension = contentType.split('/')[1] || 'png';
+            // Use any to bypass Buffer vs BlobPart type issues in the browser/node environment
+            const blob = new Blob([imageBuffer as any], { type: contentType });
+            const extractedFile = new File([blob], `word-import-${fileId}.${extension}`, { type: contentType });
+            
+            imageMap[fileId] = extractedFile;
+            return { src: fileId };
+          });
+        })
+      };
+
+      const result = await mammoth.convertToHtml({ arrayBuffer }, options);
+      const questions = parseQuestionsFromHtml(result.value, imageMap);
 
       if (questions.length === 0) {
         setParseError('No questions found in the document. Please ensure your questions follow a numbered format (e.g., "1. Question text").');
@@ -156,6 +224,7 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
       setParsedQuestions(questions);
       setStep('preview');
     } catch (err) {
+      console.error('Word Parse Error:', err);
       setParseError('Failed to parse the document. Please ensure it is a valid .docx file.');
     } finally {
       setIsParsing(false);
@@ -175,13 +244,14 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
     setIsImporting(true);
     const selectedQuestions = parsedQuestions.filter(q => q.selected);
 
-    const questionsToCreate: QuestionCreateDto[] = selectedQuestions.map((q, index) => ({
-      internalId: uuidv4(),
+    onImport(selectedQuestions.map((q, index) => ({
+      internalId: q.id,
       order: startingOrder + index,
       moduleId,
       moduleVersionId,
       text: q.text,
       staticFileIds: [],
+      extractedFiles: q.images, // Pass extracted images to parent for uploading
       type: q.type,
       answers: q.answers.map((a, aIndex): PossibleAnswerCreateDto => ({
         text: a.text,
@@ -189,9 +259,7 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
         staticFileIds: [],
         isCorrect: a.isCorrect,
       })),
-    }));
-
-    onImport(questionsToCreate);
+    })));
     setIsImporting(false);
   }, [parsedQuestions, startingOrder, moduleId, moduleVersionId, onImport]);
 
@@ -291,23 +359,35 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
                     </label>
                     <span style={modalStyles.typeBadge}>{questionTypeLabel(q.type)}</span>
                   </div>
-                  {q.answers.length > 0 && (
-                    <div style={modalStyles.answersList}>
-                      {q.answers.map((a, aIdx) => (
-                        <div key={aIdx} style={{
-                          ...modalStyles.answerItem,
-                          backgroundColor: a.isCorrect ? '#d4edda' : '#f8f9fa',
-                          borderColor: a.isCorrect ? '#28a745' : '#dee2e6',
-                        }}>
-                          <span style={{ fontWeight: 500 }}>
-                            {String.fromCharCode(65 + aIdx)}.
-                          </span>
-                          {' '}{a.text}
-                          {a.isCorrect && <span style={{ color: '#28a745', fontWeight: 700, marginLeft: '0.5rem' }}>✓</span>}
+                    <div style={modalStyles.previewContent}>
+                      <div style={modalStyles.questionTextContainer}>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {q.text}
+                        </ReactMarkdown>
+                      </div>
+                      {q.images.length > 0 && (
+                        <div style={modalStyles.imagePreviewBadge}>
+                          📎 {q.images.length} Image{q.images.length > 1 ? 's' : ''} found in Word
                         </div>
-                      ))}
+                      )}
                     </div>
-                  )}
+                    {q.answers.length > 0 && (
+                      <div style={modalStyles.answersList}>
+                        {q.answers.map((a, aIdx) => (
+                          <div key={aIdx} style={{
+                            ...modalStyles.answerItem,
+                            backgroundColor: a.isCorrect ? '#d4edda' : '#f8f9fa',
+                            borderColor: a.isCorrect ? '#28a745' : '#dee2e6',
+                          }}>
+                            <span style={{ fontWeight: 500 }}>
+                              {String.fromCharCode(65 + aIdx)}.
+                            </span>
+                            {' '}{a.text}
+                            {a.isCorrect && <span style={{ color: '#28a745', fontWeight: 700, marginLeft: '0.5rem' }}>✓</span>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                 </div>
               ))}
             </div>
@@ -435,8 +515,29 @@ const modalStyles: Record<string, React.CSSProperties> = {
   questionHeader: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: '0.75rem',
+    marginBottom: '0.5rem',
+  },
+  previewContent: {
+    paddingLeft: '2rem',
+  },
+  questionTextContainer: {
+    fontSize: '0.95rem',
+    color: '#34495e',
+    lineHeight: '1.5',
+    marginBottom: '0.75rem',
+    overflowX: 'auto' as const,
+  },
+  imagePreviewBadge: {
+    fontSize: '0.8rem',
+    color: '#2980b9',
+    backgroundColor: '#e8f4fd',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    display: 'inline-block',
+    marginBottom: '0.75rem',
+    fontStyle: 'italic',
   },
   typeBadge: {
     fontSize: '0.7rem',

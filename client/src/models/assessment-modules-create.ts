@@ -28,6 +28,7 @@ export interface QuestionCreateDto {
   moduleVersionId: string;
   text?: string; /** @maxLength 5000 characters (aligned with backend constraint) - optional if attachments exist */
   staticFileIds: string[];
+  extractedFiles?: File[];
   type: QuestionType;
   answers: PossibleAnswerCreateDto[];
 }

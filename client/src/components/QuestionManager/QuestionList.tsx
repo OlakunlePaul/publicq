@@ -140,6 +140,20 @@ export const QuestionList = ({ moduleId, moduleVersionId, moduleVersionIsPublish
     let successCount = 0;
     for (const q of importedQuestions) {
       try {
+        // Upload any extracted images first
+        if (q.extractedFiles && q.extractedFiles.length > 0) {
+          const uploadPromises = q.extractedFiles.map(file => 
+            assessmentService.uploadFile({ moduleId: q.moduleId, file })
+          );
+          
+          const uploadResults = await Promise.all(uploadPromises);
+          const uploadedIds = uploadResults
+            .filter(res => !res.isFailed && res.data)
+            .map(res => res.data.id);
+          
+          q.staticFileIds = [...(q.staticFileIds || []), ...uploadedIds];
+        }
+
         const response = await questionService.createQuestion(q);
         if (!response.isFailed) {
           setQuestions(prev => {

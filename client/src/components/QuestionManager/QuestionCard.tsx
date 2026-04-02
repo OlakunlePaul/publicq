@@ -3,6 +3,8 @@ import { QuestionDto } from '../../models/assessment-module';
 import { QuestionType } from '../../models/question-types';
 import { StaticFileDto } from '../../models/static-file';
 import { FilePreview } from '../Shared/FilePreview';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Props {
   question: QuestionDto;
@@ -80,7 +82,11 @@ export const QuestionCard = ({ question, index, readonly, onEdit, onDelete }: Pr
               {getTypeLabel(question.type)}
             </span>
           </div>
-          <h3 style={styles.questionText}>{question.text}</h3>
+          <div style={styles.questionText}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {question.text || ''}
+            </ReactMarkdown>
+          </div>
 
           {/* Use question.staticFileUrls to check for attachments */}
           {question.staticFileUrls && question.staticFileUrls.length > 0 && (
@@ -230,6 +236,20 @@ const styles = {
     margin: '0 0 12px 0',
     lineHeight: '1.5',
     whiteSpace: 'pre-wrap',
+    // Markdown table styling
+    '& table': {
+      borderCollapse: 'collapse',
+      width: '100%',
+      margin: '12px 0',
+    },
+    '& th, & td': {
+      border: '1px solid #e1e8ed',
+      padding: '8px 12px',
+      textAlign: 'left' as const,
+    },
+    '& th': {
+      backgroundColor: '#f8f9fa',
+    }
   },
   attachments: {
     marginBottom: '8px',
