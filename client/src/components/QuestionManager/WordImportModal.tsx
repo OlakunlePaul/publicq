@@ -42,7 +42,6 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
   
   const questions: ParsedQuestion[] = [];
   let currentQuestion: ParsedQuestion | null = null;
-  let currentImages: File[] = [];
   
   // Sticky Preamble State
   let activePreambleText = '';
