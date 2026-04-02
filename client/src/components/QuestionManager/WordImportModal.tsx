@@ -40,54 +40,72 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   
-  // Extract images first to maintain their order relative to text
-  // We'll replace <img> tags with markers in the text processing
   const questions: ParsedQuestion[] = [];
   let currentQuestion: ParsedQuestion | null = null;
   let currentImages: File[] = [];
-
-  // Get all top-level blocks that contain text or images
-  // We include p, li, tr, and h tags as structural boundaries
-  const blocks: Element[] = Array.from(doc.querySelectorAll('p, li, tr, h1, h2, h3, h4, h5, h6'));
   
-  // Regex for mid-line splitting (math-safe)
+  // Sticky Preamble State
+  let activePreambleText = '';
+  let activePreambleImages: File[] = [];
+
+  // Get all structural blocks
+  const blocks: Element[] = Array.from(doc.querySelectorAll('p, li, tr, h1, h2, h3, h4, h5, h6, td'));
+  
+  // Refined split regex: markers must have whitespace/punctuation before them or be at start
   const splitRegex = /(?=\s+(?:[a-eA-E][.)\]]|\d+[.)])\s+)/;
 
   for (const block of blocks) {
-    // Handling images within the block
-    const imagesInBlock = Array.from(block.querySelectorAll('img'));
-    for (const img of imagesInBlock) {
+    const imagesInBlock = Array.from(block.querySelectorAll('img')).map(img => {
       const src = img.getAttribute('src');
-      if (src && imageMap[src]) {
-        currentImages.push(imageMap[src]);
-      }
-    }
+      return src && imageMap[src] ? imageMap[src] : null;
+    }).filter((f): f is File => f !== null);
 
     const blockText = block.textContent?.trim() || '';
     if (!blockText && imagesInBlock.length === 0) continue;
 
-    // Split block into parts if it contains multiple markers (e.g. "a) b)")
+    // Check if this block contains ANY markers
+    const hasAnyMarkers = blockText.match(/(?:^|\s)(?:[a-eA-E][.)\]]|\d+[.)])(?:\s|$)/);
+
+    // If it's a plain block without markers, it might be a preamble
+    if (!hasAnyMarkers && imagesInBlock.length >= 0) {
+      // If we already have a question that's finished (has options), 
+      // this plain text is likely the START of a new preamble for the NEXT set of questions.
+      if (currentQuestion && currentQuestion.answers.length > 0) {
+        activePreambleText = blockText;
+        activePreambleImages = [...imagesInBlock];
+      } else if (!currentQuestion) {
+        activePreambleText += (activePreambleText ? '\n' : '') + blockText;
+        activePreambleImages.push(...imagesInBlock);
+      } else {
+        // Just more text for the current question
+        currentQuestion.text += '\n' + blockText;
+        currentQuestion.images.push(...imagesInBlock);
+      }
+      continue;
+    }
+
     const parts = blockText.split(splitRegex).map(p => p.trim()).filter(p => p.length > 0);
 
     for (const part of parts) {
       const questionMatch = part.match(/^(\d+)[.)]\s*(.*)/);
       const optionMatch = part.match(/^([a-eA-E])[.)\]]\s*(.*)/);
 
-      // HEURISTIC: If we have plain text AND we already have options for the current question,
-      // this is almost certainly the start of a NEW question that lost its number.
-      const looksLikeNewQuestion = !optionMatch && !questionMatch && currentQuestion && currentQuestion.answers.length > 0;
+      // HEURISTIC: Force new question if plain text follows options
+      const isPlainAfterOptions = !optionMatch && !questionMatch && currentQuestion && currentQuestion.answers.length > 0;
 
-      if (questionMatch || looksLikeNewQuestion) {
-        // Finalize previous
+      if (questionMatch || isPlainAfterOptions) {
         if (currentQuestion) {
-          currentQuestion.images = [...currentImages];
-          currentImages = [];
           finalizeQuestion(currentQuestion);
           questions.push(currentQuestion);
         }
 
-        const questionText = questionMatch ? questionMatch[2].trim() : part;
+        let questionText = questionMatch ? questionMatch[2].trim() : part;
         const originalNumber = questionMatch ? questionMatch[1] : undefined;
+
+        // Apply Sticky Preamble
+        if (activePreambleText) {
+          questionText = activePreambleText + '\n\n' + questionText;
+        }
 
         currentQuestion = {
           id: uuidv4(),
@@ -95,14 +113,15 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
           type: QuestionType.SingleChoice,
           answers: [],
           selected: true,
-          images: [],
+          images: [...activePreambleImages, ...imagesInBlock],
           originalNumber
         };
+        // Reset block images after using them once
+        imagesInBlock.length = 0;
       } else if (optionMatch && currentQuestion) {
         let answerText = optionMatch[2].trim();
         let isCorrect = false;
 
-        // Correct answer detection (*)
         if (answerText.endsWith('*') || answerText.endsWith('**')) {
           isCorrect = true;
           answerText = answerText.replace(/\*+$/, '').trim();
@@ -114,29 +133,17 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
 
         currentQuestion.answers.push({ text: answerText, isCorrect });
       } else if (currentQuestion) {
-        // Continuous text or math fragment
-        // If we are currently collecting options, append to the last option
+        // Fragment or math
         if (currentQuestion.answers.length > 0) {
           currentQuestion.answers[currentQuestion.answers.length - 1].text += ' ' + part;
         } else {
           currentQuestion.text += ' ' + part;
         }
-      } else {
-        // Handle document starting without a number
-        currentQuestion = {
-          id: uuidv4(),
-          text: part,
-          type: QuestionType.SingleChoice,
-          answers: [],
-          selected: true,
-          images: []
-        };
       }
     }
   }
 
   if (currentQuestion) {
-    currentQuestion.images = [...currentImages];
     finalizeQuestion(currentQuestion);
     questions.push(currentQuestion);
   }
