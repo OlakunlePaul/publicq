@@ -90,9 +90,10 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
     const line = rawLine.replace(/<[^>]*>/g, '').trim();
     if (!line) continue;
 
-    // Split line only if it clearly contains multiple options (e.g., "a) Text b) Text")
-    // Use a lookahead that requires a preceding space and a specific option pattern
-    const lineParts = line.split(/(?=\s+[a-eA-E][.)\]]\s+)/).map(p => p.trim()).filter(p => p.length > 0);
+    // Split line only if it clearly contains multiple options OR a new question number
+    // Use a lookahead that requires a preceding space and a specific marker pattern
+    // The \s+ after the marker ensures we don't split on decimals like "3.673" or fractions like "1 1/7"
+    const lineParts = line.split(/(?=\s+(?:[a-eA-E][.)\]]|\d+[.)])\s+)/).map(p => p.trim()).filter(p => p.length > 0);
 
     for (const part of lineParts) {
       const questionMatch = part.match(/^(\d+)[.)]\s*(.*)/);
