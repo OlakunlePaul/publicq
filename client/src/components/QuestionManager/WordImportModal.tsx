@@ -36,34 +36,6 @@ interface Props {
  * The correct answer is marked with an asterisk (*) at the end.
  * If no options are found, the question defaults to FreeText type.
  */
-/**
- * Converts HTML tables found by Mammoth into Markdown tables.
- */
-function convertTablesToMarkdown(html: string): string {
-  const tableRegex = /<table[^>]*>([\s\S]*?)<\/table>/gi;
-  return html.replace(tableRegex, (match, tableContent) => {
-    let markdownTable = '\n';
-    const rows = tableContent.match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi) || [];
-    
-    rows.forEach((row: string, rowIndex: number) => {
-      const cells = row.match(/<(td|th)[^>]*>([\s\S]*?)<\/\1>/gi) || [];
-      const cellTexts = cells.map((cell: string) => {
-        // Strip tags from inside the cell
-        return cell.replace(/<[^>]*>/g, '').trim();
-      });
-      
-      markdownTable += '| ' + cellTexts.join(' | ') + ' |\n';
-      
-      // Add separator after first row (assuming it's a header)
-      if (rowIndex === 0) {
-        markdownTable += '| ' + cellTexts.map(() => ' --- ').join(' | ') + ' |\n';
-      }
-    });
-    
-    return markdownTable + '\n';
-  });
-}
-
 function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): ParsedQuestion[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
