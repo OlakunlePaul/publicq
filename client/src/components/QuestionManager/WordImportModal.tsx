@@ -67,9 +67,9 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
   // Convert tables to markdown first
   let processedHtml = convertTablesToMarkdown(html);
   
-  // Strip other HTML tags except for our image placeholders (which we set to src="extracted-image-...")
-  // and basic paragraph breaks.
-  processedHtml = processedHtml.replace(/<\/p>/gi, '\n');
+  // Strip other HTML tags except for our image placeholders
+  // Insert newlines for structural tags to prevent text merging (e.g., "institution2.")
+  processedHtml = processedHtml.replace(/<\/p>|<\/li>|<\/div>|<\/tr>|<\/h\d>/gi, '\n');
   processedHtml = processedHtml.replace(/<br\s*\/?>/gi, '\n');
   
   // Identify images in the text and move them to the question gallery
@@ -95,7 +95,9 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
     const line = rawLine.replace(/<[^>]*>/g, '').trim();
     if (!line) continue;
 
-    const parts = line.split(/(?=\s+(?:[a-zA-Z][.)\]]|\d+[.)])(?:\s+|$))/).map(p => p.trim()).filter(p => p.length > 0);
+    // Split by option patterns or question number patterns.
+    // Use a pattern that looks for a boundary or space followed by the delimiter.
+    const parts = line.split(/(?=\b(?:[a-zA-Z][.)\]]|\d+[.)])(?:\s+|$))/).map(p => p.trim()).filter(p => p.length > 0);
 
     for (const part of parts) {
       const optionMatch = part.match(/^[a-zA-Z][.)\]]\s*(.+)/);
