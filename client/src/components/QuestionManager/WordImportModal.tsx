@@ -43,9 +43,9 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
   const questions: ParsedQuestion[] = [];
   let currentQuestion: ParsedQuestion | null = null;
   
-  // Sticky Preamble State
-  let activePreambleText = '';
-  let activePreambleImages: File[] = [];
+  // Pending Context (Text/Images found before the first question starts)
+  let pendingContextText = '';
+  let pendingContextImages: File[] = [];
 
   // Get all structural blocks - simplified to prevent duplication
   const allBlocks: Element[] = Array.from(doc.querySelectorAll('p, li, tr, td, h1, h2, h3, h4, h5, h6'));
@@ -66,24 +66,16 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
     const blockText = block.textContent?.trim() || '';
     if (!blockText && imagesInBlock.length === 0) continue;
 
-    const hasAnyMarkers = blockText.match(/(?:^|\s)(?:[a-eA-E][.)\]]|\d+[.)])(?:\s|$)/);
+    const hasMarkers = blockText.match(/(?:^|\s)(?:[a-eA-E][.)\]]|\d+[.)])(?:\s|$)/);
 
-    // If it's a plain block without markers, it's either preamble or more question text
-    if (!hasAnyMarkers) {
-      if (currentQuestion && currentQuestion.answers.length > 0) {
-        // We already finished the previous question, so this is a new preamble
-        activePreambleText = blockText;
-        activePreambleImages = [...imagesInBlock];
-      } else if (currentQuestion) {
-        // We haven't seen options yet, so this is definitely MORE text for the current question
-        if (!currentQuestion.text.includes(blockText)) {
-          currentQuestion.text += '\n' + blockText;
-        }
+    // If it's a plain block without markers, append it to the current question (Greedy)
+    if (!hasMarkers) {
+      if (currentQuestion) {
+        currentQuestion.text += '\n' + blockText;
         currentQuestion.images.push(...imagesInBlock);
       } else {
-        // Doc is starting with instructions
-        activePreambleText += (activePreambleText ? '\n' : '') + blockText;
-        activePreambleImages.push(...imagesInBlock);
+        pendingContextText += (pendingContextText ? '\n' : '') + blockText;
+        pendingContextImages.push(...imagesInBlock);
       }
       continue;
     }
@@ -94,34 +86,28 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
       const questionMatch = part.match(/^(\d+)[.)]\s*(.*)/);
       const optionMatch = part.match(/^([a-eA-E])[.)\]]\s*(.*)/);
 
-      // IMPORTANT: A new question ONLY starts if:
-      // 1. It explicitly starts with a number (e.g. "1. ")
-      // 2. OR it's a fragment following a question that ALREADY HAS OPTIONS.
-      const isHeuristicNew = !optionMatch && !questionMatch && currentQuestion && currentQuestion.answers.length > 0;
-
-      if (questionMatch || isHeuristicNew) {
+      if (questionMatch) {
         if (currentQuestion) {
           finalizeQuestion(currentQuestion);
           questions.push(currentQuestion);
         }
 
-        let questionText = questionMatch ? questionMatch[2].trim() : part;
-        const originalNumber = questionMatch ? questionMatch[1] : undefined;
-
-        // Apply Sticky Preamble
-        if (activePreambleText && !questionText.toLowerCase().includes(activePreambleText.toLowerCase())) {
-          questionText = activePreambleText + '\n\n' + questionText;
-        }
+        const questionText = questionMatch[2].trim();
+        const originalNumber = questionMatch[1];
 
         currentQuestion = {
           id: uuidv4(),
-          text: questionText,
+          text: (pendingContextText ? pendingContextText + '\n\n' : '') + questionText,
           type: QuestionType.SingleChoice,
           answers: [],
           selected: true,
-          images: [...activePreambleImages, ...imagesInBlock],
+          images: [...pendingContextImages, ...imagesInBlock],
           originalNumber
         };
+        
+        // Clear pending context after first use
+        pendingContextText = '';
+        pendingContextImages = [];
         imagesInBlock.length = 0; // consumed
       } else if (optionMatch && currentQuestion) {
         let answerText = optionMatch[2].trim();
@@ -137,8 +123,7 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
         }
         currentQuestion.answers.push({ text: answerText, isCorrect });
       } else if (currentQuestion) {
-        // Append all fragments to the current question if we haven't seen options yet
-        // This is the "Smart Merge" that prevents splitting math equations
+        // GREEDY APPEND: If it's not a new question or an option, it's more question context
         if (currentQuestion.answers.length > 0) {
           currentQuestion.answers[currentQuestion.answers.length - 1].text += ' ' + part;
         } else {
