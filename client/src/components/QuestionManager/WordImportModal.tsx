@@ -369,7 +369,6 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
                         style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                       />
                       <span style={{ fontWeight: 600, color: '#2c3e50' }}>Q{index + 1}.</span>
-                      <span style={{ color: '#34495e' }}>{q.text}</span>
                     </label>
                     <span style={modalStyles.typeBadge}>{questionTypeLabel(q.type)}</span>
                   </div>
