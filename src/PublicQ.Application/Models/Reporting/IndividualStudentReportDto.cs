@@ -30,6 +30,16 @@ public class IndividualStudentReportDto
     public string StudentDisplayName { get; set; }
 
     /// <summary>
+    /// Optional: Student admission number.
+    /// </summary>
+    public string? AdmissionNumber { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the student is locked out of the assignment.
+    /// </summary>
+    public bool IsLocked { get; set; }
+
+    /// <summary>
     /// Number of times the student switched tabs or minimized the browser during the exam.
     /// </summary>
     public int TabSwitchCount { get; set; }

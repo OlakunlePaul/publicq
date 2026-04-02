@@ -15,6 +15,11 @@ export interface ExamTakerReport {
   displayName: string;
 
   /**
+   * Optional: Student admission number.
+   */
+  admissionNumber?: string;
+
+  /**
    * Total number of assignments assigned to this student
    */
   totalAssignments: number;

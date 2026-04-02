@@ -124,6 +124,7 @@ public class StudentAssignmentEntity
             Id = Id,
             StudentId = StudentId,
             StudentDisplayName = StudentDisplayName,
+            IsLocked = IsLocked,
             TabSwitchCount = TabSwitchCount,
             LastTabSwitchAtUtc = LastTabSwitchAtUtc
         };

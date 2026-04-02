@@ -564,7 +564,10 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
                       <strong>Name:</strong> {report.displayName || 'N/A'}
                     </div>
                     <div className={styles.infoItem}>
-                      <strong>Exam Taker ID:</strong> {report.studentId || examTaker.studentId}
+                      <strong>Admission No:</strong> {report.admissionNumber || examTaker.admissionNumber || 'N/A'}
+                    </div>
+                    <div className={styles.infoItem}>
+                      <strong>Student ID:</strong> {report.studentId || examTaker.studentId}
                     </div>
                   </div>
                 </div>
@@ -1392,8 +1395,10 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
             <table className={`${styles.table} users-reports-table`}>
               <thead className={styles.thead}>
                 <tr>
-                  <th className={styles.th}>Display Name</th>
-                  <th className={styles.th}>Exam Taker ID</th>
+                  <th className={styles.th}>Student Name</th>
+                  <th className={styles.th}>Admission No.</th>
+                  <th className={styles.th}>Student ID</th>
+                  <th className={styles.th}>Status</th>
                   <th className={styles.th}>Actions</th>
                 </tr>
               </thead>
@@ -1402,7 +1407,17 @@ const UsersReports: React.FC<UsersReportsProps> = () => {
                   <tr key={examTaker.id} className={styles.tr}>
                     <td className={styles.td}>{examTaker.studentDisplayName}</td>
                     <td className={styles.td}>
+                      <span className={styles.admissionNumberText}>{examTaker.admissionNumber || 'N/A'}</span>
+                    </td>
+                    <td className={styles.td}>
                       <span className={styles.userIdText}>{examTaker.studentId}</span>
+                    </td>
+                    <td className={styles.td}>
+                      {examTaker.isLocked && (
+                        <span className={styles.statusBadge} style={{backgroundColor: '#fee2e2', color: '#991b1b'}}>
+                          EXAM LOCKED
+                        </span>
+                      )}
                     </td>
                     <td className={styles.td}>
                       <button 

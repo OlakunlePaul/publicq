@@ -24,6 +24,16 @@ export interface IndividualUserReport {
   studentDisplayName: string;
 
   /**
+   * Optional: Student admission number.
+   */
+  admissionNumber?: string;
+
+  /**
+   * Gets or sets a value indicating whether the student is locked out of the assignment.
+   */
+  isLocked: boolean;
+
+  /**
    * Number of times the student switched tabs or minimized the browser during the exam.
    */
   tabSwitchCount: number;

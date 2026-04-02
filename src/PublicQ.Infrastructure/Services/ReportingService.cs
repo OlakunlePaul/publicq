@@ -386,17 +386,28 @@ public class ReportingService(
                 $"%{nameFilter.ToUpper()}%"));
         }
         
-        var assignments = await query
-            .OrderBy(eta => eta.StudentDisplayName)
+        var assignmentsData = await dbContext.StudentAssignments
+            .AsNoTracking()
+            .Where(eta => uniqueIds.Contains(eta.Id))
+            .Join(dbContext.Students.AsNoTracking(),
+                eta => eta.StudentId,
+                s => s.Id,
+                (eta, s) => new { eta, s.AdmissionNumber })
+            .OrderBy(x => x.eta.StudentDisplayName)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
         
         var paginatedResponse = new PaginatedResponse<IndividualStudentReportDto>
         {
-            Data = assignments.Select(eta => eta.ConvertToDto()).ToList(),
+            Data = assignmentsData.Select(x => 
+            {
+                var dto = x.eta.ConvertToDto();
+                dto.AdmissionNumber = x.AdmissionNumber;
+                return dto;
+            }).ToList(),
             TotalCount = totalCount,
-            PageSize = assignments.Count
+            PageSize = assignmentsData.Count
         };
         
         logger.LogDebug("Assembled {Count} student assignments", assignments.Count);
@@ -417,6 +428,12 @@ public class ReportingService(
         Guard.AgainstNull(studentIds, nameof(studentIds));
         logger.LogDebug("GetStudentReportsAsync request received for {Count} StudentIds: {StudentIds}", 
             studentIds.Count, string.Join(", ", studentIds));
+        
+        // Get student entities for admission numbers
+        var students = await dbContext.Students
+            .AsNoTracking()
+            .Where(s => studentIds.Contains(s.Id))
+            .ToDictionaryAsync(s => s.Id, s => s, cancellationToken);
         
         // Get student assignments
         var studentAssignments = await dbContext.StudentAssignments
@@ -526,6 +543,7 @@ public class ReportingService(
                 DisplayName = string.IsNullOrWhiteSpace(studentDisplayName) ? 
                     $"ID '{studentId}'" : 
                     studentDisplayName,
+                AdmissionNumber = students.TryGetValue(studentId, out var student) ? student.AdmissionNumber : null,
                 TotalAssignments = totalAssignments,
                 CompletedAssignments = completedAssignments,
                 InProgressAssignments = inProgressAssignments,

@@ -16,6 +16,11 @@ public class StudentReportDto
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
+    /// Optional: Student admission number.
+    /// </summary>
+    public string? AdmissionNumber { get; set; }
+
+    /// <summary>
     /// Total number of assignments assigned to this student
     /// </summary>
     public int TotalAssignments { get; set; }

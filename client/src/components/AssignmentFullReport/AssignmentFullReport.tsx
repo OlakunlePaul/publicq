@@ -1265,10 +1265,15 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
                 {/* Student Card Header */}
                 <div style={styles.studentCardHeader}>
                   <div style={styles.studentHeaderInfo}>
-                    <div style={styles.studentHeaderMain}>
-                      <h4 style={styles.studentCardName}>{student.displayName}</h4>
-                      <span style={styles.studentCardId}>ID: {student.studentId}</span>
-                    </div>
+                      <div style={styles.studentHeaderMain}>
+                        <h4 style={styles.studentCardName}>{student.displayName}</h4>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          {student.admissionNumber && (
+                            <span style={{...styles.studentCardId, color: '#3b82f6', fontWeight: '600'}}>ADMISSION: {student.admissionNumber}</span>
+                          )}
+                          <span style={styles.studentCardId}>ID: {student.studentId}</span>
+                        </div>
+                      </div>
                     
                     <div style={styles.studentHeaderStats}>
                       <div style={styles.studentStatItem}>
@@ -1347,8 +1352,10 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
                 </div>
                 {/* Student Details - Always Expanded */}
                 <div style={styles.studentDetailsExpanded}>
-                  {/* Check if student has started the assignment */}
-                  {(moduleProgress.completedModules === moduleProgress.totalModules && moduleProgress.totalModules > 0) || isStudentInProgress ? (
+                  {/* Check if student has started the assignment OR is locked (to allow unlocking blocked students who didn't launch) */}
+                  {(moduleProgress.completedModules === moduleProgress.totalModules && moduleProgress.totalModules > 0) || 
+                   isStudentInProgress || 
+                   student.assignmentProgress?.find((ap: any) => ap.assignmentId === assignmentId)?.isLocked ? (
                     <>
                       <h5 style={styles.detailsTitle}>Individual Performance Analytics</h5>
                       
@@ -1482,11 +1489,19 @@ const AssignmentFullReport: React.FC<AssignmentFullReportProps> = ({
                       <h5 style={styles.detailsTitle}>Individual Performance Analytics</h5>
                       <div style={styles.notStartedContent}>
                         <p style={styles.notStartedText}>
-                          <img src="/images/icons/chart.svg" alt="" style={{width: '16px', height: '16px', marginRight: '6px', verticalAlign: 'middle'}} />Individual Performance Analytics will be available once the student launches this assignment.
+                          <img src="/images/icons/chart.svg" alt="" style={{width: '16px', height: '16px', marginRight: '6px', verticalAlign: 'middle'}} />
+                          Individual Performance Analytics will be available once the student launches this assignment.
                         </p>
                         <p style={styles.notStartedSubtext}>
                           Performance metrics, charts, and detailed progress reports will appear here after the student begins their first module.
                         </p>
+                        {(student.assignmentProgress?.find((ap: any) => ap.assignmentId === assignmentId)?.tabSwitchCount ?? 0) > 0 && (
+                          <div style={{marginTop: '12px', padding: '10px', backgroundColor: '#fff7ed', borderRadius: '4px', border: '1px solid #ffedd5'}}>
+                            <p style={{color: '#9a3412', fontWeight: '600', fontSize: '13px', margin: 0}}>
+                              ⚠️ Note: This student has recorded {student.assignmentProgress?.find((ap: any) => ap.assignmentId === assignmentId)?.tabSwitchCount} browser violations without launching a module.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
