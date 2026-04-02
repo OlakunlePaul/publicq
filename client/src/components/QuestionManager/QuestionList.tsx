@@ -264,18 +264,32 @@ export const QuestionList = ({ moduleId, moduleVersionId, moduleVersionIsPublish
         <div style={styles.emptyState}>
           <p style={styles.emptyText}>No questions added yet</p>
           {!moduleVersionIsPublished ? (
-            <button
-              onClick={() => setShowAddForm(true)}
-              style={styles.createFirstButton}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#2980b9';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#3498db';
-              }}
-            >
-              Create First Question
-            </button>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  style={styles.createFirstButton}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#2980b9';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#3498db';
+                  }}
+                >
+                  Create First Question
+                </button>
+                <button
+                  onClick={() => setShowWordImport(true)}
+                  style={{ ...styles.createFirstButton, backgroundColor: '#27ae60' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#219a52';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#27ae60';
+                  }}
+                >
+                  📄 Import from Word
+                </button>
+              </div>
           ) : (
             <div style={styles.publishedEmptyHint}>
               <span style={styles.emptyHintText}>

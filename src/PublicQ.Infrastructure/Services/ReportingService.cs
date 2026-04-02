@@ -520,7 +520,7 @@ public class ReportingService(
             
             // Generate module and assignment reports for this student
             var moduleReports = GetModuleReports(studentSpecificProgresses);
-            var assignmentReports = GetAssignmentReports(moduleReports);
+            var assignmentReports = GetAssignmentReports(studentSpecificAssignments, moduleReports);
 
             var totalAssignments = studentSpecificAssignments.Count;
             var inProgressAssignments = assignmentReports.Count(ar => ar.CompletedModules > 0 && ar.CompletedModules < ar.TotalModules);
@@ -576,31 +576,35 @@ public class ReportingService(
     /// <param name="moduleReports">module reports</param>
     /// <returns>Returns array of <see cref="StudentAssignmentReportDto"/></returns>
     private static List<StudentAssignmentReportDto> GetAssignmentReports(
+        List<StudentAssignmentEntity> studentAssignments,
         Dictionary<AssignmentEntity, HashSet<StudentModuleReportDto>> moduleReports)
     {
         var assignmentReports = new List<StudentAssignmentReportDto>();
-        foreach (var kvp in moduleReports)
+        foreach (var eta in studentAssignments)
         {
+            var assignment = eta.Assignment;
+            // Get module reports for this assignment if they exist
+            var currentModuleReports = moduleReports.TryGetValue(assignment, out var reports) 
+                ? reports 
+                : new HashSet<StudentModuleReportDto>();
+
             var assignmentReport = new StudentAssignmentReportDto
             {
-                AssignmentId = kvp.Key.Id,
-                AssignmentStartDateUtc = kvp.Key.StartDateUtc,
-                AssignmentEndDateUtc = kvp.Key.EndDateUtc,
-                AssignmentTitle = kvp.Key.Title,
-                StartedAtUtc = kvp.Value.Min(mr => mr.StartedAtUtc),
-                CompletedAtUtc = kvp.Value.Max(mr => mr.CompletedAtUtc),
-                TimeSpentMinutes = kvp.Value.Sum(mr => mr.TimeSpentMinutes),
-                CompletedModules = kvp.Value.Count(mr => mr.Status == ModuleStatus.Completed),
-                TotalModules = kvp.Value.Count,
-                ModuleReports = kvp.Value,
-                TabSwitchCount = kvp.Key.StudentAssignments
-                    .FirstOrDefault(eta => eta.AssignmentId == kvp.Key.Id)?.TabSwitchCount ?? 0,
-                LastTabSwitchAtUtc = kvp.Key.StudentAssignments
-                    .FirstOrDefault(eta => eta.AssignmentId == kvp.Key.Id)?.LastTabSwitchAtUtc,
-                IsLocked = kvp.Key.StudentAssignments
-                    .FirstOrDefault(eta => eta.AssignmentId == kvp.Key.Id)?.IsLocked ?? false
+                AssignmentId = assignment.Id,
+                AssignmentStartDateUtc = assignment.StartDateUtc,
+                AssignmentEndDateUtc = assignment.EndDateUtc,
+                AssignmentTitle = assignment.Title,
+                StartedAtUtc = currentModuleReports.Any() ? currentModuleReports.Min(mr => mr.StartedAtUtc) : null,
+                CompletedAtUtc = currentModuleReports.Any() ? currentModuleReports.Max(mr => mr.CompletedAtUtc) : null,
+                TimeSpentMinutes = currentModuleReports.Sum(mr => mr.TimeSpentMinutes),
+                CompletedModules = currentModuleReports.Count(mr => mr.Status == ModuleStatus.Completed),
+                TotalModules = currentModuleReports.Count,
+                ModuleReports = currentModuleReports,
+                TabSwitchCount = eta.TabSwitchCount,
+                LastTabSwitchAtUtc = eta.LastTabSwitchAtUtc,
+                IsLocked = eta.IsLocked
             };
-           assignmentReports.Add(assignmentReport);
+            assignmentReports.Add(assignmentReport);
         }
 
         return assignmentReports;
