@@ -47,15 +47,14 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
   let activePreambleText = '';
   let activePreambleImages: File[] = [];
 
-  // Get all structural blocks
+  // Get all structural blocks - simplified to prevent duplication
   const allBlocks: Element[] = Array.from(doc.querySelectorAll('p, li, tr, td, h1, h2, h3, h4, h5, h6'));
-  // DEDUPLICATION: Only process "Leaf" blocks (elements that don't contain other structural blocks)
-  // This prevents reading a 'tr' AND its 'td's, which causes "x x 0 0 2 2" duplication.
+  
+  // DEDUPLICATION: Only process elements that aren't nested in other structural blocks
   const blocks = allBlocks.filter(b => {
-    return !b.querySelector('p, li, tr, td, h1, h2, h3, h4, h5, h6');
+    return !b.parentElement?.closest('p, li, tr, td, h1, h2, h3, h4, h5, h6');
   });
   
-  // Refined split regex: markers must have whitespace/punctuation before them or be at start
   const splitRegex = /(?=\s+(?:[a-eA-E][.)\]]|\d+[.)])\s+)/;
 
   for (const block of blocks) {
@@ -67,26 +66,24 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
     const blockText = block.textContent?.trim() || '';
     if (!blockText && imagesInBlock.length === 0) continue;
 
-    // Check if this block contains ANY markers
     const hasAnyMarkers = blockText.match(/(?:^|\s)(?:[a-eA-E][.)\]]|\d+[.)])(?:\s|$)/);
 
-    // If it's a plain block without markers, it might be a preamble
-    if (!hasAnyMarkers && imagesInBlock.length >= 0) {
-      // If we already have a question that's finished (has options), 
-      // this plain text is likely the START of a new preamble for the NEXT set of questions.
+    // If it's a plain block without markers, it's either preamble or more question text
+    if (!hasAnyMarkers) {
       if (currentQuestion && currentQuestion.answers.length > 0) {
+        // We already finished the previous question, so this is a new preamble
         activePreambleText = blockText;
         activePreambleImages = [...imagesInBlock];
-      } else if (!currentQuestion) {
-        activePreambleText += (activePreambleText ? '\n' : '') + blockText;
-        activePreambleImages.push(...imagesInBlock);
-      } else {
-        // Just more text for the current question
-        // Skip if it looks like a duplicate of the preamble or existing text
+      } else if (currentQuestion) {
+        // We haven't seen options yet, so this is definitely MORE text for the current question
         if (!currentQuestion.text.includes(blockText)) {
           currentQuestion.text += '\n' + blockText;
         }
         currentQuestion.images.push(...imagesInBlock);
+      } else {
+        // Doc is starting with instructions
+        activePreambleText += (activePreambleText ? '\n' : '') + blockText;
+        activePreambleImages.push(...imagesInBlock);
       }
       continue;
     }
@@ -97,10 +94,12 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
       const questionMatch = part.match(/^(\d+)[.)]\s*(.*)/);
       const optionMatch = part.match(/^([a-eA-E])[.)\]]\s*(.*)/);
 
-      // HEURISTIC: Force new question if plain text follows options
-      const isPlainAfterOptions = !optionMatch && !questionMatch && currentQuestion && currentQuestion.answers.length > 0;
+      // IMPORTANT: A new question ONLY starts if:
+      // 1. It explicitly starts with a number (e.g. "1. ")
+      // 2. OR it's a fragment following a question that ALREADY HAS OPTIONS.
+      const isHeuristicNew = !optionMatch && !questionMatch && currentQuestion && currentQuestion.answers.length > 0;
 
-      if (questionMatch || isPlainAfterOptions) {
+      if (questionMatch || isHeuristicNew) {
         if (currentQuestion) {
           finalizeQuestion(currentQuestion);
           questions.push(currentQuestion);
@@ -109,7 +108,7 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
         let questionText = questionMatch ? questionMatch[2].trim() : part;
         const originalNumber = questionMatch ? questionMatch[1] : undefined;
 
-        // Apply Sticky Preamble (Avoid double prepending if it's already there)
+        // Apply Sticky Preamble
         if (activePreambleText && !questionText.toLowerCase().includes(activePreambleText.toLowerCase())) {
           questionText = activePreambleText + '\n\n' + questionText;
         }
@@ -123,8 +122,7 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
           images: [...activePreambleImages, ...imagesInBlock],
           originalNumber
         };
-        // Reset block images after using them once
-        imagesInBlock.length = 0;
+        imagesInBlock.length = 0; // consumed
       } else if (optionMatch && currentQuestion) {
         let answerText = optionMatch[2].trim();
         let isCorrect = false;
@@ -137,14 +135,14 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
           isCorrect = true;
           answerText = answerText.replace(/\s*\(correct\)\s*/i, '').trim();
         }
-
         currentQuestion.answers.push({ text: answerText, isCorrect });
       } else if (currentQuestion) {
-        // Fragment or math
+        // Append all fragments to the current question if we haven't seen options yet
+        // This is the "Smart Merge" that prevents splitting math equations
         if (currentQuestion.answers.length > 0) {
           currentQuestion.answers[currentQuestion.answers.length - 1].text += ' ' + part;
         } else {
-          currentQuestion.text += ' ' + part;
+          currentQuestion.text += '\n' + part;
         }
       }
     }
