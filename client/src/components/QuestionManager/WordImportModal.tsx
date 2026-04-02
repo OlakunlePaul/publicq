@@ -48,7 +48,12 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
   let activePreambleImages: File[] = [];
 
   // Get all structural blocks
-  const blocks: Element[] = Array.from(doc.querySelectorAll('p, li, tr, h1, h2, h3, h4, h5, h6, td'));
+  const allBlocks: Element[] = Array.from(doc.querySelectorAll('p, li, tr, td, h1, h2, h3, h4, h5, h6'));
+  // DEDUPLICATION: Only process "Leaf" blocks (elements that don't contain other structural blocks)
+  // This prevents reading a 'tr' AND its 'td's, which causes "x x 0 0 2 2" duplication.
+  const blocks = allBlocks.filter(b => {
+    return !b.querySelector('p, li, tr, td, h1, h2, h3, h4, h5, h6');
+  });
   
   // Refined split regex: markers must have whitespace/punctuation before them or be at start
   const splitRegex = /(?=\s+(?:[a-eA-E][.)\]]|\d+[.)])\s+)/;
@@ -77,7 +82,10 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
         activePreambleImages.push(...imagesInBlock);
       } else {
         // Just more text for the current question
-        currentQuestion.text += '\n' + blockText;
+        // Skip if it looks like a duplicate of the preamble or existing text
+        if (!currentQuestion.text.includes(blockText)) {
+          currentQuestion.text += '\n' + blockText;
+        }
         currentQuestion.images.push(...imagesInBlock);
       }
       continue;
@@ -101,8 +109,8 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
         let questionText = questionMatch ? questionMatch[2].trim() : part;
         const originalNumber = questionMatch ? questionMatch[1] : undefined;
 
-        // Apply Sticky Preamble
-        if (activePreambleText) {
+        // Apply Sticky Preamble (Avoid double prepending if it's already there)
+        if (activePreambleText && !questionText.toLowerCase().includes(activePreambleText.toLowerCase())) {
           questionText = activePreambleText + '\n\n' + questionText;
         }
 
