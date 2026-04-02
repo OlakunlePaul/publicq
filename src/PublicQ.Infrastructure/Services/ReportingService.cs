@@ -548,11 +548,11 @@ public class ReportingService(
                 CompletedAssignments = completedAssignments,
                 InProgressAssignments = inProgressAssignments,
                 NotStartedAssignments = totalAssignments - (inProgressAssignments + completedAssignments),
-                OverallAverageScore = assignmentReports.Any() 
-                    ? assignmentReports.Where(ar => ar.ModuleReports.Any(mr => mr.Score.HasValue))
-                        .SelectMany(ar => ar.ModuleReports.Where(mr => mr.Score.HasValue))
-                        .Average(mr => mr.Score!.Value)
-                    : null,
+                OverallAverageScore = assignmentReports
+                    .SelectMany(ar => ar.ModuleReports)
+                    .Where(mr => mr.Score.HasValue)
+                    .Select(mr => mr.Score)
+                    .Average(),
                 TotalTimeSpentMinutes = assignmentReports.Sum(ar => ar.TimeSpentMinutes),
                 AssignmentProgress = assignmentReports,
                 TotalTabSwitchCount = totalTabSwitches,

@@ -95,7 +95,7 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
     const line = rawLine.replace(/<[^>]*>/g, '').trim();
     if (!line) continue;
 
-    const parts = line.split(/(?=\s+[a-zA-Z][.)\]](?:\s+|$))/).map(p => p.trim()).filter(p => p.length > 0);
+    const parts = line.split(/(?=\s+(?:[a-zA-Z][.)\]]|\d+[.)])(?:\s+|$))/).map(p => p.trim()).filter(p => p.length > 0);
 
     for (const part of parts) {
       const optionMatch = part.match(/^[a-zA-Z][.)\]]\s*(.+)/);
@@ -115,7 +115,7 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
         }
         currentQuestion.answers.push({ text: answerText, isCorrect });
       } else {
-        const numberMatch = part.match(/^\d+[.)]\s+(.+)/);
+        const numberMatch = part.match(/^\d+[.)]\s*(.+)/);
         const textContent = numberMatch ? numberMatch[1].trim() : part.trim();
 
         if (numberMatch || (currentQuestion && currentQuestion.answers.length > 0)) {
