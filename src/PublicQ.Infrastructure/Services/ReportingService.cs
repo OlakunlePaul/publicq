@@ -410,7 +410,7 @@ public class ReportingService(
             PageSize = assignmentsData.Count
         };
         
-        logger.LogDebug("Assembled {Count} student assignments", assignments.Count);
+        logger.LogDebug("Assembled {Count} student assignments", assignmentsData.Count);
         
         return Response<PaginatedResponse<IndividualStudentReportDto>, GenericOperationStatuses>.Success(
             paginatedResponse, 
