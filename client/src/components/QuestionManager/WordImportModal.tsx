@@ -37,15 +37,15 @@ interface Props {
 }
 
 /**
- * REBUILT LINEAR PARSER
- * Features DOM list restoration & smart matchers to solve the 'missing number' bug
+ * REBUILT PARSER V9
+ * Restricts question numbering to the START of paragraphs to prevent false positives (like "100. " mid-sentence)
+ * Handles options splitting robustly anywhere in the text.
  */
 function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): ParsedQuestion[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
   
-  // 1. DOM RESTORATION: Microsoft Word auto-numbers become <ol><li> without the "1." text.
-  // We inject a synthetic marker `%%LI%%` so our text parser recognizes it as a hard block boundary.
+  // 1. DOM RESTORATION: Inject %%LI%% so list items without apparent text numbers are forced to split
   doc.querySelectorAll('li').forEach(li => {
     const text = li.textContent?.trim() || '';
     if (!/^(?:\d+[.)]|[a-eA-E][.)\]])/.test(text)) {
@@ -61,8 +61,8 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
   const allBlocks: Element[] = Array.from(doc.querySelectorAll('p, li, tr, td, h1, h2, h3, h4, h5, h6'));
   const blocks = allBlocks.filter(b => !b.parentElement?.closest('p, li, tr, td, h1, h2, h3, h4, h5, h6'));
   
-  // 2. Updated Regex to handle `%%LI%%` dynamically
-  const splitRegex = /(?=\s+(?:[a-eA-E][.)\]]|\d+[.)]|%%LI%%)\s+)/;
+  // Option split regex (we only split mid-block if it's an option [a-e] followed by . or ) )
+  const splitRegex = /(?=\s+[a-eA-E][.)\]]\s+)/;
 
   for (const block of blocks) {
     const imagesInBlock = Array.from(block.querySelectorAll('img')).map(img => {
@@ -73,9 +73,12 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
     const blockText = block.textContent?.trim() || '';
     if (!blockText && imagesInBlock.length === 0) continue;
 
-    const hasAnyMarker = /^(?:%%LI%%|\d+[.)]|[a-eA-E][.)\]])/.test(blockText) || blockText.match(/\s+(?:[a-eA-E][.)\]]|\d+[.)]|%%LI%%)\s+/);
-
-    if (!hasAnyMarker) {
+    // Check if the overall block starts with a QUESTION marker (or our synthetic li marker)
+    // We do NOT split on random numbers mid-sentence anymore!
+    const blockQMatch = blockText.match(/^(?:%%LI%%\s*|(\d+)[.)]\s*)([\s\S]*)/);
+    
+    // If the block contains NO options and NO question marker at the start, it's just continuation text.
+    if (!blockQMatch && !blockText.match(/\s+[a-eA-E][.)\]]\s+/)) {
       if (currentQuestion) {
         currentQuestion.text += '\n' + blockText;
         currentQuestion.images.push(...imagesInBlock);
@@ -88,58 +91,65 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
 
     const segments = blockText.split(splitRegex).map(s => s.trim()).filter(s => s.length > 0);
 
-    for (const segment of segments) {
-      const questionMatch = segment.match(/^(?:(\d+)[.)]|(%%LI%%))\s*([\s\S]*)/);
-      const optionMatch = segment.match(/^([a-eA-E])[.)\]]\s*([\s\S]*)/);
-
-      if (questionMatch) {
-        if (currentQuestion) questions.push(finalizeQuestion(currentQuestion));
-
-        const originalNumber = questionMatch[1]; // undefined if it was %%LI%%
-        let questionText = questionMatch[3].trim();
+    for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
         
-        // Remove synthetic marker if it somehow slipped in
-        questionText = questionText.replace(/^%%LI%%\s*/, '');
-
-        currentQuestion = {
-          id: uuidv4(),
-          text: (pendingContextText ? pendingContextText + '\n\n' : '') + questionText,
-          type: QuestionType.SingleChoice,
-          answers: [],
-          selected: true,
-          images: [...pendingContextImages, ...imagesInBlock],
-          originalNumber,
-          preambleText: '',
-          preambleImages: [],
-          isPreambleActive: false
-        };
-        pendingContextText = '';
-        pendingContextImages = [];
-        imagesInBlock.length = 0;
-      } else if (optionMatch && currentQuestion) {
-        let answerText = optionMatch[2].trim();
-        let isCorrect = false;
-
-        // Clean any synthetic markers from options too just in case
-        answerText = answerText.replace(/%%LI%%\s*/g, '');
-
-        if (answerText.endsWith('*') || answerText.endsWith('**')) {
-          isCorrect = true;
-          answerText = answerText.replace(/\*+$/, '').trim();
-        }
-        if (/\(correct\)/i.test(answerText)) {
-          isCorrect = true;
-          answerText = answerText.replace(/\s*\(correct\)\s*/i, '').trim();
-        }
-        currentQuestion.answers.push({ text: answerText, isCorrect });
-      } else if (currentQuestion) {
-        let cleanSeg = segment.replace(/%%LI%%\s*/g, '');
-        if (currentQuestion.answers.length > 0) {
-          currentQuestion.answers[currentQuestion.answers.length - 1].text += ' ' + cleanSeg;
+        // Is this the first segment of a block that STARTS with a question marker?
+        const isOptStart = segment.match(/^[a-eA-E][.)\]]\s+/);
+        
+        if (i === 0 && blockQMatch && !isOptStart) {
+            if (currentQuestion) questions.push(finalizeQuestion(currentQuestion));
+            
+            const originalNumber = blockQMatch[1];
+            // The segment may still contain the marker text, so we clean it
+            let cleanText = segment;
+            const segNumMatch = segment.match(/^(?:%%LI%%\s*|(\d+)[.)]\s*)([\s\S]*)/);
+            if (segNumMatch) cleanText = segNumMatch[2].trim();
+            cleanText = cleanText.replace(/^%%LI%%\s*/, '');
+            
+            currentQuestion = {
+              id: uuidv4(),
+              text: (pendingContextText ? pendingContextText + '\n\n' : '') + cleanText,
+              type: QuestionType.SingleChoice,
+              answers: [],
+              selected: true,
+              images: [...pendingContextImages, ...imagesInBlock],
+              originalNumber,
+              preambleText: '',
+              preambleImages: [],
+              isPreambleActive: false
+            };
+            pendingContextText = '';
+            pendingContextImages = [];
+            imagesInBlock.length = 0;
+            
         } else {
-          currentQuestion.text += '\n' + cleanSeg;
+            // It must be an option (or continuation)
+            const optionMatch = segment.match(/^([a-eA-E])[.)\]]\s*([\s\S]*)/);
+            if (optionMatch && currentQuestion) {
+                let answerText = optionMatch[2].trim();
+                let isCorrect = false;
+
+                answerText = answerText.replace(/%%LI%%\s*/g, '');
+
+                if (answerText.endsWith('*') || answerText.endsWith('**')) {
+                  isCorrect = true;
+                  answerText = answerText.replace(/\*+$/, '').trim();
+                }
+                if (/\(correct\)/i.test(answerText)) {
+                  isCorrect = true;
+                  answerText = answerText.replace(/\s*\(correct\)\s*/i, '').trim();
+                }
+                currentQuestion.answers.push({ text: answerText, isCorrect });
+            } else if (currentQuestion) {
+                let cleanSeg = segment.replace(/%%LI%%\s*/g, '');
+                if (currentQuestion.answers.length > 0) {
+                  currentQuestion.answers[currentQuestion.answers.length - 1].text += ' ' + cleanSeg;
+                } else {
+                  currentQuestion.text += '\n' + cleanSeg;
+                }
+            }
         }
-      }
     }
   }
 
@@ -151,6 +161,7 @@ function finalizeQuestion(q: ParsedQuestion): ParsedQuestion {
   if (q.answers.length === 0) {
     q.type = QuestionType.FreeText;
   } else {
+    // If no correct answer provided, default to the first one just so it's valid
     if (!q.answers.some(a => a.isCorrect)) q.answers[0].isCorrect = true;
     const correctCount = q.answers.filter(a => a.isCorrect).length;
     q.type = correctCount > 1 ? QuestionType.MultipleChoice : QuestionType.SingleChoice;
@@ -166,7 +177,6 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Specific refs for dynamic uploads
   const manualImageInputRef = useRef<HTMLInputElement>(null);
   const preambleImageInputRef = useRef<HTMLInputElement>(null);
   const [activeQIndex, setActiveQIndex] = useState<number | null>(null);
@@ -231,7 +241,7 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
     setQuestions(prev => prev.map((q, i) => i === qIdx ? { ...q, images: q.images.filter((_, idx) => idx !== imgIdx) } : q));
   };
 
-  // -- Preamble (In-Between) Management --
+  // -- Preamble Management --
   const togglePreamble = (idx: number) => {
     setQuestions(prev => prev.map((q, i) => i === idx ? { ...q, isPreambleActive: !q.isPreambleActive } : q));
   };
@@ -253,7 +263,7 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
     setQuestions(prev => prev.map((q, i) => i === qIdx ? { ...q, preambleImages: q.preambleImages.filter((_, idx) => idx !== imgIdx) } : q));
   };
 
-  // -- Text / Toggles --
+  // -- Text / Options Editing --
   const updateText = (idx: number, val: string) => {
     setQuestions(prev => prev.map((q, i) => i === idx ? { ...q, text: val } : q));
   };
@@ -262,14 +272,50 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
     setQuestions(prev => prev.map((q, i) => i === idx ? { ...q, selected: !q.selected } : q));
   };
 
+  // Editable Options Methods
+  const updateOptionText = (qIdx: number, optIdx: number, val: string) => {
+    setQuestions(prev => prev.map((q, i) => {
+      if (i !== qIdx) return q;
+      const newAnswers = [...q.answers];
+      newAnswers[optIdx].text = val;
+      return { ...q, answers: newAnswers };
+    }));
+  };
+
+  const setCorrectOption = (qIdx: number, optIdx: number) => {
+    setQuestions(prev => prev.map((q, i) => {
+      if (i !== qIdx) return q;
+      const newAnswers = q.answers.map((a, j) => ({ ...a, isCorrect: j === optIdx }));
+      return { ...q, answers: newAnswers, type: QuestionType.SingleChoice };
+    }));
+  };
+
+  const addOption = (qIdx: number) => {
+    setQuestions(prev => prev.map((q, i) => {
+      if (i !== qIdx) return q;
+      return { ...q, answers: [...q.answers, { text: 'New Option', isCorrect: false }] };
+    }));
+  };
+
+  const removeOption = (qIdx: number, optIdx: number) => {
+    setQuestions(prev => prev.map((q, i) => {
+      if (i !== qIdx) return q;
+      const newAnswers = q.answers.filter((_, j) => j !== optIdx);
+      // Ensure at least one correct answer if there are options left
+      if (newAnswers.length > 0 && !newAnswers.some(a => a.isCorrect)) {
+         newAnswers[0].isCorrect = true;
+      }
+      return { ...q, answers: newAnswers };
+    }));
+  };
+
   const executeImport = async () => {
     setIsImporting(true);
     const selected = questions.filter(q => q.selected);
     onImport(selected.map((q, i) => {
-      // Merge preamble visually and logically
       let finalMergedText = q.text;
       if (q.preambleText.trim()) {
-        finalMergedText = `[Preamble Instructions]\n${q.preambleText}\n\n[Question]\n${q.text}`;
+        finalMergedText = `[Shared Instructions]\n${q.preambleText}\n\n[Question]\n${q.text}`;
       }
       
       return {
@@ -313,7 +359,7 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
               <p style={styles.dropSub}>Questions should be numbered (1.) with options (a.)</p>
               <input ref={fileInputRef} type="file" accept=".docx" onChange={handleFileUpload} style={{ display: 'none' }} />
             </div>
-            {isParsing && <div style={styles.loader}><RefreshCcw className="animateSpin" size={18} /> Analyzing and Restoring DOM Lists...</div>}
+            {isParsing && <div style={styles.loader}><RefreshCcw className="animateSpin" size={18} /> Analyzing Document Layout...</div>}
             {parseError && <div style={styles.error}><AlertCircle size={16} /> {parseError}</div>}
           </div>
         ) : (
@@ -322,7 +368,7 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
             <input ref={preambleImageInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePreambleImage} />
             
             <div style={styles.toolbar}>
-              <p style={styles.toolHint}>You can easily insert graphs <strong>in-between</strong> questions or edit text directly below.</p>
+              <p style={styles.toolHint}>Click options text to edit. Click 'A', 'B' boxes to set correct answers.</p>
               <div style={styles.toolActions}>
                 <button style={styles.miniBtn} onClick={() => setQuestions(q => q.map(it => ({ ...it, selected: true })))}>All</button>
                 <button style={styles.miniBtn} onClick={() => setQuestions(q => q.map(it => ({ ...it, selected: false })))}>None</button>
@@ -337,15 +383,15 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
                     <div style={styles.gapZoneOuter}>
                       {!q.isPreambleActive ? (
                         <button style={styles.gapAddBtn} onClick={() => togglePreamble(idx)}>
-                          <Plus size={14} /> Insert Preamble / Graph Before Q{idx + 1}
+                          <Plus size={14} /> Insert Shared Instructions / Graph
                         </button>
                       ) : (
                         <div style={styles.preambleArea}>
                           <div style={styles.preambleHeader}>
-                            <span style={styles.preambleTitle}>Sticky Preamble (Attached to Q{idx + 1})</span>
+                            <span style={styles.preambleTitle}>Shared Instructions (Applies here onwards)</span>
                             <div style={styles.preambleActions}>
                               <button style={styles.addImgBtn} onClick={() => { setActiveQIndex(idx); preambleImageInputRef.current?.click(); }}>
-                                <ImageIcon size={14} /> Add Preamble Graph
+                                <ImageIcon size={14} /> Add Graph
                               </button>
                               <button style={styles.closeBtn} onClick={() => togglePreamble(idx)}><X size={16} /></button>
                             </div>
@@ -377,7 +423,7 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
                     <div style={styles.cardHeader}>
                       <div style={styles.qIndex}>
                         <input type="checkbox" checked={q.selected} onChange={() => toggleSelection(idx)} style={styles.checkbox} />
-                        <span style={styles.qNum}>Question {idx + 1}</span>
+                        <span style={styles.qNum}>Question {idx + 1} {q.originalNumber ? `(Original: ${q.originalNumber})` : ''}</span>
                       </div>
                       <button style={styles.addImgBtn} onClick={() => { setActiveQIndex(idx); manualImageInputRef.current?.click(); }}>
                         <ImageIcon size={14} /> Add Inline Graph
@@ -405,11 +451,29 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
                     <div style={styles.answerGrid}>
                       {q.answers.map((a, aidx) => (
                         <div key={aidx} style={{...styles.ansRow, background: a.isCorrect ? '#f0fff4' : '#f8fafc', color: a.isCorrect ? '#2f855a' : '#4a5568'}}>
-                          <div style={styles.ansToken}>{String.fromCharCode(65 + aidx)}</div>
-                          <span style={styles.ansText}>{a.text}</span>
-                          {a.isCorrect && <Check size={14} style={{marginLeft: 'auto'}} />}
+                          <div 
+                            style={{...styles.ansToken, background: a.isCorrect ? '#48bb78' : 'rgba(0,0,0,0.05)', color: a.isCorrect ? '#fff' : '#1a202c', cursor: 'pointer' }}
+                            onClick={() => setCorrectOption(idx, aidx)}
+                          >
+                            {String.fromCharCode(65 + aidx)}
+                          </div>
+                          
+                          <input 
+                              type="text" 
+                              value={a.text} 
+                              onChange={(e) => updateOptionText(idx, aidx, e.target.value)}
+                              style={styles.optInput} 
+                          />
+                          
+                          <button style={styles.optDelBtn} onClick={() => removeOption(idx, aidx)} title="Remove Option">
+                              <X size={14} />
+                          </button>
                         </div>
                       ))}
+                      
+                      <button style={styles.addOptRow} onClick={() => addOption(idx)}>
+                        <Plus size={14} /> Add Option
+                      </button>
                     </div>
                   </div>
                 </React.Fragment>
@@ -461,7 +525,6 @@ const styles: Record<string, React.CSSProperties> = {
   miniBtn: { padding: '0.4rem 0.8rem', fontSize: '0.75rem', fontWeight: 700, borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#4a5568' },
   scrollList: { flex: 1, overflowY: 'auto', padding: '2rem', background: '#fff' },
   
-  // Gap Zone Styles
   gapZoneOuter: { margin: '-0.75rem 0', display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 10 },
   gapAddBtn: { padding: '0.4rem 1rem', background: '#fff', border: '1px dashed #cbd5e0', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, color: '#718096', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' },
   preambleArea: { width: '100%', background: '#fffff0', border: '1px solid #f6e05e', borderRadius: '12px', padding: '1rem', boxShadow: '0 4px 6px -1px rgba(236,201,75,0.1)' },
@@ -480,10 +543,14 @@ const styles: Record<string, React.CSSProperties> = {
   imgWrap: { position: 'relative', width: '120px', height: '120px', borderRadius: '14px', border: '1px solid #edf2f7', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' },
   img: { width: '100%', height: '100%', objectFit: 'cover' },
   imgDel: { position: 'absolute', top: '6px', right: '6px', background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '8px', width: '24px', height: '24px', cursor: 'pointer', color: '#e53e3e', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
-  answerGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem', marginTop: '1rem' },
-  ansRow: { padding: '1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.9rem', border: '1px solid transparent' },
-  ansToken: { width: '24px', height: '24px', borderRadius: '6px', background: 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.75rem' },
-  ansText: { fontWeight: 500 },
+  
+  answerGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem', marginTop: '1rem' },
+  ansRow: { padding: '0.25rem 0.5rem 0.25rem 0.25rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid transparent' },
+  ansToken: { width: '26px', height: '26px', minWidth: '26px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.8rem', outline: '2px solid transparent', outlineOffset: '2px'  },
+  optInput: { flex: 1, border: 'none', background: 'transparent', fontSize: '0.95rem', fontWeight: 500, color: 'inherit', padding: '0.5rem', outline: 'none' },
+  optDelBtn: { background: 'none', border: 'none', color: '#a0aec0', cursor: 'pointer', display: 'flex', padding: '0.25rem' },
+  addOptRow: { padding: '0.5rem', border: '1px dashed #cbd5e0', borderRadius: '10px', background: 'none', color: '#718096', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer' },
+  
   footer: { padding: '1.5rem 2rem', borderTop: '1px solid #edf2f7', display: 'flex', justifyContent: 'space-between', background: '#fff' },
   backBtn: { padding: '0.75rem 1.75rem', borderRadius: '14px', border: '1px solid #e2e8f0', background: '#fff', fontWeight: 700, cursor: 'pointer', color: '#4a5568' },
   importBtn: { padding: '0.75rem 2.5rem', borderRadius: '14px', border: 'none', background: '#3182ce', color: '#fff', fontWeight: 800, cursor: 'pointer', boxShadow: '0 10px 15px -3px rgba(49, 130, 206, 0.4)' }
