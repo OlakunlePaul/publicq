@@ -69,12 +69,9 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
   let processedHtml = convertTablesToMarkdown(html);
   
   // Strip other HTML tags except for our image placeholders
-  // Insert newlines for structural tags to prevent text merging (e.g., "institution2.")
+  // Insert newlines for structural tags to prevent text merging
   processedHtml = processedHtml.replace(/<\/p>|<\/li>|<\/div>|<\/tr>|<\/h\d>/gi, '\n');
   processedHtml = processedHtml.replace(/<br\s*\/?>/gi, '\n');
-  
-  // Identify images in the text and move them to the question gallery
-  // Current extraction logic finds <img> tags and pulls out their src (which we mapped to fileIds)
   
   const rawLines = processedHtml.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const questions: ParsedQuestion[] = [];
@@ -82,52 +79,48 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
   let currentImages: File[] = [];
 
   for (const rawLine of rawLines) {
-    // Check if the line is just an image placeholder
+    // Check for images
     const imageMatch = rawLine.match(/<img[^>]+src=["'](extracted-image-[^"']+)["'][^>]*>/i);
     if (imageMatch) {
       const fileId = imageMatch[1];
-      if (imageMap[fileId]) {
-        currentImages.push(imageMap[fileId]);
-      }
+      if (imageMap[fileId]) currentImages.push(imageMap[fileId]);
       continue;
     }
 
-    // Strip remaining tags for cleaner text but keep numbering
     const line = rawLine.replace(/<[^>]*>/g, '').trim();
     if (!line) continue;
 
-    // Split by option patterns or question number patterns.
-    // Use a pattern that looks for a boundary or space followed by the delimiter.
-    // REQUIRE a space or start before AND a space after to reduce math collisions.
-    const parts = line.split(/(?=(?:\s+)(?:[a-zA-Z][.)\]]|\d+[.)])\s+)/).map(p => p.trim()).filter(p => p.length > 0);
+    // Split line only if it clearly contains multiple options (e.g., "a) Text b) Text")
+    // Use a lookahead that requires a preceding space and a specific option pattern
+    const lineParts = line.split(/(?=\s+[a-eA-E][.)\]]\s+)/).map(p => p.trim()).filter(p => p.length > 0);
 
-    for (const part of parts) {
-      const optionMatch = part.match(/^([a-zA-Z])[.)\]]\s*(.+)/);
-      const numberMatch = part.match(/^(\d+)[.)]\s*(.+)/);
+    for (const part of lineParts) {
+      const questionMatch = part.match(/^(\d+)[.)]\s*(.*)/);
+      const optionMatch = part.match(/^([a-eA-E])[.)\]]\s*(.*)/);
 
-      if (numberMatch) {
-        // Start a new numbered question
+      if (questionMatch) {
+        // Finalize previous
         if (currentQuestion) {
           currentQuestion.images = [...currentImages];
-          currentImages = []; // Reset images for next question
+          currentImages = [];
           finalizeQuestion(currentQuestion);
           questions.push(currentQuestion);
         }
-        
+
         currentQuestion = {
           id: uuidv4(),
-          text: numberMatch[2].trim(),
+          text: questionMatch[2].trim(), // Strip numbering "1."
           type: QuestionType.SingleChoice,
           answers: [],
           selected: true,
           images: [],
-          originalNumber: numberMatch[1]
+          originalNumber: questionMatch[1]
         };
       } else if (optionMatch && currentQuestion) {
-        // New option for the current question
-        let answerText = optionMatch[2].trim();
+        let answerText = optionMatch[2].trim(); // Strip lettering "a)"
         let isCorrect = false;
 
+        // Correct answer detection
         if (answerText.endsWith('*') || answerText.endsWith('**')) {
           isCorrect = true;
           answerText = answerText.replace(/\*+$/, '').trim();
@@ -136,33 +129,29 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
           isCorrect = true;
           answerText = answerText.replace(/\s*\(correct\)\s*/i, '').trim();
         }
+
         currentQuestion.answers.push({ text: answerText, isCorrect });
-      } else {
-        // supplementary text or math fragment - append to current context
-        const text = part.trim();
-        if (!currentQuestion) {
-          // Implicit first question? Just start one.
-          currentQuestion = {
-            id: uuidv4(),
-            text: text,
-            type: QuestionType.SingleChoice,
-            answers: [],
-            selected: true,
-            images: []
-          };
-        } else if (currentQuestion.answers.length > 0) {
-          // We have options, so append to the text of the last option
-          const lastAnswer = currentQuestion.answers[currentQuestion.answers.length - 1];
-          lastAnswer.text += ' ' + text;
+      } else if (currentQuestion) {
+        // Continuous text or math fragment
+        if (currentQuestion.answers.length > 0) {
+          currentQuestion.answers[currentQuestion.answers.length - 1].text += ' ' + part;
         } else {
-          // We don't have options yet, so append to the question text
-          currentQuestion.text += ' ' + text;
+          currentQuestion.text += ' ' + part;
         }
+      } else {
+        // Implicit first question if doc starts without number
+        currentQuestion = {
+          id: uuidv4(),
+          text: part,
+          type: QuestionType.SingleChoice,
+          answers: [],
+          selected: true,
+          images: []
+        };
       }
     }
   }
 
-  // Push the very last question
   if (currentQuestion) {
     currentQuestion.images = [...currentImages];
     finalizeQuestion(currentQuestion);
