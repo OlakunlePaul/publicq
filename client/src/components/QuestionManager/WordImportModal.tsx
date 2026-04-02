@@ -300,7 +300,7 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
         <div style={styles.header}>
           <div style={styles.headerLead}>
             <div style={styles.iconBox}><FileText size={20} color="#3182ce" /></div>
-            <h2 style={styles.title}>{step === 'upload' ? 'Word Document Import' : \`Review Questions (\${selectedCount})\`}</h2>
+            <h2 style={styles.title}>{step === 'upload' ? 'Word Document Import' : `Review Questions (${selectedCount})`}</h2>
           </div>
           <button style={styles.closeBtn} onClick={onClose}><X size={20} /></button>
         </div>
@@ -388,7 +388,7 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
                       style={styles.textEdit} 
                       value={q.text} 
                       onChange={e => updateText(idx, e.target.value)}
-                      rows={Math.max(2, q.text.split('\\n').length)}
+                      rows={Math.max(2, q.text.split('\n').length)}
                     />
 
                     {q.images.length > 0 && (
@@ -419,13 +419,13 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
             <div style={styles.footer}>
               <button style={styles.backBtn} onClick={() => { setStep('upload'); setQuestions([]); }}>Back</button>
               <button style={styles.importBtn} onClick={executeImport} disabled={selectedCount === 0 || isImporting}>
-                {isImporting ? 'Importing Processing...' : \`Confirm Import (\${selectedCount})\`}
+                {isImporting ? 'Importing Processing...' : `Confirm Import (${selectedCount})`}
               </button>
             </div>
           </div>
         )}
       </div>
-      <style>{\`
+      <style>{`
         @keyframes animateSpin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
@@ -434,7 +434,7 @@ export const WordImportModal = ({ moduleId, moduleVersionId, startingOrder, onIm
           animation: animateSpin 1s linear infinite;
         }
         .gapHover:hover { background: #ebf8ff; border-color: #bee3f8; }
-      \`}</style>
+      `}</style>
     </div>
   );
 };
