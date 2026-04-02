@@ -65,41 +65,47 @@ function convertTablesToMarkdown(html: string): string {
 }
 
 function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): ParsedQuestion[] {
-  // Convert tables to markdown first
-  let processedHtml = convertTablesToMarkdown(html);
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
   
-  // Strip other HTML tags except for our image placeholders
-  // Insert newlines for structural tags to prevent text merging
-  processedHtml = processedHtml.replace(/<\/p>|<\/li>|<\/div>|<\/tr>|<\/h\d>/gi, '\n');
-  processedHtml = processedHtml.replace(/<br\s*\/?>/gi, '\n');
-  
-  const rawLines = processedHtml.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  // Extract images first to maintain their order relative to text
+  // We'll replace <img> tags with markers in the text processing
   const questions: ParsedQuestion[] = [];
   let currentQuestion: ParsedQuestion | null = null;
   let currentImages: File[] = [];
 
-  for (const rawLine of rawLines) {
-    // Check for images
-    const imageMatch = rawLine.match(/<img[^>]+src=["'](extracted-image-[^"']+)["'][^>]*>/i);
-    if (imageMatch) {
-      const fileId = imageMatch[1];
-      if (imageMap[fileId]) currentImages.push(imageMap[fileId]);
-      continue;
+  // Get all top-level blocks that contain text or images
+  // We include p, li, tr, and h tags as structural boundaries
+  const blocks: Element[] = Array.from(doc.querySelectorAll('p, li, tr, h1, h2, h3, h4, h5, h6'));
+  
+  // Regex for mid-line splitting (math-safe)
+  const splitRegex = /(?=\s+(?:[a-eA-E][.)\]]|\d+[.)])\s+)/;
+
+  for (const block of blocks) {
+    // Handling images within the block
+    const imagesInBlock = Array.from(block.querySelectorAll('img'));
+    for (const img of imagesInBlock) {
+      const src = img.getAttribute('src');
+      if (src && imageMap[src]) {
+        currentImages.push(imageMap[src]);
+      }
     }
 
-    const line = rawLine.replace(/<[^>]*>/g, '').trim();
-    if (!line) continue;
+    const blockText = block.textContent?.trim() || '';
+    if (!blockText && imagesInBlock.length === 0) continue;
 
-    // Split line only if it clearly contains multiple options OR a new question number
-    // Use a lookahead that requires a preceding space and a specific marker pattern
-    // The \s+ after the marker ensures we don't split on decimals like "3.673" or fractions like "1 1/7"
-    const lineParts = line.split(/(?=\s+(?:[a-eA-E][.)\]]|\d+[.)])\s+)/).map(p => p.trim()).filter(p => p.length > 0);
+    // Split block into parts if it contains multiple markers (e.g. "a) b)")
+    const parts = blockText.split(splitRegex).map(p => p.trim()).filter(p => p.length > 0);
 
-    for (const part of lineParts) {
+    for (const part of parts) {
       const questionMatch = part.match(/^(\d+)[.)]\s*(.*)/);
       const optionMatch = part.match(/^([a-eA-E])[.)\]]\s*(.*)/);
 
-      if (questionMatch) {
+      // HEURISTIC: If we have plain text AND we already have options for the current question,
+      // this is almost certainly the start of a NEW question that lost its number.
+      const looksLikeNewQuestion = !optionMatch && !questionMatch && currentQuestion && currentQuestion.answers.length > 0;
+
+      if (questionMatch || looksLikeNewQuestion) {
         // Finalize previous
         if (currentQuestion) {
           currentQuestion.images = [...currentImages];
@@ -108,20 +114,23 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
           questions.push(currentQuestion);
         }
 
+        const questionText = questionMatch ? questionMatch[2].trim() : part;
+        const originalNumber = questionMatch ? questionMatch[1] : undefined;
+
         currentQuestion = {
           id: uuidv4(),
-          text: questionMatch[2].trim(), // Strip numbering "1."
+          text: questionText,
           type: QuestionType.SingleChoice,
           answers: [],
           selected: true,
           images: [],
-          originalNumber: questionMatch[1]
+          originalNumber
         };
       } else if (optionMatch && currentQuestion) {
-        let answerText = optionMatch[2].trim(); // Strip lettering "a)"
+        let answerText = optionMatch[2].trim();
         let isCorrect = false;
 
-        // Correct answer detection
+        // Correct answer detection (*)
         if (answerText.endsWith('*') || answerText.endsWith('**')) {
           isCorrect = true;
           answerText = answerText.replace(/\*+$/, '').trim();
@@ -134,13 +143,14 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
         currentQuestion.answers.push({ text: answerText, isCorrect });
       } else if (currentQuestion) {
         // Continuous text or math fragment
+        // If we are currently collecting options, append to the last option
         if (currentQuestion.answers.length > 0) {
           currentQuestion.answers[currentQuestion.answers.length - 1].text += ' ' + part;
         } else {
           currentQuestion.text += ' ' + part;
         }
       } else {
-        // Implicit first question if doc starts without number
+        // Handle document starting without a number
         currentQuestion = {
           id: uuidv4(),
           text: part,
