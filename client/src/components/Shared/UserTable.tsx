@@ -53,6 +53,7 @@ interface UserTableProps {
   loading?: boolean;
   externalDataLoaded?: boolean; // Flag to indicate if external data management is used
   currentUserRoles?: UserRole[]; // Current user's roles for permission checks
+  visibleColumns?: ('id' | 'email' | 'fullName' | 'class' | 'term' | 'admissionNumber' | 'dob' | 'userType' | 'actions')[];
 }
 
 const UserTable: React.FC<UserTableProps> = ({
@@ -83,6 +84,7 @@ const UserTable: React.FC<UserTableProps> = ({
   loading: externalLoading,
   externalDataLoaded = false,
   currentUserRoles = [],
+  visibleColumns = ['id', 'email', 'fullName', 'class', 'term', 'admissionNumber', 'dob', 'userType', 'actions'],
 }) => {
   // Check if current user is administrator
   const isAdmin = currentUserRoles.includes(UserRole.ADMINISTRATOR);
@@ -387,35 +389,33 @@ const UserTable: React.FC<UserTableProps> = ({
           <table className={userTableStyles.table}>
             <thead className={userTableStyles.tableHead}>
               <tr>
-                {selectionMode !== 'none' && (
-                  <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>
-                    {selectionMode === 'multiple' && displayUsers.length > 0 ? (
-                      <div className={userTableStyles.selectAllHeader}>
-                        <input
-                          type="checkbox"
-                          checked={areAllCurrentPageSelected}
-                          ref={(input) => {
-                            if (input) input.indeterminate = areSomeCurrentPageSelected && !areAllCurrentPageSelected;
-                          }}
-                          onChange={handleSelectAllToggle}
-                          className={userTableStyles.selectAllCheckbox}
-                        />
-                        <span className={userTableStyles.selectLabel}>Select</span>
-                      </div>
-                    ) : (
-                      'Select'
-                    )}
-                  </th>
-                )}
-                <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>ID</th>
-                <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>Email</th>
-                <th className={userTableStyles.th}>Full Name</th>
-                <th className={userTableStyles.th}>Class</th>
-                <th className={userTableStyles.th}>Term</th>
-                <th className={userTableStyles.th}>Admission No</th>
-                <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>Date of Birth</th>
-                <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>User Type</th>
-                {showActions && <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>Actions</th>}
+                <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>
+                  {selectionMode === 'multiple' && displayUsers.length > 0 ? (
+                    <div className={userTableStyles.selectAllHeader}>
+                      <input
+                        type="checkbox"
+                        checked={areAllCurrentPageSelected}
+                        ref={(input) => {
+                          if (input) input.indeterminate = areSomeCurrentPageSelected && !areAllCurrentPageSelected;
+                        }}
+                        onChange={handleSelectAllToggle}
+                        className={userTableStyles.selectAllCheckbox}
+                      />
+                      <span className={userTableStyles.selectLabel}>Select</span>
+                    </div>
+                  ) : (
+                    'Select'
+                  )}
+                </th>
+                {visibleColumns.includes('id') && <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>ID</th>}
+                {visibleColumns.includes('email') && <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>Email</th>}
+                {visibleColumns.includes('fullName') && <th className={userTableStyles.th}>Full Name</th>}
+                {visibleColumns.includes('class') && <th className={userTableStyles.th}>Class</th>}
+                {visibleColumns.includes('term') && <th className={userTableStyles.th}>Term</th>}
+                {visibleColumns.includes('admissionNumber') && <th className={userTableStyles.th}>Admission No</th>}
+                {visibleColumns.includes('dob') && <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>Date of Birth</th>}
+                {visibleColumns.includes('userType') && <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>User Type</th>}
+                {showActions && visibleColumns.includes('actions') && <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -437,68 +437,86 @@ const UserTable: React.FC<UserTableProps> = ({
                         />
                       </td>
                     )}
-                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="ID">
-                      <span className={userTableStyles.idCell}>{user.id}</span>
-                    </td>
-                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="Email">
-                      <div className={userTableStyles.userEmail}>{user.email || 'N/A'}</div>
-                    </td>
-                    <td className={userTableStyles.td} data-label="Full Name">
-                      <div className={userTableStyles.userName}>{user.fullName || '-'}</div>
-                    </td>
-                    <td className={userTableStyles.td} data-label="Class">
-                      <div style={{ fontSize: '13px', fontWeight: 500 }}>{user.className || '-'}</div>
-                    </td>
-                    <td className={userTableStyles.td} data-label="Term">
-                      <div style={{ fontSize: '12px', color: '#6b7280' }}>{user.termName || '-'}</div>
-                    </td>
-                    <td className={userTableStyles.td} data-label="Admission No">
-                      <div className={userTableStyles.admissionNumber}>
-                        {user.admissionNumber ? (
-                          <span className={userTableStyles.admissionNumberBadge}>
-                            {user.admissionNumber}
-                          </span>
-                        ) : '-'}
-                      </div>
-                    </td>
-                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="Date of Birth">
-                      <div className={userTableStyles.dateOfBirth}>
-                        {user.dateOfBirth 
-                          ? new Date(user.dateOfBirth).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric'
-                            })
-                          : 'N/A'
-                        }
-                      </div>
-                    </td>
-                    <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="User Type">
-                      <div className={userTableStyles.userTypeContainer}>
-                        {(() => {
-                          if (!user.hasCredential) {
-                            return <span className={userTableStyles.examTakerBadge}>Exam Taker</span>;
+                    {visibleColumns.includes('id') && (
+                      <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="ID">
+                        <span className={userTableStyles.idCell} title={user.id}>
+                          {user.id.substring(0, 8)}...
+                        </span>
+                      </td>
+                    )}
+                    {visibleColumns.includes('email') && (
+                      <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="Email">
+                        <div className={userTableStyles.userEmail}>{user.email || 'N/A'}</div>
+                      </td>
+                    )}
+                    {visibleColumns.includes('fullName') && (
+                      <td className={userTableStyles.td} data-label="Full Name">
+                        <div className={userTableStyles.userName}>{user.fullName || '-'}</div>
+                      </td>
+                    )}
+                    {visibleColumns.includes('class') && (
+                      <td className={userTableStyles.td} data-label="Class">
+                        <div style={{ fontSize: '13px', fontWeight: 500 }}>{user.className || '-'}</div>
+                      </td>
+                    )}
+                    {visibleColumns.includes('term') && (
+                      <td className={userTableStyles.td} data-label="Term">
+                        <div style={{ fontSize: '12px', color: '#6b7280' }}>{user.termName || '-'}</div>
+                      </td>
+                    )}
+                    {visibleColumns.includes('admissionNumber') && (
+                      <td className={userTableStyles.td} data-label="Admission No">
+                        <div className={userTableStyles.admissionNumber}>
+                          {user.admissionNumber ? (
+                            <span className={userTableStyles.admissionNumberBadge}>
+                              {user.admissionNumber}
+                            </span>
+                          ) : '-'}
+                        </div>
+                      </td>
+                    )}
+                    {visibleColumns.includes('dob') && (
+                      <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="Date of Birth">
+                        <div className={userTableStyles.dateOfBirth}>
+                          {user.dateOfBirth 
+                            ? new Date(user.dateOfBirth).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })
+                            : 'N/A'
                           }
-                          
-                          const roles = user.roles || [];
-                          if (roles.includes('Administrator')) {
-                            return <span className={userTableStyles.adminBadge}>Admin</span>;
-                          }
-                          if (roles.includes('Manager')) {
-                            return <span className={userTableStyles.managerBadge}>Manager</span>;
-                          }
-                          if (roles.includes('Teacher')) {
-                            return <span className={userTableStyles.teacherBadge}>Teacher</span>;
-                          }
-                          if (roles.includes('Student')) {
-                            return <span className={userTableStyles.examTakerBadge}>Exam Taker</span>;
-                          }
-                          
-                          return <span className={userTableStyles.userBadge}>User</span>;
-                        })()}
-                      </div>
-                    </td>
-                    {showActions && (
+                        </div>
+                      </td>
+                    )}
+                    {visibleColumns.includes('userType') && (
+                      <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="User Type">
+                        <div className={userTableStyles.userTypeContainer}>
+                          {(() => {
+                            if (!user.hasCredential) {
+                              return <span className={userTableStyles.examTakerBadge}>Exam Taker</span>;
+                            }
+                            
+                            const roles = user.roles || [];
+                            if (roles.includes('Administrator')) {
+                              return <span className={userTableStyles.adminBadge}>Admin</span>;
+                            }
+                            if (roles.includes('Manager')) {
+                              return <span className={userTableStyles.managerBadge}>Manager</span>;
+                            }
+                            if (roles.includes('Teacher')) {
+                              return <span className={userTableStyles.teacherBadge}>Teacher</span>;
+                            }
+                            if (roles.includes('Student')) {
+                              return <span className={userTableStyles.examTakerBadge}>Exam Taker</span>;
+                            }
+                            
+                            return <span className={userTableStyles.userBadge}>User</span>;
+                          })()}
+                        </div>
+                      </td>
+                    )}
+                    {showActions && visibleColumns.includes('actions') && (
                       <td className={`${userTableStyles.td} ${userTableStyles.noPrint}`} data-label="Actions">
                         <div className={userTableStyles.actionContainer}>
                           {user.hasCredential && (

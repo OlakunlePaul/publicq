@@ -97,7 +97,7 @@ function parseQuestionsFromHtml(html: string, imageMap: Record<string, File>): P
 
     // Split by option patterns or question number patterns.
     // Use a pattern that looks for a boundary or space followed by the delimiter.
-    const parts = line.split(/(?=\b(?:[a-zA-Z][.)\]]|\d+[.)])(?:\s+|$))/).map(p => p.trim()).filter(p => p.length > 0);
+    const parts = line.split(/(?=(?:\s+)(?:[a-zA-Z][.)\]]|\d+[.)])\s+)/).map(p => p.trim()).filter(p => p.length > 0);
 
     for (const part of parts) {
       const optionMatch = part.match(/^[a-zA-Z][.)\]]\s*(.+)/);

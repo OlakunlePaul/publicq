@@ -825,9 +825,10 @@ const ExamTakerManagementModal: React.FC<ExamTakerManagementModalProps> = ({
               onUserSelect={handleAvailableUserSelect}
               onUserDeselect={handleAvailableUserDeselect}
               selectionMode="multiple"
+              visibleColumns={['email', 'fullName', 'class', 'admissionNumber']}
               title="All Users"
               emptyMessage="No available users found"
-              searchPlaceholder="Search available users..."
+              searchPlaceholder="Search by email or ID..."
               maxHeight="400px"
               enableSearch={true}
               enablePagination={true}
@@ -843,7 +844,7 @@ const ExamTakerManagementModal: React.FC<ExamTakerManagementModalProps> = ({
           </div>
 
           {/* Transfer Controls */}
-          <div className={cssStyles.transferControls}>
+          <div className={cssStyles.transferControls} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignSelf: 'center', margin: '0 10px' }}>
             <button 
               onClick={moveToAssigned}
               disabled={selectedAvailable.length === 0}
@@ -851,8 +852,22 @@ const ExamTakerManagementModal: React.FC<ExamTakerManagementModalProps> = ({
                 [cssStyles.transferButtonDisabled]: selectedAvailable.length === 0
               })}
               title="Assign selected users"
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                backgroundColor: selectedAvailable.length > 0 ? '#3b82f6' : '#e5e7eb',
+                color: 'white',
+                border: 'none',
+                cursor: selectedAvailable.length > 0 ? 'pointer' : 'not-allowed',
+                transition: 'all 0.2s'
+              }}
             >
-              →
+              »
             </button>
             <button 
               onClick={moveToUnassigned}
@@ -861,8 +876,22 @@ const ExamTakerManagementModal: React.FC<ExamTakerManagementModalProps> = ({
                 [cssStyles.transferButtonDisabled]: selectedAssigned.length === 0
               })}
               title="Unassign selected users"
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                backgroundColor: selectedAssigned.length > 0 ? '#3b82f6' : '#e5e7eb',
+                color: 'white',
+                border: 'none',
+                cursor: selectedAssigned.length > 0 ? 'pointer' : 'not-allowed',
+                transition: 'all 0.2s'
+              }}
             >
-              ←
+              «
             </button>
           </div>
 
@@ -874,6 +903,7 @@ const ExamTakerManagementModal: React.FC<ExamTakerManagementModalProps> = ({
               onUserSelect={handleAssignedUserSelect}
               onUserDeselect={handleAssignedUserDeselect}
               selectionMode="multiple"
+              visibleColumns={['email', 'fullName', 'class', 'admissionNumber']}
               title={`Assigned Students (${assignedUsers.length})`}
               emptyMessage="No students assigned"
               searchPlaceholder="Search assigned users..."
