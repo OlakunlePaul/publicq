@@ -72,3 +72,4 @@ build_warnings.txt
 final_build_log.txt
 build_errors_final.txt
 build_errors_new.txt
+test-parser.js

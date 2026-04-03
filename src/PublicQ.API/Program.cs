@@ -167,15 +167,6 @@ if (corsOrigins.Length > 0)
 app.UseDefaultFiles(); // This will serve index.html for requests to "/"
 app.UseStaticFiles(); // This serves files from wwwroot
 
-app.UseAuthentication();
-app.UseRouting();
-app.UseAuthorization();
-
-app.UseMiddleware<McpApiKeyMiddleware>();
-app.MapMcp(Constants.McpRoutePrefix).AllowAnonymous(); // Middleware handles authentication/authorization
-
-app.MapControllers();
-
 // Configure static file serving for uploads
 var fileStorageOptions = app.Services.GetRequiredService<IOptions<FileStorageOptions>>().Value;
 var staticContentPath = fileStorageOptions.StaticContentPath ?? "static";
@@ -190,6 +181,15 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = $"/{staticContentPath}"
 });
+
+app.UseAuthentication();
+app.UseRouting();
+app.UseAuthorization();
+
+app.UseMiddleware<McpApiKeyMiddleware>();
+app.MapMcp(Constants.McpRoutePrefix).AllowAnonymous(); // Middleware handles authentication/authorization
+
+app.MapControllers();
 
 // This maps all other than /api and /mcp requests to the React app when it runs in dev
 if (app.Environment.IsDevelopment())
