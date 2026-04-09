@@ -661,21 +661,66 @@ public class AssignmentService(
         }
 
         var items = await query
-            .OrderByDescending(x => x.UpdatedAtUtc)
             .Include(a => a.Group)
-            .Include(a => a.StudentAssignments)
-            .Select(a => a.ConvertToStudentAssignmentDto(
-                a.StudentAssignments.Where(sa => sa.StudentId == resolvedId).Select(sa => sa.Id).FirstOrDefault()
-            ))
+                .ThenInclude(g => g.GroupMemberEntities)
+            .Include(a => a.StudentAssignments.Where(sa => sa.StudentId == resolvedId))
+                .ThenInclude(sa => sa.ModuleProgress)
+            .OrderBy(a => a.StartDateUtc)
             .ToListAsync(cancellationToken);
 
+        var now = DateTime.UtcNow;
+        var dtos = new List<StudentAssignmentDto>();
+        bool previousActiveIncompleteFound = false;
+
+        foreach (var a in items)
+        {
+            var sa = a.StudentAssignments.FirstOrDefault();
+            var studentAssignmentId = sa?.Id ?? Guid.Empty;
+            var dto = a.ConvertToStudentAssignmentDto(studentAssignmentId);
+            
+            // 1. Calculate Completion
+            // An assignment is completed if it has a student assignment record AND
+            // all modules in its group have corresponding completed module progress records.
+            bool isCompleted = false;
+            if (sa != null && a.Group?.GroupMemberEntities != null && a.Group.GroupMemberEntities.Count > 0)
+            {
+                var completedModuleIds = sa.ModuleProgress
+                    .Where(mp => mp.CompletedAtUtc != null)
+                    .Select(mp => mp.GroupMemberId)
+                    .ToHashSet();
+                
+                isCompleted = a.Group.GroupMemberEntities.All(gme => completedModuleIds.Contains(gme.Id));
+            }
+            
+            dto.IsCompleted = isCompleted;
+
+            // 2. Calculate Automatic Progression Lock
+            // An assignment is locked if:
+            // - It has not been completed yet
+            // - There exists an EARLIER assignment that has started but is NOT yet completed.
+            
+            // We only block based on assignments that have already "Started" (StartDateUtc <= now).
+            // Future assignments are "Scheduled" and locked by time anyway in the UI, 
+            // but for logical consistency we follow the sequence.
+            
+            dto.IsProgressionLocked = previousActiveIncompleteFound;
+
+            // If this assignment has started and is not completed, it blocks all subsequent ones.
+            if (a.StartDateUtc <= now && !isCompleted)
+            {
+                previousActiveIncompleteFound = true;
+            }
+
+            dtos.Add(dto);
+        }
+
         logger.LogInformation("Fetched {Count} assignments out of {Total} for student {StudentId}",
-            items.Count, 
+            dtos.Count, 
             totalCount, 
             studentId);
         
         return Response<IList<StudentAssignmentDto>, GenericOperationStatuses>.Success(
-                items, 
+                dtos, 
                 GenericOperationStatuses.Completed,
                 "Assignments retrieved successfully");
     }

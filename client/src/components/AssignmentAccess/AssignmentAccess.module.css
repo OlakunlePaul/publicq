@@ -353,6 +353,39 @@
   font-weight: 700;
 }
 
+.completedBadge {
+  padding: 4px 12px;
+  background-color: #dcfce7;
+  color: #166534;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lockedBadge {
+  padding: 4px 12px;
+  background-color: #f1f5f9;
+  color: #475569;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lockedCard {
+  opacity: 0.7;
+  filter: grayscale(0.5);
+  cursor: not-allowed !important;
+}
+
+.lockedCard:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: #e2e8f0 !important;
+}
+
 .skeletonGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

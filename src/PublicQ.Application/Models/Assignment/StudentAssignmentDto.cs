@@ -29,4 +29,14 @@ public class StudentAssignmentDto : AssignmentBaseDto
     /// Gets or sets the name of the group containing the assessment modules.
     /// </summary>
     public string GroupTitle { get; set; }
+
+    /// <summary>
+    /// Indicates whether the student has fully completed this assignment.
+    /// </summary>
+    public bool IsCompleted { get; set; }
+
+    /// <summary>
+    /// Indicates whether this assignment is automatically locked because an earlier active assignment is not yet completed.
+    /// </summary>
+    public bool IsProgressionLocked { get; set; }
 }

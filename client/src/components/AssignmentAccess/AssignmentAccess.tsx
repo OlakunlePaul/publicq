@@ -269,10 +269,19 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
               {assignments.map(assignment => {
                 const statusBadge = getStatusBadge(assignment);
                 const status = getAssignmentStatus(assignment);
-                const isAccessible = assignment.isPublished && (status === 'active' || status === 'ended');
+                
+                // If it's progression locked, it's NOT accessible.
+                // If it's completed, it's accessible (to view results/summary) if it's not a draft and (active or ended).
+                const isLocked = assignment.isProgressionLocked;
+                const isCompleted = assignment.isCompleted;
+                const isAccessible = assignment.isPublished && (status === 'active' || status === 'ended') && !isLocked;
                 
                 return (
-                  <div key={assignment.id} className={styles.assignmentCard} onClick={() => isAccessible && onAssignmentOpen && onAssignmentOpen(assignment)}>
+                  <div 
+                    key={assignment.id} 
+                    className={`${styles.assignmentCard} ${isLocked ? styles.lockedCard : ''}`} 
+                    onClick={() => isAccessible && onAssignmentOpen && onAssignmentOpen(assignment)}
+                  >
                     <div className={styles.assignmentHeader}>
                       <h4 className={styles.assignmentTitle}>{assignment.title}</h4>
                       <div className={styles.badgeContainer}>
@@ -280,7 +289,18 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
                           <span className={styles.draftBadge}>Draft</span>
                         )}
                         {assignment.isPublished && (
-                          <span className={statusBadge.className}>{statusBadge.text}</span>
+                          <>
+                            {isLocked ? (
+                              <span className={styles.lockedBadge}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                Locked
+                              </span>
+                            ) : isCompleted ? (
+                              <span className={styles.completedBadge}>Completed</span>
+                            ) : (
+                              <span className={statusBadge.className}>{statusBadge.text}</span>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -301,7 +321,12 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
                         <span>{formatDateToLocal(assignment.startDateUtc)}</span>
                       </div>
                     </div>
-                    {isAccessible && (
+                    
+                    {isLocked ? (
+                      <button className={styles.disabledButton} disabled>
+                        Unlock after previous exam
+                      </button>
+                    ) : isAccessible ? (
                       <button 
                         className={styles.startButton}
                         onClick={(e) => {
@@ -309,14 +334,13 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
                            onAssignmentOpen && onAssignmentOpen(assignment);
                         }}
                       >
-                        {status === 'ended' ? 'View Results' : 'Open Exam'}
+                        {status === 'ended' || isCompleted ? 'View Results' : 'Open Exam'}
                       </button>
-                    )}
-                    {assignment.isPublished && status === 'scheduled' && (
+                    ) : (assignment.isPublished && status === 'scheduled') ? (
                       <button className={styles.disabledButton} disabled>
                         Not Yet Available
                       </button>
-                    )}
+                    ) : null}
                   </div>
                 );
               })}

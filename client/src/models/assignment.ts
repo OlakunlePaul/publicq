@@ -135,6 +135,16 @@ export interface Assignment extends AssignmentBase {
    * The collection of student assignments linking specific exam takers to this assignment.
    */
   studentAssignments?: StudentAssignment[];
+
+  /**
+   * Indicates whether the student has fully completed this assignment.
+   */
+  isCompleted?: boolean;
+
+  /**
+   * Indicates whether this assignment is automatically locked because an earlier active assignment is not yet completed.
+   */
+  isProgressionLocked?: boolean;
 }
 
 /**
