@@ -75,6 +75,25 @@ export interface AssignmentBase {
    * Default is 3. Set to 0 to disable.
    */
   maxTabSwitches: number;
+
+  /**
+   * If true, this assignment must be fully completed before the student can access
+   * any assignments that have a later StartDateUtc (or higher ProgressionOrder).
+   */
+  enforceProgressionLock?: boolean;
+
+  /**
+   * Explicit sort order for the progression lock. Useful when multiple assignments
+   * share the exact same StartDateUtc. Lower values are evaluated first.
+   */
+  progressionOrder?: number;
+
+  /**
+   * If true, everyone in the assigned classLevelId will automatically see this exam.
+   * If false, the exam is hidden from the general class and will ONLY be visible to
+   * students explicitly assigned via StudentAssignments.
+   */
+  isForEntireClassLevel?: boolean;
 }
 
 /**

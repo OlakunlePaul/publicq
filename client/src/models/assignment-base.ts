@@ -59,6 +59,40 @@ export interface AssignmentBase {
    * Gets or sets the foreign key reference to the group containing the assessment modules.
    */
   groupId: string;
+
+  /**
+   * If true, this assignment must be fully completed before the student can access
+   * any assignments that have a later StartDateUtc (or higher ProgressionOrder).
+   */
+  enforceProgressionLock?: boolean;
+
+  /**
+   * Explicit sort order for the progression lock. Useful when multiple assignments
+   * share the exact same StartDateUtc. Lower values are evaluated first.
+   */
+  progressionOrder?: number;
+
+  /**
+   * If true, everyone in the assigned classLevelId will automatically see this exam.
+   * If false, the exam is hidden from the general class and will ONLY be visible to
+   * students explicitly assigned via StudentAssignments.
+   */
+  isForEntireClassLevel?: boolean;
+
+  /**
+   * Link to subject
+   */
+  subjectId?: string;
+
+  /**
+   * Link to class level
+   */
+  classLevelId?: string;
+
+  /**
+   * Max tab switches
+   */
+  maxTabSwitches?: number;
 }
 
 /**

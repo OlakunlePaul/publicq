@@ -41,6 +41,9 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
     subjectId: '',
     classLevelId: '',
     maxTabSwitches: 3,
+    enforceProgressionLock: true,
+    progressionOrder: 0,
+    isForEntireClassLevel: true,
   });
   const [error, setError] = useState('');
   const [groups, setGroups] = useState<Group[]>([]);
@@ -70,7 +73,10 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           groupId: assignment.groupId,
           subjectId: assignment.subjectId || '',
           classLevelId: assignment.classLevelId || '',
-          maxTabSwitches: assignment.maxTabSwitches || 3,
+          maxTabSwitches: assignment.maxTabSwitches ?? 3,
+          enforceProgressionLock: assignment.enforceProgressionLock ?? true,
+          progressionOrder: assignment.progressionOrder ?? 0,
+          isForEntireClassLevel: assignment.isForEntireClassLevel ?? true,
         });
       } else {
         // Set default dates: start date = today, end date = next week
@@ -90,6 +96,9 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           subjectId: '',
           classLevelId: '',
           maxTabSwitches: 3,
+          enforceProgressionLock: true,
+          progressionOrder: 0,
+          isForEntireClassLevel: true,
         });
       }
       setError('');
@@ -160,6 +169,9 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           groupId: assignment.groupId,
           subjectId: formData.subjectId || undefined,
           maxTabSwitches: formData.maxTabSwitches,
+          enforceProgressionLock: formData.enforceProgressionLock,
+          progressionOrder: formData.progressionOrder,
+          isForEntireClassLevel: formData.isForEntireClassLevel,
         });
       } else {
         // Create new assignment
@@ -175,6 +187,9 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           subjectId: formData.subjectId || undefined,
           classLevelId: formData.classLevelId || undefined,
           maxTabSwitches: formData.maxTabSwitches,
+          enforceProgressionLock: formData.enforceProgressionLock,
+          progressionOrder: formData.progressionOrder,
+          isForEntireClassLevel: formData.isForEntireClassLevel,
         });
       }
     }
@@ -249,27 +264,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
         </h3>
         {apiError && <p className={cssStyles.formError}>{apiError}</p>}
         <div className={cssStyles.formContainer}>
-          <div className={cssStyles.formGroup}>
-            <label className={cssStyles.formLabel}>
-              Select Class: <span style={{color: '#dc2626'}}>*</span>
-            </label>
-            <select
-              name="classLevelId"
-              value={formData.classLevelId}
-              onChange={handleInputChange}
-              className={cssStyles.formSelect}
-            >
-              <option value="">Select a class</option>
-              {classLevels.map(cl => (
-                <option key={cl.id} value={cl.id}>
-                  {cl.name} {cl.sectionOrArm ? `(${cl.sectionOrArm})` : ''}
-                </option>
-              ))}
-            </select>
-            <p className={cssStyles.formHelpText}>
-              Select the target class for this exam.
-            </p>
-          </div>
+
 
           <div className={cssStyles.formGroup}>
             <label className={cssStyles.formLabel}>
@@ -364,7 +359,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
 
           <div className={cssStyles.formGroup}>
             <label className={cssStyles.formLabel}>
-              Select Class: <span style={{color: '#dc2626'}}>*</span>
+              Select Class Level: <span style={{color: '#dc2626'}}>*</span>
             </label>
             <select
               name="classLevelId"
@@ -382,6 +377,41 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
             <p className={cssStyles.formHelpText}>
               Selecting a class first will filter the available subjects below.
             </p>
+          </div>
+
+          <div className={cssStyles.formGroup} style={{ marginLeft: '1rem', paddingLeft: '1rem', borderLeft: '2px solid #e5e7eb' }}>
+            <label className={cssStyles.formLabel}>
+              Who should take this exam? <span style={{color: '#dc2626'}}>*</span>
+            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <label className={cssStyles.formCheckboxLabel} style={{ fontWeight: 'normal' }}>
+                <input
+                  type="radio"
+                  name="isForEntireClassLevel"
+                  checked={formData.isForEntireClassLevel === true}
+                  onChange={() => setFormData(prev => ({ ...prev, isForEntireClassLevel: true }))}
+                  className={cssStyles.formCheckbox}
+                />
+                Entire Class
+              </label>
+              <p className={cssStyles.formHelpText} style={{ marginTop: '-0.25rem' }}>
+                The exam will appear automatically for everyone in the selected class. (Example: English, Mathematics)
+              </p>
+              
+              <label className={cssStyles.formCheckboxLabel} style={{ fontWeight: 'normal', marginTop: '0.5rem' }}>
+                <input
+                  type="radio"
+                  name="isForEntireClassLevel"
+                  checked={formData.isForEntireClassLevel === false}
+                  onChange={() => setFormData(prev => ({ ...prev, isForEntireClassLevel: false }))}
+                  className={cssStyles.formCheckbox}
+                />
+                Specific Students Only (e.g. Science Students)
+              </label>
+              <p className={cssStyles.formHelpText} style={{ marginTop: '-0.25rem' }}>
+                The exam is hidden from the general class. After creating, use the 'Manage Exam Takers' button to explicitly select ONLY the specific students writing this. (Example: Chemistry, Literature)
+              </p>
+            </div>
           </div>
 
           {!assignment && (
@@ -481,6 +511,49 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
               />
               Randomize answer order
             </label>
+          </div>
+
+          <div className={cssStyles.formGroup} style={{ marginTop: '1.5rem', borderTop: '1px solid #e5e7eb', paddingTop: '1.5rem' }}>
+            <label className={cssStyles.formLabel} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '1.25rem' }}>🚥</span> Exam Progression & Sequencing
+            </label>
+            
+            <label className={cssStyles.formCheckboxLabel} style={{ marginTop: '1rem' }}>
+              <input
+                type="checkbox"
+                name="enforceProgressionLock"
+                checked={formData.enforceProgressionLock}
+                onChange={handleInputChange}
+                className={cssStyles.formCheckbox}
+              />
+              <span style={{ fontWeight: 600 }}>Enforce Sequential Progression Lock</span>
+            </label>
+            <p className={cssStyles.formHelpText} style={{ marginLeft: '1.75rem', marginTop: '0.25rem' }}>
+              If checked, this exam must be taken in order. Leaving this exam incomplete will block the student from opening any future exams. If unchecked, this exam functions independently and does not block others.
+            </p>
+
+            {formData.enforceProgressionLock && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1rem', marginLeft: '1.75rem', backgroundColor: '#f9fafb', padding: '1rem', borderRadius: '0.375rem', border: '1px solid #e5e7eb' }}>
+                <div style={{ flexShrink: 0 }}>
+                  <label className={cssStyles.formLabel} style={{ fontSize: '0.875rem', color: '#1f2937', marginBottom: '0.25rem' }}>
+                    Progression Order Index
+                  </label>
+                  <input
+                    type="number"
+                    name="progressionOrder"
+                    value={formData.progressionOrder}
+                    onChange={handleInputChange}
+                    className={cssStyles.formInput}
+                    min="0"
+                    max="1000"
+                    style={{ width: '80px', textAlign: 'center' }}
+                  />
+                </div>
+                <p className={cssStyles.formHelpText} style={{ margin: 0, fontSize: '0.8125rem' }}>
+                  If multiple exams share the exact same Start Time, use this number to define the explicit sequence they must be taken in (e.g. 1, 2, 3). Lower numbers are evaluated first.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className={cssStyles.formGroup} style={{ marginTop: '1rem', borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}>

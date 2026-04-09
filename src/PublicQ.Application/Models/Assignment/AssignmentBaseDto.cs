@@ -97,6 +97,25 @@ public abstract class AssignmentBaseDto
     public int MaxTabSwitches { get; set; } = 3;
 
     /// <summary>
+    /// If true, this assignment must be fully completed before the student can access
+    /// any assignments that have a later StartDateUtc (or higher ProgressionOrder).
+    /// </summary>
+    public bool EnforceProgressionLock { get; set; } = true;
+
+    /// <summary>
+    /// Explicit sort order for the progression lock. Useful when multiple assignments
+    /// share the exact same StartDateUtc. Lower values are evaluated first.
+    /// </summary>
+    public int ProgressionOrder { get; set; } = 0;
+
+    /// <summary>
+    /// If true, everyone in the assigned ClassLevelId will automatically see this exam.
+    /// If false, the exam is hidden from the general class and will ONLY be visible to
+    /// students explicitly assigned via StudentAssignments.
+    /// </summary>
+    public bool IsForEntireClassLevel { get; set; } = true;
+
+    /// <summary>
     /// Gets the server's current UTC time.
     /// Used by clients to make date comparisons without relying on potentially manipulated local clocks.
     /// </summary>

@@ -647,7 +647,7 @@ public class AssignmentService(
             .AsNoTracking()
             .Where(a => a.IsPublished
                         && (a.StudentAssignments.Any(sa => sa.StudentId == resolvedId)
-                            || (studentClassId != null && a.ClassLevelId == studentClassId)));
+                            || (studentClassId != null && a.IsForEntireClassLevel && a.ClassLevelId == studentClassId)));
         
         var totalCount = await query.LongCountAsync(cancellationToken);
         
@@ -666,6 +666,7 @@ public class AssignmentService(
             .Include(a => a.StudentAssignments.Where(sa => sa.StudentId == resolvedId))
                 .ThenInclude(sa => sa.ModuleProgress)
             .OrderBy(a => a.StartDateUtc)
+                .ThenBy(a => a.ProgressionOrder)
             .ToListAsync(cancellationToken);
 
         var now = DateTime.UtcNow;
@@ -696,17 +697,16 @@ public class AssignmentService(
 
             // 2. Calculate Automatic Progression Lock
             // An assignment is locked if:
-            // - It has not been completed yet
-            // - There exists an EARLIER assignment that has started but is NOT yet completed.
+            // - It enforces progression lock
+            // - There exists an EARLIER assignment (that also enforces progression lock) that has started but is NOT yet completed.
             
             // We only block based on assignments that have already "Started" (StartDateUtc <= now).
-            // Future assignments are "Scheduled" and locked by time anyway in the UI, 
-            // but for logical consistency we follow the sequence.
+            // Future assignments are "Scheduled" and locked by time anyway in the UI.
             
-            dto.IsProgressionLocked = previousActiveIncompleteFound;
+            dto.IsProgressionLocked = previousActiveIncompleteFound && a.EnforceProgressionLock;
 
-            // If this assignment has started and is not completed, it blocks all subsequent ones.
-            if (a.StartDateUtc <= now && !isCompleted)
+            // If this assignment enforces a lock, has started, and is not completed, it blocks all subsequent assignments that enforce locks.
+            if (a.StartDateUtc <= now && !isCompleted && a.EnforceProgressionLock)
             {
                 previousActiveIncompleteFound = true;
             }
