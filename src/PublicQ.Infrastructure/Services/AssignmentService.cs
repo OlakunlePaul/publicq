@@ -220,6 +220,9 @@ public class AssignmentService(
         assignmentToUpdate.SubjectId = updateDto.SubjectId;
         assignmentToUpdate.ClassLevelId = updateDto.ClassLevelId;
         assignmentToUpdate.MaxTabSwitches = updateDto.MaxTabSwitches;
+        assignmentToUpdate.EnforceProgressionLock = updateDto.EnforceProgressionLock;
+        assignmentToUpdate.ProgressionOrder = updateDto.ProgressionOrder;
+        assignmentToUpdate.IsForEntireClassLevel = updateDto.IsForEntireClassLevel;
         assignmentToUpdate.UpdatedAtUtc = DateTime.UtcNow;
         assignmentToUpdate.UpdatedByUser = updatedByUser;
 
