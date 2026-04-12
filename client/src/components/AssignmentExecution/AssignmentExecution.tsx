@@ -368,12 +368,14 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
       battery = batt;
       updateBatteryInfo();
       
-      battery.addEventListener('levelchange', updateBatteryInfo);
-      battery.addEventListener('chargingchange', updateBatteryInfo);
-    });
+      if (battery && typeof battery.addEventListener === 'function') {
+        battery.addEventListener('levelchange', updateBatteryInfo);
+        battery.addEventListener('chargingchange', updateBatteryInfo);
+      }
+    }).catch((e: any) => console.log('Battery API error or not supported:', e));
 
     return () => {
-      if (battery) {
+      if (battery && typeof battery.removeEventListener === 'function') {
         battery.removeEventListener('levelchange', updateBatteryInfo);
         battery.removeEventListener('chargingchange', updateBatteryInfo);
       }
