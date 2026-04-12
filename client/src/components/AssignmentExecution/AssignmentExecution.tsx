@@ -1457,6 +1457,7 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
                 </div>
               )})}
           </div>
+        ) : null}
         {groupMemberStates && groupMemberStates.length > 0 && groupMemberStates.every(m => convertToEnum(m.status) === ModuleStatus.Completed || convertToEnum(m.status) === ModuleStatus.TimeElapsed) && (
           <div style={styles.completionSummary} className="assignment-execution-completion-summary">
             <div style={styles.completionIcon}>🏁</div>
