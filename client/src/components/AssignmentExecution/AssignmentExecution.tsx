@@ -348,6 +348,7 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
 
       // Trigger warning if battery < 20% and NOT charging
       if (level < 0.20 && !charging) {
+        console.log('Low battery detected', { charging });
         if (!showBatteryWarning) {
           setShowBatteryWarning(true);
           // Play a subtle ping sound

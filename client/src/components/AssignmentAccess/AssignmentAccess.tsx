@@ -26,6 +26,8 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
   const [error, setError] = useState('');
   const [userIdError, setUserIdError] = useState('');
 
+  const [activeTab, setActiveTab] = useState<'hall' | 'archive'>('hall');
+
   // Determine mode based on props
   const mode = currentUser ? 'authenticated' : 'guest';
 
@@ -117,25 +119,34 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
 
   const getStatusBadge = (assignment: Assignment) => {
     const status = getAssignmentStatus(assignment);
+    const isCompleted = assignment.isCompleted;
+
+    if (isCompleted) return { text: 'Completed', className: `${styles.badge} ${styles.completedBadge}` };
+    
     switch (status) {
       case 'active':
-        return { text: 'Active Now', className: styles.activeBadge };
+        return { text: 'Active Now', className: `${styles.badge} ${styles.activeBadge}` };
       case 'scheduled':
-        return { text: 'Scheduled', className: styles.scheduledBadge };
+        return { text: 'Scheduled', className: `${styles.badge} ${styles.scheduledBadge}` };
       case 'ended':
-        return { text: 'Exam Ended', className: styles.endedBadge };
+        return { text: 'Exam Ended', className: `${styles.badge} ${styles.endedBadge}` };
       default:
-        return { text: 'Unknown', className: styles.endedBadge };
+        return { text: 'Unknown', className: `${styles.badge} ${styles.endedBadge}` };
     }
   };
+
+  // Filter assignments
+  const activeAssignments = assignments.filter(a => !a.isCompleted && getAssignmentStatus(a) !== 'ended');
+  const archivedAssignments = assignments.filter(a => a.isCompleted || getAssignmentStatus(a) === 'ended');
+  const displayAssignments = activeTab === 'hall' ? activeAssignments : archivedAssignments;
 
   return (
     <div className={styles.container}>
       {mode === 'guest' && !examTakerInfo ? (
         <div className={styles.guestAccess}>
-          <h2 className={styles.title}>Access Your Subject Exams</h2>
+          <h2 className={styles.title}>Access Your Exams</h2>
           <p className={styles.introText}>
-            Select your preferred method to access your exams today.
+            Enter your student ID to enter the exam hall and view your scheduled papers.
           </p>
           
           <div className={styles.accessOptions}>
@@ -143,16 +154,16 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
             <div className={styles.examTakerSection}>
               <div className={styles.optionHeader}>
                 <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="" style={{width: '32px', height: '32px'}} />
-                <h3 className={styles.sectionTitle}>Quick Access with Student ID</h3>
+                <h3 className={styles.sectionTitle}>Quick Entry</h3>
               </div>
               <p className={styles.sectionDescription}>
-                <strong>For students:</strong> Enter your unique student ID to quickly access your exams without needing a username or password.
+                Enter your unique student ID to quickly access your assigned sessions.
               </p>
               
               <div className={styles.inputGroup}>
                 <input
                   type="text"
-                  placeholder="Enter your student ID"
+                  placeholder="Student ID (e.g. PQ-2024-001)"
                   value={examTakerId}
                   onChange={(e) => {
                     setExamTakerId(e.target.value.toUpperCase());
@@ -166,7 +177,7 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
                   className={styles.accessButton}
                   disabled={loading}
                 >
-                  {loading ? 'Checking...' : 'Access My Exams'}
+                  {loading ? 'Verifying...' : 'Enter Exam Hall'}
                 </button>
               </div>
               
@@ -180,16 +191,16 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
               <div className={styles.loginSection}>
                 <div className={styles.optionHeader}>
                   <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="" style={{width: '32px', height: '32px'}} />
-                  <h3 className={styles.sectionTitle}>Full Account Access</h3>
+                  <h3 className={styles.sectionTitle}>Login</h3>
                 </div>
                 <p className={styles.sectionDescription}>
-                  <strong>Have username and password?</strong> Log in to your account for full access to exams, progress tracking, and additional features.
+                  Have an account password? Log in for unified access to all features.
                 </p>
                 <button 
                   onClick={onLoginRequest}
                   className={styles.loginButton}
                 >
-                  Login to Your Account
+                  Log in to Account
                 </button>
               </div>
             )}
@@ -201,18 +212,18 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
             <img src="https://cdn-icons-png.flaticon.com/512/9371/9371842.png" alt="" style={{width: '48px', height: '48px'}} />
             <div className={styles.welcomeContent}>
               <h2 className={styles.welcomeTitle}>
-                Welcome back{`${examTakerInfo.fullName ? `, ${examTakerInfo.fullName}` : ''}`}
+                Hi, {examTakerInfo.fullName || 'Student'}
               </h2>
-              {examTakerInfo.email && (
-                <p className={styles.examTakerEmail}>{examTakerInfo.email}</p>
-              )}
+              <p className={styles.examTakerEmail}>
+                {examTakerInfo.admissionNumber || examTakerInfo.id || 'Ready for assignments?'}
+              </p>
             </div>
             {mode === 'guest' && (
               <button 
                 onClick={clearExamTakerData}
                 className={styles.switchUserButton}
               >
-                Switch User
+                Sign Out
               </button>
             )}
           </div>
@@ -220,136 +231,122 @@ const AssignmentAccess: React.FC<AssignmentAccessProps> = ({
       ) : mode === 'authenticated' ? (
         <div className={styles.authenticatedAccess}>
           <h2 className={styles.title}>
-            Your Exam Hall
+            Exam Hall
           </h2>
         </div>
       ) : null}
 
-      {/* Assignment List Header */}
-      {(mode === 'authenticated' || examTakerInfo) && (assignments.length > 0 || loading) && (
-        <>
-          {!loading && (
-            <div className={styles.demoInfoBox}>
-              <div className={styles.demoInfoHeader}>
-                <img src="https://cdn-icons-png.flaticon.com/512/1067/1067555.png" alt="" className={styles.demoInfoIcon} />
-                <h3 className={styles.demoInfoTitle}>New to the platform?</h3>
-              </div>
-              <p className={styles.demoInfoText}>
-                Before launching a module, you can use <strong>Demo Mode</strong> to familiarize yourself with the exam experience. 
-                Try it out to understand how questions work, navigation, and submission process.
-              </p>
-              <a href="/demo" className={styles.demoInfoLink}>
-                Try Demo Mode →
-              </a>
-            </div>
-          )}
-          <h3 className={styles.assignmentsHeader}>Your Available Exams</h3>
-        </>
-      )}
-
-      {/* Assignment List */}
+      {/* Main Content Area */}
       {(mode === 'authenticated' || (mode === 'guest' && examTakerInfo)) && (
-        <div className={styles.assignmentList}>
-          {loading ? (
-            <div className={styles.skeletonGrid}>
-              {[1, 2, 3].map(i => (
-                <div key={i} className={styles.skeletonCard}></div>
-              ))}
-            </div>
-          ) : error ? (
-            <div className={styles.errorContainer}>
-              <p className={styles.errorText}>{error}</p>
-            </div>
-          ) : assignments.length === 0 ? (
-            <div className={styles.emptyContainer}>
-              <p className={styles.emptyMessage}>No exams available at this time.</p>
-            </div>
-          ) : (
-            <div className={styles.cardsGrid}>
-              {assignments.map(assignment => {
-                const statusBadge = getStatusBadge(assignment);
-                const status = getAssignmentStatus(assignment);
-                
-                // If it's progression locked, it's NOT accessible.
-                // If it's completed, it's accessible (to view results/summary) if it's not a draft and (active or ended).
-                const isLocked = assignment.isProgressionLocked;
-                const isCompleted = assignment.isCompleted;
-                const isAccessible = assignment.isPublished && (status === 'active' || status === 'ended') && !isLocked;
-                
-                return (
-                  <div 
-                    key={assignment.id} 
-                    className={`${styles.assignmentCard} ${isLocked ? styles.lockedCard : ''}`} 
-                    onClick={() => isAccessible && onAssignmentOpen && onAssignmentOpen(assignment)}
-                  >
-                    <div className={styles.assignmentHeader}>
-                      <h4 className={styles.assignmentTitle}>{assignment.title}</h4>
-                      <div className={styles.badgeContainer}>
-                        {!assignment.isPublished && (
-                          <span className={styles.draftBadge}>Draft</span>
-                        )}
-                        {assignment.isPublished && (
-                          <>
-                            {isLocked ? (
-                              <span className={styles.lockedBadge}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                                Locked
-                              </span>
-                            ) : isCompleted ? (
-                              <span className={styles.completedBadge}>Completed</span>
-                            ) : (
-                              <span className={statusBadge.className}>{statusBadge.text}</span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <p 
-                      className={styles.assignmentDescription}
-                      title={assignment.description || 'No description available'}
+        <>
+          {/* Tab Navigation */}
+          <div className={styles.tabNav}>
+            <button 
+              className={`${styles.tabButton} ${activeTab === 'hall' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('hall')}
+            >
+              Active Hall
+              <span className={styles.tabCount}>{activeAssignments.length}</span>
+            </button>
+            <button 
+              className={`${styles.tabButton} ${activeTab === 'archive' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('archive')}
+            >
+              Archive
+              <span className={styles.tabCount}>{archivedAssignments.length}</span>
+            </button>
+          </div>
+
+          <div className={styles.assignmentList}>
+            {loading ? (
+              <div className={styles.skeletonGrid}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} className={styles.skeletonCard}></div>
+                ))}
+              </div>
+            ) : error ? (
+              <div className={styles.errorContainer}>
+                <p className={styles.errorText}>{error}</p>
+              </div>
+            ) : displayAssignments.length === 0 ? (
+              <div className={styles.emptyContainer}>
+                <div className={styles.emptyIcon}>📭</div>
+                <p className={styles.emptyMessage}>
+                  {activeTab === 'hall' 
+                    ? 'No active exams scheduled right now.' 
+                    : 'Your exam history is currently empty.'}
+                </p>
+              </div>
+            ) : (
+              <div className={styles.cardsGrid}>
+                {displayAssignments.map(assignment => {
+                  const statusBadge = getStatusBadge(assignment);
+                  const status = getAssignmentStatus(assignment);
+                  const isLocked = assignment.isProgressionLocked;
+                  const isCompleted = assignment.isCompleted;
+                  const isAccessible = assignment.isPublished && (status === 'active' || status === 'ended') && !isLocked;
+                  
+                  return (
+                    <div 
+                      key={assignment.id} 
+                      className={`${styles.assignmentCard} ${isLocked ? styles.lockedCard : ''}`} 
+                      onClick={() => isAccessible && onAssignmentOpen && onAssignmentOpen(assignment)}
                     >
-                      {assignment.description 
-                        ? assignment.description.length > 120 
-                          ? `${assignment.description.substring(0, 120)}...` 
-                          : assignment.description
-                        : 'No description available'
-                      }
-                    </p>
-                    <div className={styles.assignmentMeta}>
-                      <div className={styles.dateInfo}>
-                        <span className={styles.metaLabel}>Start:</span>
-                        <span>{formatDateToLocal(assignment.startDateUtc)}</span>
+                      <div className={styles.assignmentHeader}>
+                        <h4 className={styles.assignmentTitle}>{assignment.title}</h4>
+                        <div className={styles.badgeContainer}>
+                          {isLocked ? (
+                            <span className={`${styles.badge} ${styles.lockedBadge}`}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                              Locked
+                            </span>
+                          ) : (
+                            <span className={statusBadge.className}>{statusBadge.text}</span>
+                          )}
+                        </div>
                       </div>
+                      
+                      <p className={styles.assignmentDescription}>
+                        {assignment.description || 'Access your exam module and follow the instructions carefully.'}
+                      </p>
+                      
+                      <div className={styles.assignmentMeta}>
+                        <div className={styles.dateInfo}>
+                          <span className={styles.metaLabel}>Scheduled:</span>
+                          <span>{formatDateToLocal(assignment.startDateUtc)}</span>
+                        </div>
+                      </div>
+                      
+                      {isLocked ? (
+                        <button className={styles.disabledButton} disabled>
+                           Complete Previous First
+                        </button>
+                      ) : isAccessible ? (
+                        <button 
+                          className={styles.startButton}
+                          onClick={(e) => {
+                             e.stopPropagation();
+                             onAssignmentOpen && onAssignmentOpen(assignment);
+                          }}
+                        >
+                          {status === 'ended' || isCompleted ? 'View Results' : 'Launch Exam'}
+                        </button>
+                      ) : (assignment.isPublished && status === 'scheduled') ? (
+                        <button className={styles.disabledButton} disabled>
+                          Available Soon
+                        </button>
+                      ) : null}
                     </div>
-                    
-                    {isLocked ? (
-                      <button className={styles.disabledButton} disabled>
-                        Unlock after previous exam
-                      </button>
-                    ) : isAccessible ? (
-                      <button 
-                        className={styles.startButton}
-                        onClick={(e) => {
-                           e.stopPropagation();
-                           onAssignmentOpen && onAssignmentOpen(assignment);
-                        }}
-                      >
-                        {status === 'ended' || isCompleted ? 'View Results' : 'Open Exam'}
-                      </button>
-                    ) : (assignment.isPublished && status === 'scheduled') ? (
-                      <button className={styles.disabledButton} disabled>
-                        Not Yet Available
-                      </button>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
 };
 
 export default AssignmentAccess;
+

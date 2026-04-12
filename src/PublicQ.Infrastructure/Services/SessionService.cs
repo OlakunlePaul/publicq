@@ -867,10 +867,8 @@ public class SessionService(
                 .ThenInclude(sa => sa.Assignment)
             .Include(mp => mp.GroupMember)
             .Where(mp => mp.StudentId == studentId &&
-                         mp.StudentAssignment.Assignment.SessionId == sessionId &&
-                         mp.StudentAssignment.Assignment.TermId == termId &&
                          mp.StudentAssignment.Assignment.ClassLevelId == classLevelId &&
-                         mp.GroupMember.SubjectId == subjectId)
+                         mp.GroupMember.AssessmentModule.SubjectId == subjectId)
             .OrderByDescending(mp => mp.StartedAtUtc)
             .Select(mp => mp.Id)
             .FirstOrDefaultAsync(cancellationToken);
@@ -901,10 +899,8 @@ public class SessionService(
             .Include(mp => mp.StudentAssignment)
                 .ThenInclude(sa => sa.Assignment)
             .Include(mp => mp.GroupMember)
-            .Where(mp => mp.StudentAssignment.Assignment.SessionId == sessionId &&
-                         mp.StudentAssignment.Assignment.TermId == termId &&
-                         mp.StudentAssignment.Assignment.ClassLevelId == classLevelId &&
-                         mp.GroupMember.SubjectId == subjectId &&
+            .Where(mp => mp.StudentAssignment.Assignment.ClassLevelId == classLevelId &&
+                         mp.GroupMember.AssessmentModule.SubjectId == subjectId &&
                          mp.HasStarted)
             .ToListAsync(cancellationToken);
 

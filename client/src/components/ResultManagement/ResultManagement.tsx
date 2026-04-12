@@ -456,7 +456,7 @@ const ResultManagement: React.FC = () => {
     try {
       // Fetch current group member states for this student to find InProgress/Completed/TimeElapsed modules
       // This is necessary because we need the ModuleProgress.Id to call extendTime
-      const memberStates = await sessionService.getGroupMemberStates(studentId, '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000');
+      await sessionService.getGroupMemberStates(studentId, '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000');
       // Wait, we need the actual assignment context.
       // Refined strategy: The backend ExtendTimeAsync takes userProgressId (Guid).
       // We need to fetch the progress record for the student's active assignment.
