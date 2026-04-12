@@ -769,18 +769,43 @@ public class AssignmentService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var maxAllowed = studentAssignment.Assignment.MaxTabSwitches;
+        
+        // Log the tab switch
+        await dbContext.LogEntries.AddAsync(new LogEntryEntity
+        {
+            Timestamp = DateTime.UtcNow,
+            Level = "Warning",
+            Category = "Proctoring",
+            Message = $"[PROCTORING] Student {studentId} switched tabs in Assignment {assignmentId}. Count: {studentAssignment.TabSwitchCount}/{maxAllowed}",
+            UserId = studentId,
+            RequestId = Guid.NewGuid().ToString()
+        }, cancellationToken);
+
         if (maxAllowed > 0 && studentAssignment.TabSwitchCount >= maxAllowed)
         {
             logger.LogWarning("Locking student {StudentId} for assignment {AssignmentId}. Tab switches: {Count}/{Max}",
                 studentId, studentAssignment.TabSwitchCount, maxAllowed, assignmentId);
             
             studentAssignment.IsLocked = true;
+            
+            // Log the lock event
+            await dbContext.LogEntries.AddAsync(new LogEntryEntity
+            {
+                Timestamp = DateTime.UtcNow,
+                Level = "Critical",
+                Category = "Proctoring",
+                Message = $"[PROCTORING] Student {studentId} SESSION LOCKED in Assignment {assignmentId} due to exceeding tab switch limit ({maxAllowed}).",
+                UserId = studentId,
+                RequestId = Guid.NewGuid().ToString()
+            }, cancellationToken);
+
             await dbContext.SaveChangesAsync(cancellationToken);
 
             return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.Conflict, 
                 $"LOCKED: Tab switch limit exceeded ({studentAssignment.TabSwitchCount}/{maxAllowed}). Exam has been locked.");
         }
 
+        await dbContext.SaveChangesAsync(cancellationToken);
         return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Tab switch recorded.");
     }
 
@@ -804,6 +829,19 @@ public class AssignmentService(
         studentAssignment.TabSwitchCount = 0;
         studentAssignment.IsLocked = false;
         studentAssignment.LastTabSwitchAtUtc = null;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Log the unlock event
+        await dbContext.LogEntries.AddAsync(new LogEntryEntity
+        {
+            Timestamp = DateTime.UtcNow,
+            Level = "Information",
+            Category = "Proctoring",
+            Message = $"[PROCTORING] Student {studentId} session UNLOCKED by Administrator for Assignment {assignmentId}.",
+            UserId = studentId,
+            RequestId = Guid.NewGuid().ToString()
+        }, cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

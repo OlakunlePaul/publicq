@@ -1457,10 +1457,24 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
                 </div>
               )})}
           </div>
-        ) : (
-          <div style={styles.emptyModules}>
-            <p style={styles.emptyText}>No modules found in this exam.</p>
-            <p style={styles.emptyText}>Debug: Group member states length = {groupMemberStates?.length || 'undefined'}</p>
+        {groupMemberStates && groupMemberStates.length > 0 && groupMemberStates.every(m => convertToEnum(m.status) === ModuleStatus.Completed || convertToEnum(m.status) === ModuleStatus.TimeElapsed) && (
+          <div style={styles.completionSummary} className="assignment-execution-completion-summary">
+            <div style={styles.completionIcon}>🏁</div>
+            <h2 style={styles.completionTitle}>Exam Completed</h2>
+            <p style={styles.completionText}>
+              You have finished all modules for this exam. 
+              {assignment.showResultsImmediately 
+                ? "Your results are displayed below for each module." 
+                : "Your results will be processed by your instructor."}
+            </p>
+            <div style={styles.completionStats}>
+              <div style={styles.completionStatItem}>
+                <span style={styles.completionStatLabel}>Completion Date:</span>
+                <span style={styles.completionStatValue}>
+                  {new Date().toLocaleDateString()}
+                </span>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -1649,6 +1663,58 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
 };
 
 const styles: Record<string, React.CSSProperties> = {
+  completionSummary: {
+    textAlign: 'center',
+    padding: '40px 20px',
+    backgroundColor: '#f0fdf4',
+    borderRadius: '16px',
+    border: '1px solid #bbf7d0',
+    marginTop: '32px',
+    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.05)',
+  },
+  completionIcon: {
+    fontSize: '64px',
+    marginBottom: '16px',
+  },
+  completionTitle: {
+    fontSize: '28px',
+    fontWeight: '800',
+    color: '#166534',
+    marginBottom: '12px',
+  },
+  completionText: {
+    fontSize: '18px',
+    color: '#15803d',
+    marginBottom: '24px',
+    lineHeight: '1.6',
+    maxWidth: '600px',
+    margin: '0 auto 24px auto',
+  },
+  completionStats: {
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    padding: '20px',
+    borderRadius: '12px',
+    display: 'inline-flex',
+    flexDirection: 'column',
+    gap: '12px',
+    minWidth: '280px',
+  },
+  completionStatItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '24px',
+  },
+  completionStatLabel: {
+    color: '#64748b',
+    fontSize: '14px',
+    fontWeight: '500',
+  },
+  completionStatValue: {
+    color: '#1e293b',
+    fontSize: '16px',
+    fontWeight: '700',
+  },
   container: {
     maxWidth: '1000px',
     margin: '0 auto',
