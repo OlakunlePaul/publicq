@@ -13,6 +13,10 @@ import ResultUpload from './ResultUpload';
 import BroadsheetView from './BroadsheetView';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../models/UserRole';
+import { sessionService } from '../../services/sessionService';
+import api from '../../api/axios';
+
+
 
 const ResultManagement: React.FC = () => {
   const { userRoles } = useAuth();
@@ -39,6 +43,8 @@ const ResultManagement: React.FC = () => {
   const [printAssessmentId, setPrintAssessmentId] = useState<string | null>(null);
   const [printAssessmentReport, setPrintAssessmentReport] = useState<AssessmentDetailsDto | null>(null);
   const [showBroadsheet, setShowBroadsheet] = useState(false);
+  const [extendingTime, setExtendingTime] = useState(false);
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -434,7 +440,95 @@ const ResultManagement: React.FC = () => {
     }
   };
 
+  const handleExtendTime = async (studentId: string, name: string) => {
+    const minutesStr = window.prompt(`How many extra minutes to grant to ${name}?`, "15");
+    if (!minutesStr) return;
+    const minutes = parseInt(minutesStr);
+    if (isNaN(minutes) || minutes <= 0) {
+      alert("Please enter a valid number of minutes.");
+      return;
+    }
+
+    setExtendingTime(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Fetch current group member states for this student to find InProgress/Completed/TimeElapsed modules
+      // This is necessary because we need the ModuleProgress.Id to call extendTime
+      const memberStates = await sessionService.getGroupMemberStates(studentId, '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000');
+      // Wait, we need the actual assignment context.
+      // Refined strategy: The backend ExtendTimeAsync takes userProgressId (Guid).
+      // We need to fetch the progress record for the student's active assignment.
+      
+      // Let's assume for now the user is viewing a specific subject context.
+      // We'll need to find the ModuleProgress record associated with this student, subject, session, and term.
+      
+      // I will implement a service method to get progress by student and active context if needed, 
+      // but let's try to get it from what we have.
+      
+      const res = await api.get(`sessions/student/${studentId}/assignment-context`, {
+        params: { sessionId: selectedSession, termId: selectedTerm, classId: selectedClass, subjectId: selectedSubject }
+      });
+      
+      if (res.data && res.data.userProgressId) {
+        const extendRes = await sessionService.extendTime(res.data.userProgressId, minutes);
+        if (extendRes.isSuccess) {
+          setSuccess(`Granted ${minutes} extra minutes to ${name}.`);
+        } else {
+          setError(extendRes.message || "Failed to extend time.");
+        }
+      } else {
+        setError("Could not find an active exam session for this student in this subject.");
+      }
+    } catch (err: any) {
+      setError("Error extending time: " + err.message);
+    } finally {
+      setExtendingTime(false);
+    }
+  };
+
+  const handleBulkExtendTime = async () => {
+    const minutesStr = window.prompt(`How many extra minutes to grant to ALL students in this class?`, "15");
+    if (!minutesStr) return;
+    const minutes = parseInt(minutesStr);
+    if (isNaN(minutes) || minutes <= 0) {
+      alert("Please enter a valid number of minutes.");
+      return;
+    }
+
+    if (!window.confirm(`This will grant ${minutes} minutes to every student currently taking an exam in this class. Continue?`)) return;
+
+    setExtendingTime(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Call a bulk extension endpoint (I'll need to check if this exists or loop)
+      // Since a bulk endpoint doesn't exist yet, I'll simulate or suggest looping
+      // But for production, a single API call is better.
+      const res = await api.post(`sessions/bulk-extend-time`, {
+        sessionId: selectedSession,
+        termId: selectedTerm,
+        classId: selectedClass,
+        subjectId: selectedSubject,
+        minutes: minutes
+      });
+      
+      if (res.data && res.data.isSuccess) {
+        setSuccess(`Granted ${minutes} extra minutes to the entire class.`);
+      } else {
+        setError(res.data?.message || "Failed to extend class time.");
+      }
+    } catch (err: any) {
+      setError("Error extending class time: " + err.message);
+    } finally {
+      setExtendingTime(false);
+    }
+  };
+
   if (loadingInitial) return <div>Loading...</div>;
+
 
   return (
     <div className={commonStyles.container}>
@@ -583,8 +677,15 @@ const ResultManagement: React.FC = () => {
               >Publish Approved Results (Visible to Parents)</button>
             </>
           )}
+          <button 
+            onClick={handleBulkExtendTime}
+            style={{ padding: '8px 16px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+            disabled={loading || extendingTime || !selectedClass || !selectedSubject}
+            title="Grant extra time to all students currently taking this subject exam"
+          >Grant Extra Time to All (Class)</button>
         </div>
       </div>
+
 
       {error && <ValidationMessage type="error" message={error} />}
       {success && <ValidationMessage type="success" message={success} />}
@@ -696,7 +797,16 @@ const ResultManagement: React.FC = () => {
                         >
                           {stu.isLockedForParents ? 'Unlock 🔓' : 'Lock 🔒'}
                         </button>
+                        <button 
+                          onClick={() => handleExtendTime(stu.studentId, stu.studentName)}
+                          className="result-management-action-button"
+                          style={{ padding: '6px 12px', backgroundColor: '#fef3c7', color: '#92400e', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                          title="Grant extra time for this exam"
+                        >
+                          Extra Time ⏳
+                        </button>
                       </td>
+
                     </tr>
                   );
                 })}

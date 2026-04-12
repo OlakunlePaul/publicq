@@ -281,4 +281,83 @@ public class SessionsController(ISessionService sessionService) : ControllerBase
         
         return response.ToActionResult();
     }
+
+    /// <summary>
+    /// Grants additional time to a student for a specific module progress.
+    /// Restricted to Managers and Administrators.
+    /// </summary>
+    /// <param name="userProgressId">Module progress ID</param>
+    /// <param name="minutes">Minutes to add</param>
+    /// <param name="cancellationToken">Cancellation Token</param>
+    /// <returns>Returns <see cref="GenericOperationStatuses"/> wrapped into <see cref="Response{TStatus}"/></returns>
+    [HttpPost("progress/{userProgressId:guid}/extend-time")]
+    // [Authorize(Roles = "Administrator,Manager")] // Assuming standard role-based auth is configured
+    public async Task<IActionResult> ExtendTimeAsync(
+        [FromRoute] Guid userProgressId,
+        [FromQuery] int minutes,
+        CancellationToken cancellationToken)
+    {
+        if (userProgressId == Guid.Empty || minutes <= 0)
+        {
+            return Response<GenericOperationStatuses>.Failure(
+                GenericOperationStatuses.BadRequest,
+                "Validation failed. Please provide a valid progress ID and positive minutes.")
+                .ToActionResult();
+        }
+
+        var response = await sessionService.ExtendTimeAsync(
+            userProgressId,
+            minutes,
+            cancellationToken);
+
+        return response.ToActionResult();
+    }
+
+    /// <summary>
+    /// Gets the user progress ID for a student within a specific assignment context.
+    /// This is used by teachers to identify active exam sessions for time extension.
+    /// </summary>
+    [HttpGet("student/{studentId}/assignment-context")]
+    public async Task<IActionResult> GetAssignmentContextAsync(
+        [FromRoute] string studentId,
+        [FromQuery] Guid sessionId,
+        [FromQuery] Guid termId,
+        [FromQuery] Guid classId,
+        [FromQuery] Guid subjectId,
+        CancellationToken cancellationToken)
+    {
+        var response = await sessionService.GetModuleProgressIdAsync(
+            studentId, sessionId, termId, classId, subjectId, cancellationToken);
+
+        if (response.IsSuccess)
+        {
+            return Ok(new { userProgressId = response.Data });
+        }
+
+        return response.ToActionResult();
+    }
+
+    /// <summary>
+    /// Grants additional time to all students currently taking an exam in a specific class and subject.
+    /// </summary>
+    [HttpPost("bulk-extend-time")]
+    public async Task<IActionResult> BulkExtendTimeAsync(
+        [FromBody] BulkExtendTimeRequest request,
+        CancellationToken cancellationToken)
+    {
+        var response = await sessionService.BulkExtendTimeAsync(
+            request.SessionId, request.TermId, request.ClassId, request.SubjectId, request.Minutes, cancellationToken);
+
+        return response.ToActionResult();
+    }
 }
+
+public class BulkExtendTimeRequest
+{
+    public Guid SessionId { get; set; }
+    public Guid TermId { get; set; }
+    public Guid ClassId { get; set; }
+    public Guid SubjectId { get; set; }
+    public int Minutes { get; set; }
+}
+

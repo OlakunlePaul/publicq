@@ -68,6 +68,10 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [maxTabSwitches, setMaxTabSwitches] = useState(0);
   const [showTabWarning, setShowTabWarning] = useState(false);
+  const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
+  const [isCharging, setIsCharging] = useState<boolean | null>(null);
+  const [showBatteryWarning, setShowBatteryWarning] = useState(false);
+
 
   const convertToEnum = useCallback((status: ModuleStatus | string): ModuleStatus => {
     return typeof status === 'string' 
@@ -326,6 +330,55 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [groupMemberStates, getModuleTimeInfo, loadAssignmentData, assignment, user]);
+  
+  // Battery Monitoring Effect
+  useEffect(() => {
+    if (!('getBattery' in navigator)) return;
+
+    let battery: any = null;
+
+    const updateBatteryInfo = () => {
+      if (!battery) return;
+      
+      const level = battery.level;
+      const charging = battery.charging;
+      
+      setBatteryLevel(level);
+      setIsCharging(charging);
+
+      // Trigger warning if battery < 20% and NOT charging
+      if (level < 0.20 && !charging) {
+        if (!showBatteryWarning) {
+          setShowBatteryWarning(true);
+          // Play a subtle ping sound
+          try {
+            const audio = new Audio('/audio/alert-ping.mp3');
+            audio.play().catch(e => console.log('Audio play failed:', e));
+          } catch (e) {
+            console.log('Audio init failed:', e);
+          }
+        }
+      } else {
+        setShowBatteryWarning(false);
+      }
+    };
+
+    (navigator as any).getBattery().then((batt: any) => {
+      battery = batt;
+      updateBatteryInfo();
+      
+      battery.addEventListener('levelchange', updateBatteryInfo);
+      battery.addEventListener('chargingchange', updateBatteryInfo);
+    });
+
+    return () => {
+      if (battery) {
+        battery.removeEventListener('levelchange', updateBatteryInfo);
+        battery.removeEventListener('chargingchange', updateBatteryInfo);
+      }
+    };
+  }, [showBatteryWarning]);
+
 
   useEffect(() => {
     loadAssignmentData();
@@ -986,6 +1039,20 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
         </div>
       )}
 
+      {/* Battery Warning */}
+      {showBatteryWarning && (
+        <div style={styles.batteryWarning}>
+          <div style={styles.batteryWarningIcon}>🪫</div>
+          <div style={styles.antiCheatWarningContent}>
+            <div style={styles.antiCheatWarningTitle}>Low Battery Warning</div>
+            <div style={styles.antiCheatWarningText}>
+              Your battery is at {Math.round((batteryLevel || 0) * 100)}%. Please plug in your device to avoid losing your exam progress.
+            </div>
+          </div>
+        </div>
+      )}
+
+
       <style>
         {`
           @keyframes shake {
@@ -999,6 +1066,13 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
             25% { transform: translateX(calc(-50% - 3px)); }
             75% { transform: translateX(calc(-50% + 3px)); }
           }
+
+          @keyframes pulseBattery {
+            0% { transform: scale(1); box-shadow: 0 10px 15px -3px rgba(244, 63, 94, 0.1); }
+            50% { transform: scale(1.02); box-shadow: 0 10px 25px -3px rgba(244, 63, 94, 0.3); }
+            100% { transform: scale(1); box-shadow: 0 10px 15px -3px rgba(244, 63, 94, 0.1); }
+          }
+
           
           @keyframes highlight {
             0% { 
@@ -2478,7 +2552,29 @@ const styles: Record<string, React.CSSProperties> = {
     opacity: 0,
     marginTop: '5px',
   },
+
+  batteryWarning: {
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
+    zIndex: 1100,
+    backgroundColor: '#fff1f2',
+    border: '1px solid #f43f5e',
+    borderRadius: '12px',
+    padding: '16px',
+    display: 'flex',
+    gap: '12px',
+    alignItems: 'center',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    maxWidth: '350px',
+    animation: 'pulseBattery 2s infinite',
+  },
+  batteryWarningIcon: {
+    fontSize: '24px',
+    filter: 'drop-shadow(0 0 8px rgba(244, 63, 94, 0.4))',
+  },
 };
+
 
 // Add CSS for spinner animation
 const spinKeyframes = `

@@ -110,4 +110,38 @@ public interface ISessionService
         Guid questionResponseId,
         bool isCorrect,
         CancellationToken cancellationToken);
-}
+
+    /// <summary>
+    /// Grants additional time to a student for a specific module progress.
+    /// </summary>
+    /// <param name="userProgressId">The ID of the user's progress record</param>
+    /// <param name="additionalMinutes">Number of minutes to add</param>
+    /// <param name="cancellationToken">Token to cancel the operation</param>
+    /// <returns>A response indicating success or failure</returns>
+    Task<Response<GenericOperationStatuses>> ExtendTimeAsync(
+        Guid userProgressId,
+        int additionalMinutes,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Gets the user progress ID for a student within a specific assignment context.
+    /// </summary>
+    Task<Response<Guid, GenericOperationStatuses>> GetModuleProgressIdAsync(
+        string studentId,
+        Guid sessionId,
+        Guid termId,
+        Guid classLevelId,
+        Guid subjectId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Grants additional time to all students currently taking an exam in a specific class and subject.
+    /// </summary>
+    Task<Response<GenericOperationStatuses>> BulkExtendTimeAsync(
+        Guid sessionId,
+        Guid termId,
+        Guid classLevelId,
+        Guid subjectId,
+        int additionalMinutes,
+        CancellationToken cancellationToken);
+}

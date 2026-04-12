@@ -8,5 +8,8 @@ export enum GenericOperationStatuses {
   NotFound = "NotFound",
   Conflict = "Conflict",
   Unauthorized = "Unauthorized",
-  BadRequest = "BadRequest"
+  BadRequest = "BadRequest",
+  Forbidden = "Forbidden",
+  FeatureIsNotAvailable = "FeatureIsNotAvailable",
+  PartiallyCompleted = "PartiallyCompleted"
 }

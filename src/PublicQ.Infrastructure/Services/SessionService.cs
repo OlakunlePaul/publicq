@@ -808,4 +808,126 @@ public class SessionService(
             GenericOperationStatuses.Completed,
             "Question response mark updated successfully.");
     }
-}
+
+    /// <inheritdoc cref="ISessionService.ExtendTimeAsync"/>
+    public async Task<Response<GenericOperationStatuses>> ExtendTimeAsync(
+        Guid userProgressId,
+        int additionalMinutes,
+        CancellationToken cancellationToken)
+    {
+        logger.LogDebug("Extending time for module progress {UserProgressId} by {Minutes} minutes.", 
+            userProgressId, additionalMinutes);
+
+        var userProgress = await dbContext.ModuleProgress
+            .FirstOrDefaultAsync(mp => mp.Id == userProgressId, cancellationToken);
+
+        if (userProgress is null)
+        {
+            logger.LogInformation("Module progress {UserProgressId} not found.", userProgressId);
+            return Response<GenericOperationStatuses>.Failure(
+                GenericOperationStatuses.NotFound,
+                $"Module progress {userProgressId} not found.");
+        }
+
+        // Add minutes
+        userProgress.DurationInMinutes += additionalMinutes;
+
+        // Reset completion if it was finished, so they can resume
+        if (userProgress.CompletedAtUtc != null)
+        {
+            logger.LogInformation("Resetting CompletedAtUtc for {UserProgressId} to allow re-attempt.", userProgressId);
+            userProgress.CompletedAtUtc = null;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Granted {Minutes} minutes extra to progress {UserProgressId}. New duration: {TotalMinutes}.",
+            additionalMinutes, userProgressId, userProgress.DurationInMinutes);
+
+        return Response<GenericOperationStatuses>.Success(
+            GenericOperationStatuses.Completed,
+            $"Granted {additionalMinutes} extra minutes successfully.");
+    }
+
+    /// <inheritdoc cref="ISessionService.GetModuleProgressIdAsync"/>
+    public async Task<Response<Guid, GenericOperationStatuses>> GetModuleProgressIdAsync(
+        string studentId,
+        Guid sessionId,
+        Guid termId,
+        Guid classLevelId,
+        Guid subjectId,
+        CancellationToken cancellationToken)
+    {
+        logger.LogDebug("Finding progress ID for student {StudentId} in context {SessionId}/{TermId}/{ClassId}/{SubjectId}.",
+            studentId, sessionId, termId, classLevelId, subjectId);
+
+        var progress = await dbContext.ModuleProgress
+            .AsNoTracking()
+            .Include(mp => mp.StudentAssignment)
+                .ThenInclude(sa => sa.Assignment)
+            .Include(mp => mp.GroupMember)
+            .Where(mp => mp.StudentId == studentId &&
+                         mp.StudentAssignment.Assignment.SessionId == sessionId &&
+                         mp.StudentAssignment.Assignment.TermId == termId &&
+                         mp.StudentAssignment.Assignment.ClassLevelId == classLevelId &&
+                         mp.GroupMember.SubjectId == subjectId)
+            .OrderByDescending(mp => mp.StartedAtUtc)
+            .Select(mp => mp.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (progress == Guid.Empty)
+        {
+            logger.LogInformation("No active exam progress found for student {StudentId} in the requested context.", studentId);
+            return Response<Guid, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound,
+                "No active exam progress found for this student in this subject.");
+        }
+
+        return Response<Guid, GenericOperationStatuses>.Success(progress, GenericOperationStatuses.Completed);
+    }
+
+    /// <inheritdoc cref="ISessionService.BulkExtendTimeAsync"/>
+    public async Task<Response<GenericOperationStatuses>> BulkExtendTimeAsync(
+        Guid sessionId,
+        Guid termId,
+        Guid classLevelId,
+        Guid subjectId,
+        int additionalMinutes,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Bulk extending time by {Minutes} minutes for Class {ClassId}, Subject {SubjectId}.",
+            additionalMinutes, classLevelId, subjectId);
+
+        var activeProgressItems = await dbContext.ModuleProgress
+            .Include(mp => mp.StudentAssignment)
+                .ThenInclude(sa => sa.Assignment)
+            .Include(mp => mp.GroupMember)
+            .Where(mp => mp.StudentAssignment.Assignment.SessionId == sessionId &&
+                         mp.StudentAssignment.Assignment.TermId == termId &&
+                         mp.StudentAssignment.Assignment.ClassLevelId == classLevelId &&
+                         mp.GroupMember.SubjectId == subjectId &&
+                         mp.HasStarted)
+            .ToListAsync(cancellationToken);
+
+        if (activeProgressItems.Count == 0)
+        {
+            return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound,
+                "No active student sessions found for this class and subject.");
+        }
+
+        foreach (var progress in activeProgressItems)
+        {
+            progress.DurationInMinutes += additionalMinutes;
+            if (progress.CompletedAtUtc != null)
+            {
+                progress.CompletedAtUtc = null;
+            }
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Bulk time extension completed for {Count} students.", activeProgressItems.Count);
+
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed,
+            $"Granted {additionalMinutes} extra minutes to {activeProgressItems.Count} students.");
+    }
+}
