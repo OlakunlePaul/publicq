@@ -378,7 +378,7 @@ const AssignmentExecution: React.FC<AssignmentExecutionProps> = ({
         battery.removeEventListener('chargingchange', updateBatteryInfo);
       }
     };
-  }, [showBatteryWarning]);
+  }, [showBatteryWarning, isCharging]);
 
 
   useEffect(() => {
