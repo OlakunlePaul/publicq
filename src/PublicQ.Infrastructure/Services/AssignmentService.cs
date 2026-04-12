@@ -7,6 +7,7 @@ using PublicQ.Application.Models.Assignment;
 using PublicQ.Infrastructure.Options;
 using PublicQ.Infrastructure.Persistence;
 using PublicQ.Infrastructure.Persistence.Entities.Assignment;
+using PublicQ.Infrastructure.Persistence.Entities;
 using PublicQ.Shared;
 
 namespace PublicQ.Infrastructure.Services;
