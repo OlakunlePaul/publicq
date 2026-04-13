@@ -12,6 +12,7 @@ import UserTable from '../Shared/UserTable';
 import { VALIDATION_CONSTRAINTS } from '../../constants/contstants';
 import cssStyles from './AssignmentManagement.module.css';
 import { cn } from '../../utils/cn';
+import { ProctoringLogModal } from './ProctoringLogModal';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -1065,6 +1066,16 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
     currentAssignedUsers: User[];
   }>({ isOpen: false, assignmentId: '', assignmentTitle: '', currentExamTakers: [], currentAssignedUsers: [] });
 
+  const [proctorLogModal, setProctorLogModal] = useState<{
+    isOpen: boolean;
+    assignmentId: string;
+    assignmentTitle: string;
+  }>({ isOpen: false, assignmentId: '', assignmentTitle: '' });
+
+  const handleViewProctoringLogs = (assignment: Assignment) => {
+    setProctorLogModal({ isOpen: true, assignmentId: assignment.id, assignmentTitle: assignment.title });
+  };
+
   // Handle Ctrl+N keyboard shortcut for creating new assignment
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1654,6 +1665,21 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
                         >
                           Exam Takers
                         </button>
+                        {assignment.maxTabSwitches !== null && assignment.maxTabSwitches !== undefined && assignment.maxTabSwitches > 0 && (
+                          <button 
+                            onClick={() => handleViewProctoringLogs(assignment)} 
+                            className={cssStyles.actionButtonSecondary}
+                            style={{ backgroundColor: '#fef3c7', color: '#92400e', borderColor: '#fde68a' }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#fde68a';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = '#fef3c7';
+                            }}
+                          >
+                            Proctor Logs
+                          </button>
+                        )}
                         <button 
                           onClick={() => handleDownloadExamTakers(assignment.id, assignment.title)} 
                           className={cssStyles.actionButtonPublish}
@@ -1732,6 +1758,21 @@ const AssignmentManagement = ({ assignmentManagementData, setAssignmentManagemen
             </div>
             </>
           )}
+      <ExamTakerManagementModal
+        isOpen={examTakerModal.isOpen}
+        assignmentTitle={examTakerModal.assignmentTitle}
+        currentExamTakers={examTakerModal.currentExamTakers}
+        currentAssignedUsers={examTakerModal.currentAssignedUsers}
+        onConfirm={confirmExamTakerManagement}
+        onCancel={cancelExamTakerManagement}
+      />
+
+      <ProctoringLogModal
+        isOpen={proctorLogModal.isOpen}
+        assignmentId={proctorLogModal.assignmentId}
+        assignmentTitle={proctorLogModal.assignmentTitle}
+        onClose={() => setProctorLogModal({ isOpen: false, assignmentId: '', assignmentTitle: '' })}
+      />
       </div>
     </>
   );

@@ -75,5 +75,18 @@ export const assignmentService = {
   unlockAssignment: async (assignmentId: string, studentId: string): Promise<Response<GenericOperationStatuses>> => {
     const response = await axios.post<Response<GenericOperationStatuses>>(`assignments/${assignmentId}/proctoring/unlock/${studentId}`);
     return response.data;
+  },
+
+  getProctoringLogs: async (
+    assignmentId: string,
+    pageNumber: number = 1,
+    pageSize: number = 10,
+    studentId?: string
+  ): Promise<ResponseWithData<PaginatedResponse<any>, GenericOperationStatuses>> => {
+    const response = await axios.get<ResponseWithData<PaginatedResponse<any>, GenericOperationStatuses>>(
+      `assignments/${assignmentId}/proctoring-logs`,
+      { params: { pageNumber, pageSize, studentId } }
+    );
+    return response.data;
   }
 };
