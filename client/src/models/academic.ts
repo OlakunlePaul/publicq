@@ -135,6 +135,7 @@ export interface AssessmentDetailsDto {
     studentId: string;
     studentName: string;
     admissionNumber?: string;
+    className?: string;
     status: number;
     
     totalMarksObtained?: number;

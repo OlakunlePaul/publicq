@@ -97,7 +97,14 @@ After all scores are entered:
 3. Use the **"Print Report"** button to generate a printable report card for a student.
 4. Use the **"Lock 🔒 / Unlock 🔓"** toggle to control whether parents can see a specific student's result.
 
-### Step 5: View the Broadsheet
+### Step 5: Submission & Moderation
+Results entered by Teachers are initially stored as **"Drafts"**. 
+
+- **Drafting:** As you save scores, the status remains in local draft mode.
+- **Submission:** Once you are satisfied, the scores are available to the **Manager** for moderation.
+- **Approval:** A Manager or Head Teacher must review and **Approve/Publish** the results before they become official and visible to parents in the student portal.
+
+### Step 6: View the Broadsheet
 Click the purple **"Class Broadsheet"** button to see a bird's-eye view of the entire class's performance across all subjects. This is perfect for staff meetings and academic reviews.
 
 > **🎉 Congratulations!**  

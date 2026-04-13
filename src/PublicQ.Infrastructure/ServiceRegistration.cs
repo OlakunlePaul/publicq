@@ -67,7 +67,19 @@ public static class ServiceRegistration
         services.AddTransient<IEmailSender<ApplicationUser>, IdentityEmailSender>();
         services.AddScoped<IApplicationInitializer, ApplicationInitializer>();
         services.AddScoped<IConfigurationUpdateService, ConfigurationUpdateService>();
-        services.AddScoped<IStorageService, FileStorageService>();
+        
+        // Register IStorageService based on configuration
+        services.AddScoped<IStorageService>(provider => {
+            var s3Options = provider.GetRequiredService<IOptionsMonitor<S3Options>>().CurrentValue;
+            if (s3Options.Enabled)
+            {
+                return provider.GetRequiredService<S3StorageService>();
+            }
+            return provider.GetRequiredService<FileStorageService>();
+        });
+        services.AddScoped<S3StorageService>();
+        services.AddScoped<FileStorageService>();
+
         services.AddScoped<IPermissionService, PermissionService>();
     
         services.AddScoped<IAssessmentService, AssessmentService>();
@@ -101,6 +113,7 @@ public static class ServiceRegistration
         services.AddOptions<AssessmentServiceOptions>().Bind(config.GetSection(nameof(AssessmentServiceOptions)));
         services.AddOptions<AssignmentServiceOptions>().Bind(config.GetSection(nameof(AssignmentServiceOptions)));
         services.AddOptions<ReportingService>().Bind(config.GetSection(nameof(ReportingServiceOptions)));
+        services.AddOptions<S3Options>().Bind(config.GetSection(nameof(S3Options)));
     
         return services;
     }

@@ -58,6 +58,7 @@ public class ConfigurationController(
     IOptionsMonitor<McpApiKeyOptions> mcpApiKeyOptions,
     IOptionsMonitor<OpenAIOptions> openAIOptions,
     IOptionsMonitor<ResendOptions> resendOptions,
+    IOptionsMonitor<S3Options> s3Options,
     IUserConfigurationProvider userConfigurationProvider,
     IStorageService storageService) : ControllerBase
 {
@@ -500,6 +501,51 @@ public class ConfigurationController(
         var response = configUpdateService.Set(fileStorageOptions.CurrentValue);
         
         return response.ToActionResult(nameof(GetFileStorageConfiguration));
+    }
+    
+    /// <summary>
+    /// Gets S3 storage configuration
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("s3-storage")]
+    [Authorize(Constants.AdminsPolicy)]
+    public IActionResult GetS3Configuration()
+    {
+        var options = s3Options.CurrentValue;
+        // Mask the secret key for security
+        var maskedOptions = new S3Options 
+        { 
+            Enabled = options.Enabled,
+            AccessKey = options.AccessKey,
+            SecretKey = string.IsNullOrWhiteSpace(options.SecretKey) ? string.Empty : "********************************",
+            BucketName = options.BucketName,
+            Endpoint = options.Endpoint,
+            ServiceUrl = options.ServiceUrl,
+            Region = options.Region
+        };
+        
+        return Response<S3Options, GenericOperationStatuses>
+            .Success(maskedOptions, GenericOperationStatuses.Completed, "Successfully retrieved S3 configuration.")
+            .ToActionResult();
+    }
+    
+    /// <summary>
+    /// Sets S3 storage configuration
+    /// </summary>
+    /// <param name="options">S3 Options</param>
+    /// <returns></returns>
+    [HttpPost("s3-storage")]
+    [Authorize(Constants.AdminsPolicy)]
+    public IActionResult SetS3Configuration([FromBody] S3Options options)
+    {
+        // If the secret key is masked, preserve the existing one
+        if (options.SecretKey == "********************************")
+        {
+            options.SecretKey = s3Options.CurrentValue.SecretKey;
+        }
+
+        var response = configUpdateService.Set(options);
+        return response.ToActionResult(nameof(GetS3Configuration));
     }
     
     /// <summary>

@@ -16,6 +16,7 @@ import { LlmIntegrationOptions, OpenAIOptions } from '../models/llm-integration-
 import { McpApiKeyOptions } from '../models/mcp-api-key-options';
 import { AdmissionNumberConfiguration } from '../models/admission-number-configuration';
 import { SchoolBrandingConfiguration } from '../models/school-branding-configuration';
+import { S3Configuration } from '../models/s3-configuration';
 
 export const configurationService = {
   getEmailOptions: async (): Promise<EmailOption> => {
@@ -197,6 +198,16 @@ export const configurationService = {
         'Content-Type': 'multipart/form-data'
       }
     });
+    return response.data;
+  },
+
+  getS3Options: async (): Promise<ResponseWithData<S3Configuration, GenericOperationStatuses>> => {
+    const response = await axios.get<ResponseWithData<S3Configuration, GenericOperationStatuses>>('configuration/s3-storage');
+    return response.data;
+  },
+
+  setS3Options: async (options: S3Configuration): Promise<Response<GenericOperationStatuses>> => {
+    const response = await axios.post<Response<GenericOperationStatuses>>('configuration/s3-storage', options);
     return response.data;
   }
 };

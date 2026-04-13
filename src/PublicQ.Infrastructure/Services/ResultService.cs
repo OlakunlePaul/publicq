@@ -200,6 +200,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
     {
         var assessment = await dbContext.StudentAssessments
             .Include(a => a.Student)
+            .Include(a => a.ClassLevel)
             .Include(a => a.SubjectScores)
                 .ThenInclude(s => s.Subject)
             .FirstOrDefaultAsync(a => a.Id == assessmentId, cancellationToken);
@@ -212,6 +213,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             StudentId = assessment.StudentId,
             StudentName = assessment.Student?.FullName ?? "Unknown",
             AdmissionNumber = assessment.Student?.AdmissionNumber,
+            ClassName = assessment.ClassLevel?.Name,
             Status = assessment.Status,
             TotalMarksObtained = assessment.TotalMarksObtained,
             TotalMarksObtainable = assessment.TotalMarksObtainable,

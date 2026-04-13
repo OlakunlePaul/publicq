@@ -92,6 +92,7 @@ public record AssessmentDetailsDto
     public string StudentId { get; init; } = string.Empty;
     public string StudentName { get; init; } = string.Empty;
     public string? AdmissionNumber { get; init; }
+    public string? ClassName { get; init; }
     public ModerationStatus Status { get; init; }
     
     // Academic Summary

@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { AssessmentDetailsDto, TermDto, SessionDto } from '../../models/academic';
 import { configurationService } from '../../services/configurationService';
 import { SchoolBrandingConfiguration } from '../../models/school-branding-configuration';
+import api from '../../api/axios';
 
 interface PrintableReportCardProps {
   report: AssessmentDetailsDto;
@@ -14,6 +15,7 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
   const printRef = useRef<HTMLDivElement>(null);
 
   const [branding, setBranding] = useState<SchoolBrandingConfiguration | null>(null);
+  const baseURL = api.defaults.baseURL?.replace(/\/api\/?$/, '') || '';
 
   useEffect(() => {
     // Fetch branding data
@@ -76,7 +78,11 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
         {/* Header Section */}
         <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '3px solid #000', paddingBottom: '10px' }}>
           {branding?.schoolLogoUrl && (
-            <img src={branding.schoolLogoUrl} alt="School Logo" style={{ maxHeight: '80px', marginBottom: '10px' }} />
+            <img 
+              src={branding.schoolLogoUrl.startsWith('http') ? branding.schoolLogoUrl : `${baseURL}/${branding.schoolLogoUrl}`} 
+              alt="School Logo" 
+              style={{ maxHeight: '80px', marginBottom: '10px' }} 
+            />
           )}
           <div style={{ fontSize: '32px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1e3a8a' }}>
             {branding?.schoolName || 'Day & Boarding School'}
@@ -106,7 +112,7 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
               </tr>
               <tr>
                 <td style={tdInfoStyle}>Class:</td>
-                <td style={{ ...tdInfoStyle, borderBottom: '1px solid #000' }}>N/A</td> {/* Class name not directly in DTO, would need to be passed down */}
+                <td style={{ ...tdInfoStyle, borderBottom: '1px solid #000' }}>{report.className || 'N/A'}</td>
               </tr>
             </tbody>
           </table>

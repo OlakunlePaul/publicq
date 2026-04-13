@@ -21,6 +21,7 @@ import AcademicStructureManagement from '../components/AcademicStructureManageme
 import ResultManagement from '../components/ResultManagement/ResultManagement';
 import SchoolBrandingManagement from '../components/Admin/Settings/SchoolBrandingManagement';
 import PermissionManagement from '../components/Admin/Permissions/PermissionManagement';
+import S3StorageManagement from '../components/Admin/Settings/S3StorageManagement';
 import { PlatformStatisticService } from '../services/platformStatisticService';
 import { User } from '../models/user';
 import { Group } from '../models/group';
@@ -36,7 +37,7 @@ import cssStyles from './Admin.module.css';
 import HandbookModal from '../components/Shared/HandbookModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type AdminSection = 'dashboard' | 'users' | 'groups' | 'assignments' | 'assessments' | 'reports' | 'email' | 'banners' | 'pages' | 'ai' | 'ai-chat' | 'security' | 'cache' | 'storage' | 'logs' | 'admissions' | 'branding' | 'academic' | 'results' | 'permissions';
+type AdminSection = 'dashboard' | 'users' | 'groups' | 'assignments' | 'assessments' | 'reports' | 'email' | 'banners' | 'pages' | 'ai' | 'ai-chat' | 'security' | 'cache' | 'storage' | 's3-storage' | 'logs' | 'admissions' | 'branding' | 'academic' | 'results' | 'permissions';
 
 // Animated Counter Component
 const AnimatedCounter = ({ target, duration = 1000, delay = 0 }: { target: number; duration?: number; delay?: number }) => {
@@ -245,6 +246,7 @@ const Admin = () => {
       cache: { title: 'System Optimize', icon: <img src="https://cdn-icons-png.flaticon.com/512/2874/2874802.png" alt="Cache" style={{width: '24px', height: '24px'}} />, description: 'The Maintenance Shed – Cleaning up system overhead and optimizing performance.' },
       storage: { title: 'File Storage', icon: <img src="https://cdn-icons-png.flaticon.com/512/2965/2965312.png" alt="Storage" style={{width: '24px', height: '24px'}} />, description: 'The School Archives – Managing digital assets, documents, and student uploads.' },
       logs: { title: 'System Logs', icon: <img src="https://cdn-icons-png.flaticon.com/512/1069/1069159.png" alt="Logs" style={{width: '24px', height: '24px'}} />, description: 'The Audit Ledger – Continuous monitoring of all administrative actions and system events.' },
+      's3-storage': { title: 'Cloud Storage', icon: <img src="https://cdn-icons-png.flaticon.com/512/2965/2965312.png" alt="S3" style={{width: '24px', height: '24px'}} />, description: 'The Sky Archive – Persistent cloud storage using S3/Railway Buckets.' },
       admissions: { title: 'Registration Format', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Admissions" style={{width: '24px', height: '24px'}} />, description: 'The Admission Desk – Defining how student IDs and admission numbers are formatted.' },
       branding: { title: 'School Profile', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Branding" style={{width: '24px', height: '24px'}} />, description: 'The School Signage – Configuring your school\'s public identity, logo, and theme.' },
       academic: { title: 'School Structure', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Academic" style={{width: '24px', height: '24px'}} />, description: 'The Blueprint – Organizing the school\'s Sessions, Terms, Classes, and Subjects.' },
@@ -346,6 +348,7 @@ const Admin = () => {
       );
       case 'cache': return <CacheManagement cacheConfig={cacheOptions} setCacheConfig={setCacheOptions} />;
       case 'storage': return <FileStorageManagement fileStorageConfig={fileStorageOptions} setFileStorageConfig={setFileStorageOptions} />;
+      case 's3-storage': return <S3StorageManagement />;
       case 'logs': return <LogManagement logConfig={logOptions} setLogConfig={setLogOptions} />;
       case 'dashboard': return <DashboardContent userCount={userCount} studentCount={studentCount} teacherCount={teacherCount} groupCount={groupCount} moduleCount={moduleCount} assignmentCount={assignmentCount} questionCount={questionCount} loading={dashboardLoading} error={dashboardError} onNavigate={navigateToSection} />;
       case 'reports': return <ReportsAnalytics />;
@@ -445,6 +448,11 @@ const Admin = () => {
           {UserPolicies.hasManagerAccess(userRoles) && (
             <button onClick={() => navigateToSection('admissions')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'admissions' })}>
               <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Registration Format
+            </button>
+          )}
+          {UserPolicies.hasAdminAccess(userRoles) && (
+            <button onClick={() => navigateToSection('s3-storage')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 's3-storage' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/2965/2965312.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Cloud Storage
             </button>
           )}
           {UserPolicies.hasManagerAccess(userRoles) && (
