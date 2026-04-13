@@ -504,21 +504,19 @@ const ResultManagement: React.FC = () => {
     setSuccess('');
 
     try {
-      // Call a bulk extension endpoint (I'll need to check if this exists or loop)
-      // Since a bulk endpoint doesn't exist yet, I'll simulate or suggest looping
-      // But for production, a single API call is better.
-      const res = await api.post(`sessions/bulk-extend-time`, {
-        sessionId: selectedSession,
-        termId: selectedTerm,
-        classId: selectedClass,
-        subjectId: selectedSubject,
-        minutes: minutes
-      });
+      // Call a bulk extension endpoint
+      const res = await sessionService.bulkExtendTime(
+        selectedSession,
+        selectedTerm,
+        selectedClass,
+        selectedSubject,
+        minutes
+      );
       
-      if (res.data && res.data.isSuccess) {
+      if (res.isSuccess) {
         setSuccess(`Granted ${minutes} extra minutes to the entire class.`);
       } else {
-        setError(res.data?.message || "Failed to extend class time.");
+        setError(res.message || "Failed to extend class time.");
       }
     } catch (err: any) {
       setError("Error extending class time: " + err.message);
@@ -699,13 +697,23 @@ const ResultManagement: React.FC = () => {
                 {subjects.find(s => s.id === selectedSubject)?.name} - {classes.find(c => c.id === selectedClass)?.name}
               </span>
             </h3>
-            <button 
-              onClick={handleSaveScores}
-              style={{ padding: '10px 20px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
-              disabled={loading}
-            >
-              Save Scores
-            </button>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={handleBulkExtendTime}
+                style={{ padding: '10px 20px', backgroundColor: '#fef3c7', color: '#92400e', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
+                disabled={extendingTime}
+                title="Grant extra time to the entire class for their active exam"
+              >
+                {extendingTime ? 'Extending...' : 'Bulk Extra Time ⏳'}
+              </button>
+              <button 
+                onClick={handleSaveScores}
+                style={{ padding: '10px 20px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
+                disabled={loading}
+              >
+                Save Scores
+              </button>
+            </div>
           </div>
 
           <div style={{ overflowX: 'auto' }} className="result-management-table-container">

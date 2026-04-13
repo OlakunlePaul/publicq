@@ -52,5 +52,16 @@ export const sessionService = {
   extendTime: async (userProgressId: string, minutes: number): Promise<Response<GenericOperationStatuses>> => {
     const response = await axios.post<Response<GenericOperationStatuses>>(`sessions/progress/${userProgressId}/extend-time?minutes=${minutes}`);
     return response.data;
+  },
+
+  bulkExtendTime: async (sessionId: string, termId: string, classId: string, subjectId: string, minutes: number): Promise<Response<GenericOperationStatuses>> => {
+    const response = await axios.post<Response<GenericOperationStatuses>>('sessions/bulk-extend-time', {
+      sessionId,
+      termId,
+      classId,
+      subjectId,
+      minutes
+    });
+    return response.data;
   }
 }
