@@ -53,7 +53,8 @@ export const ProctoringLogModal: React.FC<ProctoringLogModalProps> = ({
 
   useEffect(() => {
     if (isOpen && assignmentId) {
-      loadLogs(1, studentIdFilter);
+      // Load initially without filter when modal opens
+      loadLogs(1, '');
     }
   }, [isOpen, assignmentId, loadLogs]);
 
