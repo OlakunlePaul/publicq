@@ -917,4 +917,46 @@ public class AssignmentService(
         
         return combinedStudents;
     }
+
+    /// <inheritdoc cref="IAssignmentService.GetProctoringLogsAsync"/>
+    public async Task<Response<PaginatedResponse<LogEntryDto>, GenericOperationStatuses>> GetProctoringLogsAsync(
+        Guid assignmentId,
+        string? studentId = null,
+        int pageNumber = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("Retrieving proctoring logs for assignment {AssignmentId}, student {StudentId}", assignmentId, studentId);
+
+        var query = dbContext.LogEntries
+            .AsNoTracking()
+            .Where(l => l.Category == "Proctoring" && l.Message.Contains(assignmentId.ToString()));
+
+        if (!string.IsNullOrWhiteSpace(studentId))
+        {
+            query = query.Where(l => l.UserId == studentId);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var logs = await query
+            .OrderByDescending(l => l.Timestamp)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(l => l.ConvertToDto())
+            .ToListAsync(cancellationToken);
+
+        var paginatedResponse = new PaginatedResponse<LogEntryDto>
+        {
+            Data = logs,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        return Response<PaginatedResponse<LogEntryDto>, GenericOperationStatuses>.Success(
+            paginatedResponse,
+            GenericOperationStatuses.Completed,
+            "Proctoring logs retrieved successfully.");
+    }
 }

@@ -157,4 +157,20 @@ public interface IAssignmentService
         Guid assignmentId,
         string studentId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves proctoring logs for an assignment.
+    /// </summary>
+    /// <param name="assignmentId">The ID of the assignment.</param>
+    /// <param name="studentId">Optional. The ID of the student to filter logs for.</param>
+    /// <param name="pageNumber">The page number.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>A paginated list of proctoring log entries.</returns>
+    Task<Response<PaginatedResponse<LogEntryDto>, GenericOperationStatuses>> GetProctoringLogsAsync(
+        Guid assignmentId,
+        string? studentId = null,
+        int pageNumber = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default);
 }

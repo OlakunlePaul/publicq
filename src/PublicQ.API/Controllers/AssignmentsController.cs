@@ -92,6 +92,28 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
         
         return response.ToActionResult();
     }
+    /// <summary>
+    /// Gets proctoring logs for a specific assignment.
+    /// </summary>
+    /// <param name="id">The assignment ID.</param>
+    /// <param name="studentId">Optional. The student ID to filter by.</param>
+    /// <param name="pageNumber">Optional. Page number (default 1).</param>
+    /// <param name="pageSize">Optional. Page size (default 10).</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>An <see cref="IActionResult"/> with the paginated proctoring logs.</returns>
+    [Authorize(Constants.ContributorsPolicy)]
+    [HttpGet("{id:guid}/proctoring-logs")]
+    public async Task<IActionResult> GetProctoringLogsAsync(
+        Guid id,
+        [FromQuery] string? studentId = null,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await assignmentService.GetProctoringLogsAsync(id, studentId, pageNumber, pageSize, cancellationToken);
+        
+        return response.ToActionResult();
+    }
     
     /// <summary>
     /// Gets a paginated list of available assignments for a specific exam taker.
