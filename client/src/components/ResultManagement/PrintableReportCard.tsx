@@ -49,14 +49,19 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
               left: 0;
               top: 0;
               width: 100%;
-              padding: 0;
+              padding: 10mm;
               margin: 0;
+              box-sizing: border-box;
             }
             .no-print {
               display: none !important;
             }
-            .page-break {
-              page-break-after: always;
+            table {
+              page-break-inside: avoid;
+            }
+            @page {
+              size: A4;
+              margin: 10mm;
             }
           }
         `}
@@ -159,7 +164,7 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
 
                 return (
                   <tr key={idx}>
-                    <td style={tdStyle}>{score.subjectRemark || `Subject`}</td> {/* Need SubjectName in DTO to display properly */}
+                    <td style={tdStyle}>{score.subjectName || score.subjectRemark || 'Subject'}</td>
                     <td style={{...tdStyle, textAlign: 'center'}}>{score.testScore ?? '-'}</td>
                     <td style={{...tdStyle, textAlign: 'center'}}>{score.examScore ?? '-'}</td>
                     <td style={{...tdStyle, textAlign: 'center', fontWeight: 'bold'}}>{total}</td>
@@ -288,8 +293,7 @@ const btnSecondary: React.CSSProperties = {
 const pageStyle: React.CSSProperties = {
   backgroundColor: '#fff',
   width: '210mm', // Standard A4 width
-  minHeight: '297mm', // Standard A4 height
-  padding: '20mm', // Standard margins
+  padding: '15mm', // Standard margins
   boxSizing: 'border-box',
   boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
   fontFamily: '"Times New Roman", Times, serif', // Report cards often use serif fonts
