@@ -66,10 +66,15 @@ public class FileStorageService(
                 $"Failed to save '{filePath}'. Exception message: '{ex.Message}'.");
         }
         
-        logger.LogDebug("Item with name '{Path}' saved successfully", filePath);
-        
+        var relativeWebPath = string.IsNullOrWhiteSpace(storageItem.RelativePath) 
+            ? storageItem.Name 
+            : $"{storageItem.RelativePath.TrimEnd('/').TrimStart('/')}/{storageItem.Name}";
+            
+        // Prepend 'static' if it's not already there (assuming static is the root of serving)
+        relativeWebPath = $"{options.CurrentValue.StaticContentPath?.Trim('/')}/{relativeWebPath}";
+
         return Response<string, GenericOperationStatuses>
-            .Success(filePath, GenericOperationStatuses.Cancelled, $"Item saved successfully to '{filePath}'.");
+            .Success(relativeWebPath, GenericOperationStatuses.Completed, $"Item saved successfully to '{relativeWebPath}'.");
     }
 
     /// <summary>

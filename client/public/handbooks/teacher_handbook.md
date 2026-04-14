@@ -93,11 +93,21 @@ If a student encounters technical issues during a live online exam, you can gran
 After all scores are entered:
 
 1. Verify each student's **Test** and **Exam** scores are correct.
-2. Use the **"Edit Details"** button on any row to view and fine-tune individual report card data.
-3. Use the **"Print Report"** button to generate a printable report card for a student.
-4. Use the **"Lock 🔒 / Unlock 🔓"** toggle to control whether parents can see a specific student's result.
+2. Use the **"Print Report"** button to generate a printable report card for a student.
+3. Use the **"Lock 🔒 / Unlock 🔓"** toggle to control whether parents can see a specific student's result.
 
-### Step 5: Submission & Moderation
+### Step 5: Filling Student Traits & Comments
+To complete the report card, you must provide feedback on the student's behavior and physical development.
+
+1. Click the **"Edit Details"** button on a student's row.
+2. A window will open showing the following sections:
+   - **Attendance:** Enter the total *Times School Opened*, the student's *Times Present*, and *Times Absent*.
+   - **Affective Domain:** Rate student traits like *Punctuality*, *Neatness*, and *Attitude* using a scale (e.g., A to E).
+   - **Psychomotor Skills:** Rate physical activities like *Games*, *Jumps*, and *Swimming*.
+   - **Comments:** Provide a personal assessment in the **Class Teacher's Comment** box.
+3. Click **"Save Report Details"** to finalize these entries.
+
+### Step 6: Submission & Moderation
 Results entered by Teachers are initially stored as **"Drafts"**. 
 
 - **Drafting:** As you save scores, the status remains in local draft mode.

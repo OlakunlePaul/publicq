@@ -69,9 +69,9 @@ public class S3StorageService : IStorageService
             
             _logger.LogInformation("Successfully uploaded {Key} to S3 bucket {Bucket}", key, _options.CurrentValue.BucketName);
             
-            // Return the key. The API will likely have a route to serve/proxy these or return a signed URL.
-            // For now, we return the relative path which the frontend will use to hit our proxy or absolute URL.
-            return Response<string, GenericOperationStatuses>.Success(key, GenericOperationStatuses.Completed, "File saved to S3.");
+            // Return the key prefixed with 'static/' to trigger our proxy controller
+            var relativeWebPath = $"static/{key}";
+            return Response<string, GenericOperationStatuses>.Success(relativeWebPath, GenericOperationStatuses.Completed, "File saved to S3.");
         }
         catch (Exception ex)
         {

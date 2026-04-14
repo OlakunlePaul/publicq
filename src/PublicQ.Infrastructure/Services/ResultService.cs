@@ -226,7 +226,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             TimesAbsent = assessment.TimesAbsent,
             ClassTeacherComment = assessment.ClassTeacherComment,
             HeadTeacherComment = assessment.HeadTeacherComment,
-            SubjectScores = assessment.SubjectScores.Select(s => new StudentSubjectScoreDto
+            var subjects = assessment.SubjectScores.Select(s => new StudentSubjectScoreDto
             {
                 StudentId = assessment.StudentId,
                 SubjectName = s.Subject?.Name,
@@ -235,7 +235,28 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 TotalScore = s.TotalScore,
                 Grade = s.Grade,
                 SubjectRemark = s.SubjectRemark
-            }).ToList()
+            });
+
+        return Response<AssessmentDetailsDto, GenericOperationStatuses>.Success(new AssessmentDetailsDto
+        {
+            Id = assessment.Id,
+            StudentId = assessment.StudentId,
+            StudentName = assessment.Student?.FullName ?? "Unknown",
+            AdmissionNumber = assessment.Student?.AdmissionNumber,
+            ClassName = assessment.ClassLevel?.Name,
+            Status = assessment.Status,
+            TotalMarksObtained = assessment.TotalMarksObtained,
+            TotalMarksObtainable = assessment.TotalMarksObtainable,
+            AverageScore = assessment.AverageScore,
+            PositionInClass = assessment.PositionInClass,
+            NumberInClass = assessment.NumberInClass,
+            OverallGrade = assessment.OverallGrade,
+            TimesSchoolOpened = assessment.TimesSchoolOpened,
+            TimesPresent = assessment.TimesPresent,
+            TimesAbsent = assessment.TimesAbsent,
+            ClassTeacherComment = assessment.ClassTeacherComment,
+            HeadTeacherComment = assessment.HeadTeacherComment,
+            SubjectScores = SortSubjectScores(subjects, s => s.SubjectName)
         }, GenericOperationStatuses.Completed);
     }
 
@@ -474,8 +495,29 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
         }
     }
 
+    private static List<T> SortSubjectScores<T>(IEnumerable<T> scores, Func<T, string?> getName)
+    {
+        return scores.OrderByDescending(s => 
+        {
+            var name = getName(s)?.ToLowerInvariant() ?? "";
+            if (name.Contains("english")) return 100;
+            if (name.Contains("mathematics") || name.Contains("maths")) return 99;
+            return 0;
+        }).ThenBy(s => getName(s)).ToList();
+    }
+
     private static StudentAssessmentDto MapToDto(StudentAssessmentEntity a)
     {
+        var subjects = a.SubjectScores.Select(s => new SubjectScoreDto(
+                s.Id,
+                s.Subject?.Name ?? "Unknown",
+                s.TestScore,
+                s.ExamScore,
+                s.TotalScore,
+                s.Grade,
+                s.SubjectRemark
+            ));
+
         return new StudentAssessmentDto(
             a.Id,
             a.StudentId,
@@ -496,15 +538,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             a.TimesAbsent,
             a.ClassTeacherComment,
             a.HeadTeacherComment,
-            a.SubjectScores.Select(s => new SubjectScoreDto(
-                s.Id,
-                s.Subject?.Name ?? "Unknown",
-                s.TestScore,
-                s.ExamScore,
-                s.TotalScore,
-                s.Grade,
-                s.SubjectRemark
-            )).ToList(),
+            SortSubjectScores(subjects, s => s.SubjectName),
             a.PublishedAt,
             a.IsLockedForParents
         );
