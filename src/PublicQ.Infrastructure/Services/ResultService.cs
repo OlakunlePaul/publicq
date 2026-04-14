@@ -207,35 +207,16 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
 
         if (assessment == null) return Response<AssessmentDetailsDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assessment not found.");
 
-        return Response<AssessmentDetailsDto, GenericOperationStatuses>.Success(new AssessmentDetailsDto
+        var subjects = assessment.SubjectScores.Select(s => new StudentSubjectScoreDto
         {
-            Id = assessment.Id,
             StudentId = assessment.StudentId,
-            StudentName = assessment.Student?.FullName ?? "Unknown",
-            AdmissionNumber = assessment.Student?.AdmissionNumber,
-            ClassName = assessment.ClassLevel?.Name,
-            Status = assessment.Status,
-            TotalMarksObtained = assessment.TotalMarksObtained,
-            TotalMarksObtainable = assessment.TotalMarksObtainable,
-            AverageScore = assessment.AverageScore,
-            PositionInClass = assessment.PositionInClass,
-            NumberInClass = assessment.NumberInClass,
-            OverallGrade = assessment.OverallGrade,
-            TimesSchoolOpened = assessment.TimesSchoolOpened,
-            TimesPresent = assessment.TimesPresent,
-            TimesAbsent = assessment.TimesAbsent,
-            ClassTeacherComment = assessment.ClassTeacherComment,
-            HeadTeacherComment = assessment.HeadTeacherComment,
-            var subjects = assessment.SubjectScores.Select(s => new StudentSubjectScoreDto
-            {
-                StudentId = assessment.StudentId,
-                SubjectName = s.Subject?.Name,
-                TestScore = s.TestScore,
-                ExamScore = s.ExamScore,
-                TotalScore = s.TotalScore,
-                Grade = s.Grade,
-                SubjectRemark = s.SubjectRemark
-            });
+            SubjectName = s.Subject?.Name,
+            TestScore = s.TestScore,
+            ExamScore = s.ExamScore,
+            TotalScore = s.TotalScore,
+            Grade = s.Grade,
+            SubjectRemark = s.SubjectRemark
+        });
 
         return Response<AssessmentDetailsDto, GenericOperationStatuses>.Success(new AssessmentDetailsDto
         {
