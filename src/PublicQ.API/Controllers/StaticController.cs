@@ -19,9 +19,10 @@ public class StaticController : ControllerBase
     [HttpGet("{*path}")]
     public async Task<IActionResult> GetStaticFile(string path, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(path))
+        // Normalize path: strip leading slash if present
+        if (path.StartsWith("/"))
         {
-            return NotFound();
+            path = path.Substring(1);
         }
 
         // The path usually includes the category, e.g., 'branding/logo.png'

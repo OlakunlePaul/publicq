@@ -149,11 +149,18 @@ const SchoolBrandingManagement: React.FC = () => {
         );
     }
 
-    const previewUrl = config.schoolLogoUrl 
-        ? (config.schoolLogoUrl.startsWith('http') 
-            ? config.schoolLogoUrl 
-            : `${appConfig.apiBaseUrl}${config.schoolLogoUrl.startsWith('/') ? config.schoolLogoUrl.substring(1) : config.schoolLogoUrl}`)
-        : null;
+    const getPreviewUrl = () => {
+        if (!config.schoolLogoUrl) return null;
+        if (config.schoolLogoUrl.startsWith('http')) return config.schoolLogoUrl;
+        
+        // Use the API proxy route: api/static/xxx
+        // Since schoolLogoUrl already starts with 'static/', we just need to ensure the base URL is correct.
+        const baseUrl = appConfig.apiBaseUrl.replace(/\/$/, ''); // Remove trailing slash
+        const path = config.schoolLogoUrl.startsWith('/') ? config.schoolLogoUrl : `/${config.schoolLogoUrl}`;
+        return `${baseUrl}${path}`;
+    };
+
+    const previewUrl = getPreviewUrl();
 
     return (
         <motion.div 

@@ -81,7 +81,7 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
             <img 
               src={branding.schoolLogoUrl.startsWith('http') ? branding.schoolLogoUrl : `${baseURL}/${branding.schoolLogoUrl}`} 
               alt="School Logo" 
-              style={{ maxHeight: '80px', marginBottom: '10px' }} 
+              style={{ maxHeight: '80px', marginBottom: '10px', display: 'block', marginLeft: 'auto', marginRight: 'auto' }} 
             />
           )}
           <div style={{ fontSize: '32px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1e3a8a' }}>
