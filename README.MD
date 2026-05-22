@@ -7,7 +7,7 @@
 
 **PublicQ** is a comprehensive assessment platform designed for creating, managing, and deploying educational and professional assessments. Built with .NET 10 and React 19, it provides a complete solution for exam management with advanced features like versioning, role-based access control, real-time analytics, and AI-powered assistance.
 
-## 🎯 **[See it in action! Try the live demo →](https://publicq.app)** ✨
+## 🎯 **[See it in action! Try the live demo →](https://examnova.vercel.app)** ✨
 
 ## 📋 Table of Contents
 
