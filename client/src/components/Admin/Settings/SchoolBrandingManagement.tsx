@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './SchoolBranding.module.css';
 import { configurationService } from '../../../services/configurationService';
 import { SchoolBrandingConfiguration } from '../../../models/school-branding-configuration';
