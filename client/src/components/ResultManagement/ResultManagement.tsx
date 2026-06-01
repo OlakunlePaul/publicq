@@ -839,7 +839,8 @@ const ResultManagement: React.FC = () => {
           report={printAssessmentReport}
           termInfo={terms.find(t => t.id === selectedTerm)}
           sessionInfo={sessions.find(s => s.id === selectedSession)}
-          onClose={() => setPrintAssessmentId(null)} 
+          onClose={() => setPrintAssessmentId(null)}
+          isAdminOrManager={userRoles.some(r => r === UserRole.MANAGER || r === UserRole.ADMINISTRATOR)}
         />
       )}
 

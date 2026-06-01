@@ -9,9 +9,10 @@ interface PrintableReportCardProps {
   termInfo?: TermDto;
   sessionInfo?: SessionDto;
   onClose: () => void;
+  isAdminOrManager?: boolean;
 }
 
-const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termInfo, sessionInfo, onClose }) => {
+const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termInfo, sessionInfo, onClose, isAdminOrManager }) => {
   const printRef = useRef<HTMLDivElement>(null);
 
   const [branding, setBranding] = useState<SchoolBrandingConfiguration | null>(null);
@@ -36,30 +37,45 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
   const tableBorder = '1px solid #000';
   
   return (
-    <div style={overlayStyle}>
+    <div style={overlayStyle} className="printable-report-overlay">
       <style>
         {`
           @media print {
             body * {
               visibility: hidden;
             }
+            .printable-report-overlay {
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
+              right: auto !important;
+              bottom: auto !important;
+              visibility: visible !important;
+              overflow: visible !important;
+              height: auto !important;
+              background-color: white !important;
+              padding: 0 !important;
+            }
             #printable-report-card, #printable-report-card * {
               visibility: visible;
             }
             #printable-report-card {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              padding: 10mm;
-              margin: 0;
+              position: relative !important;
+              width: 100% !important;
+              padding: 0 !important;
+              margin: 0 !important;
               box-sizing: border-box;
+              box-shadow: none !important;
             }
             .no-print {
               display: none !important;
             }
             table {
               page-break-inside: avoid;
+            }
+            tr {
+              page-break-inside: avoid;
+              page-break-after: auto;
             }
             @page {
               size: A4;
@@ -247,6 +263,19 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
             </div>
             {/* Additional info like next term fees could go here */}
           </div>
+          
+          {isAdminOrManager && (
+            <div style={{ marginTop: '50px', display: 'flex', justifyContent: 'space-between', padding: '0 20px', pageBreakInside: 'avoid' }}>
+              <div style={{ textAlign: 'center', width: '250px' }}>
+                <div style={{ borderBottom: '1px solid #000', height: '60px' }}></div>
+                <div style={{ marginTop: '8px', fontWeight: 'bold' }}>Manager / Admin Signature</div>
+              </div>
+              <div style={{ textAlign: 'center', width: '200px' }}>
+                <div style={{ borderBottom: '1px solid #000', height: '60px' }}></div>
+                <div style={{ marginTop: '8px', fontWeight: 'bold' }}>Official Stamp</div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
