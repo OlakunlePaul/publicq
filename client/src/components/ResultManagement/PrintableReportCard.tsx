@@ -12,11 +12,23 @@ interface PrintableReportCardProps {
   isAdminOrManager?: boolean;
 }
 
+const gradeRemarkMap: Record<string, string> = {
+  'A1': 'Excellent', 'B2': 'Very Good', 'B3': 'Good',
+  'C4': 'Credit', 'C5': 'Credit', 'C6': 'Pass',
+  'D7': 'Pass', 'E8': 'Poor', 'F9': 'Fail'
+};
+
 const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termInfo, sessionInfo, onClose, isAdminOrManager }) => {
   const printRef = useRef<HTMLDivElement>(null);
 
   const [branding, setBranding] = useState<SchoolBrandingConfiguration | null>(null);
   const baseURL = api.defaults.baseURL?.replace(/\/api\/?$/, '') || '';
+
+  const getAssetUrl = (url?: string | null) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    return `${baseURL}/${url.replace(/^\//, '')}`;
+  };
 
   useEffect(() => {
     // Fetch branding data
@@ -95,7 +107,7 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
         <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '3px solid #000', paddingBottom: '10px' }}>
           {branding?.schoolLogoUrl && (
             <img 
-              src={branding.schoolLogoUrl.startsWith('http') ? branding.schoolLogoUrl : `${baseURL}/${branding.schoolLogoUrl}`} 
+              src={getAssetUrl(branding.schoolLogoUrl)!} 
               alt="School Logo" 
               style={{ maxHeight: '80px', marginBottom: '10px', display: 'block', marginLeft: 'auto', marginRight: 'auto' }} 
             />
@@ -149,8 +161,17 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
               <tr>
                 <td style={tdInfoStyle}>Position/Grade:</td>
                 <td style={{ ...tdInfoStyle, borderBottom: '1px solid #000', fontWeight: 'bold' }}>
-                  {report.positionInClass ? `${report.positionInClass} / ` : '- / '} 
-                  {report.overallGrade || '-'}
+                  {report.positionInClass != null ? `${report.positionInClass}` : '-'}
+                  {report.numberInClass != null ? ` of ${report.numberInClass}` : ''}
+                  {' / '}
+                  {report.overallGrade || (report.averageScore != null ? (
+                    report.averageScore >= 75 ? 'A1' :
+                    report.averageScore >= 70 ? 'B2' :
+                    report.averageScore >= 65 ? 'B3' :
+                    report.averageScore >= 60 ? 'C4' :
+                    report.averageScore >= 50 ? 'C6' :
+                    report.averageScore >= 40 ? 'E8' : 'F9'
+                  ) : '-')}
                 </td>
               </tr>
             </tbody>
@@ -191,7 +212,7 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
                     <td style={{...tdStyle, textAlign: 'center'}}>{score.examScore ?? '-'}</td>
                     <td style={{...tdStyle, textAlign: 'center', fontWeight: 'bold'}}>{total}</td>
                     <td style={{...tdStyle, textAlign: 'center'}}>{grade}</td>
-                    <td style={tdStyle}>{score.subjectRemark || '-'}</td>
+                    <td style={tdStyle}>{score.subjectRemark || gradeRemarkMap[grade] || '-'}</td>
                   </tr>
                 );
               })}
@@ -267,11 +288,19 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
           {isAdminOrManager && (
             <div style={{ marginTop: '50px', display: 'flex', justifyContent: 'space-between', padding: '0 20px', pageBreakInside: 'avoid' }}>
               <div style={{ textAlign: 'center', width: '250px' }}>
-                <div style={{ borderBottom: '1px solid #000', height: '60px' }}></div>
+                <div style={{ borderBottom: '1px solid #000', height: '60px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                  {branding?.managerSignatureUrl && (
+                    <img src={getAssetUrl(branding.managerSignatureUrl)!} alt="Signature" style={{ maxHeight: '55px', maxWidth: '200px', objectFit: 'contain' }} />
+                  )}
+                </div>
                 <div style={{ marginTop: '8px', fontWeight: 'bold' }}>Manager / Admin Signature</div>
               </div>
               <div style={{ textAlign: 'center', width: '200px' }}>
-                <div style={{ borderBottom: '1px solid #000', height: '60px' }}></div>
+                <div style={{ borderBottom: '1px solid #000', height: '60px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                  {branding?.officialStampUrl && (
+                    <img src={getAssetUrl(branding.officialStampUrl)!} alt="Stamp" style={{ maxHeight: '55px', maxWidth: '180px', objectFit: 'contain' }} />
+                  )}
+                </div>
                 <div style={{ marginTop: '8px', fontWeight: 'bold' }}>Official Stamp</div>
               </div>
             </div>

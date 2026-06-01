@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import styles from './SchoolBranding.module.css';
 import { configurationService } from '../../../services/configurationService';
 import { SchoolBrandingConfiguration } from '../../../models/school-branding-configuration';
@@ -15,7 +15,9 @@ import {
     Camera, 
     Globe, 
     Loader2,
-    CheckCircle2
+    CheckCircle2,
+    PenLine,
+    Stamp
 } from 'lucide-react';
 
 const SchoolBrandingManagement: React.FC = () => {
@@ -30,8 +32,14 @@ const SchoolBrandingManagement: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [signatureFile, setSignatureFile] = useState<File | null>(null);
+    const [stampFile, setStampFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
+    const [uploadingSignature, setUploadingSignature] = useState(false);
+    const [uploadingStamp, setUploadingStamp] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const signatureInputRef = useRef<HTMLInputElement>(null);
+    const stampInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         const fetchConfig = async () => {
@@ -60,8 +68,18 @@ const SchoolBrandingManagement: React.FC = () => {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             setLogoFile(e.target.files[0]);
-            // Auto-trigger upload for better UX? Or wait for click?
-            // Let's wait for click but show the file is ready.
+        }
+    };
+
+    const handleSignatureFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setSignatureFile(e.target.files[0]);
+        }
+    };
+
+    const handleStampFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setStampFile(e.target.files[0]);
         }
     };
 
@@ -113,6 +131,52 @@ const SchoolBrandingManagement: React.FC = () => {
         }
     };
 
+    const handleUploadSignature = async () => {
+        if (!signatureFile) return;
+        setUploadingSignature(true);
+        setError(null);
+        setSuccess(null);
+        try {
+            const response = await configurationService.uploadManagerSignature(signatureFile);
+            if (response.isSuccess && response.data) {
+                const newConfig = { ...config, managerSignatureUrl: response.data };
+                setConfig(newConfig);
+                setSignatureFile(null);
+                await handleSaveInternal(newConfig);
+                setSuccess('Signature uploaded and saved successfully!');
+            } else {
+                setError(response.message || 'Failed to upload signature.');
+            }
+        } catch (err) {
+            setError('Error uploading signature.');
+        } finally {
+            setUploadingSignature(false);
+        }
+    };
+
+    const handleUploadStamp = async () => {
+        if (!stampFile) return;
+        setUploadingStamp(true);
+        setError(null);
+        setSuccess(null);
+        try {
+            const response = await configurationService.uploadOfficialStamp(stampFile);
+            if (response.isSuccess && response.data) {
+                const newConfig = { ...config, officialStampUrl: response.data };
+                setConfig(newConfig);
+                setStampFile(null);
+                await handleSaveInternal(newConfig);
+                setSuccess('Stamp uploaded and saved successfully!');
+            } else {
+                setError(response.message || 'Failed to upload stamp.');
+            }
+        } catch (err) {
+            setError('Error uploading stamp.');
+        } finally {
+            setUploadingStamp(false);
+        }
+    };
+
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         await handleSaveInternal(config);
@@ -149,18 +213,17 @@ const SchoolBrandingManagement: React.FC = () => {
         );
     }
 
-    const getPreviewUrl = () => {
-        if (!config.schoolLogoUrl) return null;
-        if (config.schoolLogoUrl.startsWith('http')) return config.schoolLogoUrl;
-        
-        // Use the API proxy route: api/static/xxx
-        // Since schoolLogoUrl already starts with 'static/', we just need to ensure the base URL is correct.
-        const baseUrl = appConfig.apiBaseUrl.replace(/\/$/, ''); // Remove trailing slash
-        const path = config.schoolLogoUrl.startsWith('/') ? config.schoolLogoUrl : `/${config.schoolLogoUrl}`;
+    const getAssetPreviewUrl = (url?: string | null) => {
+        if (!url) return null;
+        if (url.startsWith('http')) return url;
+        const baseUrl = appConfig.apiBaseUrl.replace(/\/$/, '');
+        const path = url.startsWith('/') ? url : `/${url}`;
         return `${baseUrl}${path}`;
     };
 
-    const previewUrl = getPreviewUrl();
+    const previewUrl = getAssetPreviewUrl(config.schoolLogoUrl);
+    const signaturePreviewUrl = getAssetPreviewUrl(config.managerSignatureUrl);
+    const stampPreviewUrl = getAssetPreviewUrl(config.officialStampUrl);
 
     return (
         <motion.div 
@@ -349,6 +412,147 @@ const SchoolBrandingManagement: React.FC = () => {
                                     Paste a link if your logo is hosted on an external website.
                                 </p>
                             </div>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+
+            {/* 3. Signature & Stamp Section */}
+            <div className={styles.grid} style={{ marginTop: '1.5rem' }}>
+                {/* Manager Signature */}
+                <motion.div variants={itemVariants} className={styles.profileCard}>
+                    <div className={styles.sectionHeader}>
+                        <h3><PenLine size={20} style={{ display: 'inline', marginRight: '6px' }} />Manager / Admin Signature</h3>
+                        <p>Upload a scanned signature to appear on printed report cards.</p>
+                    </div>
+
+                    <div className={styles.logoSection}>
+                        <div 
+                            className={styles.logoPreviewContainer}
+                            onClick={() => signatureInputRef.current?.click()}
+                            style={{ height: '100px' }}
+                        >
+                            {signaturePreviewUrl ? (
+                                <img src={signaturePreviewUrl} alt="Signature Preview" className={styles.logoImage} style={{ objectFit: 'contain' }} />
+                            ) : (
+                                <PenLine size={48} color="#d1d5db" />
+                            )}
+                            <div className={styles.uploadOverlay}>
+                                <Upload size={14} style={{ display: 'inline', marginRight: '4px' }} /> Change Signature
+                            </div>
+                        </div>
+
+                        <div className={styles.uploadZone}>
+                            <input
+                                ref={signatureInputRef}
+                                id="signatureUpload"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleSignatureFileChange}
+                                style={{ display: 'none' }}
+                            />
+                            
+                            {signatureFile && (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    style={{ textAlign: 'center', marginBottom: '16px' }}
+                                >
+                                    <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#4f46e5' }}>
+                                        Ready: {signatureFile.name}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={handleUploadSignature}
+                                        disabled={uploadingSignature}
+                                        className={styles.saveButton}
+                                        style={{ marginTop: '8px' }}
+                                    >
+                                        {uploadingSignature ? <Loader2 className="animate-spin" size={18} /> : <Upload size={18} />}
+                                        {uploadingSignature ? 'Processing...' : 'Upload & Persist Signature'}
+                                    </button>
+                                </motion.div>
+                            )}
+
+                            {!signatureFile && (
+                                <div 
+                                    className={styles.dropZone}
+                                    onClick={() => signatureInputRef.current?.click()}
+                                >
+                                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                        Click to upload or <span style={{ color: '#4f46e5', fontWeight: 600 }}>browse files</span>
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Official Stamp */}
+                <motion.div variants={itemVariants} className={styles.profileCard}>
+                    <div className={styles.sectionHeader}>
+                        <h3><Stamp size={20} style={{ display: 'inline', marginRight: '6px' }} />Official Stamp</h3>
+                        <p>Upload a scanned stamp to appear on printed report cards.</p>
+                    </div>
+
+                    <div className={styles.logoSection}>
+                        <div 
+                            className={styles.logoPreviewContainer}
+                            onClick={() => stampInputRef.current?.click()}
+                            style={{ height: '100px' }}
+                        >
+                            {stampPreviewUrl ? (
+                                <img src={stampPreviewUrl} alt="Stamp Preview" className={styles.logoImage} style={{ objectFit: 'contain' }} />
+                            ) : (
+                                <Stamp size={48} color="#d1d5db" />
+                            )}
+                            <div className={styles.uploadOverlay}>
+                                <Upload size={14} style={{ display: 'inline', marginRight: '4px' }} /> Change Stamp
+                            </div>
+                        </div>
+
+                        <div className={styles.uploadZone}>
+                            <input
+                                ref={stampInputRef}
+                                id="stampUpload"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleStampFileChange}
+                                style={{ display: 'none' }}
+                            />
+                            
+                            {stampFile && (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    style={{ textAlign: 'center', marginBottom: '16px' }}
+                                >
+                                    <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#4f46e5' }}>
+                                        Ready: {stampFile.name}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={handleUploadStamp}
+                                        disabled={uploadingStamp}
+                                        className={styles.saveButton}
+                                        style={{ marginTop: '8px' }}
+                                    >
+                                        {uploadingStamp ? <Loader2 className="animate-spin" size={18} /> : <Upload size={18} />}
+                                        {uploadingStamp ? 'Processing...' : 'Upload & Persist Stamp'}
+                                    </button>
+                                </motion.div>
+                            )}
+
+                            {!stampFile && (
+                                <div 
+                                    className={styles.dropZone}
+                                    onClick={() => stampInputRef.current?.click()}
+                                >
+                                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                        Click to upload or <span style={{ color: '#4f46e5', fontWeight: 600 }}>browse files</span>
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </motion.div>

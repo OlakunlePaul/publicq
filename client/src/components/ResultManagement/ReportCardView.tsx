@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AssessmentDetailsDto, UpdateAssessmentDetailsDto } from '../../models/academic';
 import { resultService } from '../../services/resultService';
 import { ValidationMessage } from '../Shared/ValidationComponents';
+import { Sparkles } from 'lucide-react';
 
 interface ReportCardViewProps {
   assessmentId: string;
@@ -99,6 +100,40 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAutoGenerateComments = () => {
+    if (!report || readOnly) return;
+    
+    const avg = report.averageScore || 0;
+    let academic = "showing steady progress";
+    if (avg >= 85) academic = "demonstrating outstanding academic excellence";
+    else if (avg >= 70) academic = "performing very well across most subjects";
+    else if (avg >= 50) academic = "showing average performance but with room for improvement";
+    else academic = "requiring more focus and dedication to improve academic performance";
+
+    const att = formData.attitudeInSchool || '';
+    let behavior = "";
+    if (['A', 'B', '5', '4', 'A1', 'B2', 'B3'].includes(att.toUpperCase())) behavior = " Their positive attitude and good behavior are commendable.";
+    else if (['D', 'E', '2', '1', 'D7', 'E8', 'F9'].includes(att.toUpperCase())) behavior = " There is a need for better conduct and focus during classes.";
+
+    const sports = formData.fieldGames || formData.trackGames || '';
+    let physical = "";
+    if (['A', 'B', '5', '4'].includes(sports.toUpperCase())) physical = " They also show great enthusiasm in physical activities.";
+
+    const classComment = `${report.studentName} is ${academic}.${behavior}${physical}`;
+    
+    let headComment = "A satisfactory result.";
+    if (avg >= 75) headComment = "An excellent result. Keep up the good work!";
+    else if (avg >= 60) headComment = "A good performance. Aim higher next term.";
+    else if (avg >= 50) headComment = "A fair performance. More effort is needed next term.";
+    else headComment = "Poor performance. Parents should please monitor their studies at home.";
+
+    setFormData(prev => ({
+      ...prev,
+      classTeacherComment: classComment,
+      headTeacherComment: headComment
+    }));
   };
 
   if (loading) return <div style={{ padding: '20px' }}>Loading Report Card...</div>;
@@ -221,7 +256,18 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
 
       {/* Remarks */}
       <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '12px', border: '1px solid #e5e7eb', marginBottom: '32px' }}>
-        <h3 style={{ marginTop: 0, fontSize: '15px', fontWeight: 600, color: '#374151', marginBottom: '16px' }}>Comments & Remarks</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#374151' }}>Comments & Remarks</h3>
+          {!readOnly && (
+            <button 
+              onClick={handleAutoGenerateComments} 
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', backgroundColor: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+              title="Generate comments based on student's performance"
+            >
+              <Sparkles size={14} /> Auto-Generate (AI)
+            </button>
+          )}
+        </div>
         <div style={{ display: 'grid', gap: '20px' }}>
           <div>
             <label style={labelStyle}>Class Teacher's Comment</label>

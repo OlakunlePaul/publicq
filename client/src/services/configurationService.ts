@@ -201,6 +201,28 @@ export const configurationService = {
     return response.data;
   },
 
+  uploadManagerSignature: async (file: File): Promise<ResponseWithData<string, GenericOperationStatuses>> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axios.post<ResponseWithData<string, GenericOperationStatuses>>('configuration/school-branding/signature', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  uploadOfficialStamp: async (file: File): Promise<ResponseWithData<string, GenericOperationStatuses>> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axios.post<ResponseWithData<string, GenericOperationStatuses>>('configuration/school-branding/stamp', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
   getS3Options: async (): Promise<ResponseWithData<S3Configuration, GenericOperationStatuses>> => {
     const response = await axios.get<ResponseWithData<S3Configuration, GenericOperationStatuses>>('configuration/s3-storage');
     return response.data;

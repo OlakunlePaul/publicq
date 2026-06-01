@@ -3,4 +3,6 @@ export interface SchoolBrandingConfiguration {
     schoolAddress: string;
     schoolPhone: string;
     schoolLogoUrl: string | null;
+    managerSignatureUrl?: string;
+    officialStampUrl?: string;
 }

@@ -906,4 +906,87 @@ public class ConfigurationController(
         var result = await storageService.SaveAsync(storageItem, cancellationToken);
         return result.ToActionResult();
     }
+    /// <summary>
+    /// Uploads a manager signature.
+    /// </summary>
+    /// <param name="file">The signature file</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Returns the URL of the uploaded signature</returns>
+    [HttpPost("school-branding/signature")]
+    [Authorize(Constants.ManagersPolicy)]
+    public async Task<IActionResult> UploadManagerSignature(
+        IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return Response<string, GenericOperationStatuses>
+                .Failure(GenericOperationStatuses.BadRequest, "No file uploaded.")
+                .ToActionResult();
+        }
+
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!allowedExtensions.Contains(extension))
+        {
+            return Response<string, GenericOperationStatuses>
+                .Failure(GenericOperationStatuses.BadRequest, "Invalid file type. Only JPG, PNG, and GIF are allowed.")
+                .ToActionResult();
+        }
+
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms, cancellationToken);
+
+        var storageItem = new PublicQ.Shared.Models.StorageItem
+        {
+            Name = $"manager_signature_{Guid.NewGuid()}{extension}",
+            Content = ms.ToArray(),
+            RelativePath = "branding"
+        };
+
+        var result = await storageService.SaveAsync(storageItem, cancellationToken);
+        return result.ToActionResult();
+    }
+    
+    /// <summary>
+    /// Uploads an official stamp.
+    /// </summary>
+    /// <param name="file">The stamp file</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Returns the URL of the uploaded stamp</returns>
+    [HttpPost("school-branding/stamp")]
+    [Authorize(Constants.ManagersPolicy)]
+    public async Task<IActionResult> UploadOfficialStamp(
+        IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return Response<string, GenericOperationStatuses>
+                .Failure(GenericOperationStatuses.BadRequest, "No file uploaded.")
+                .ToActionResult();
+        }
+
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!allowedExtensions.Contains(extension))
+        {
+            return Response<string, GenericOperationStatuses>
+                .Failure(GenericOperationStatuses.BadRequest, "Invalid file type. Only JPG, PNG, and GIF are allowed.")
+                .ToActionResult();
+        }
+
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms, cancellationToken);
+
+        var storageItem = new PublicQ.Shared.Models.StorageItem
+        {
+            Name = $"official_stamp_{Guid.NewGuid()}{extension}",
+            Content = ms.ToArray(),
+            RelativePath = "branding"
+        };
+
+        var result = await storageService.SaveAsync(storageItem, cancellationToken);
+        return result.ToActionResult();
+    }
 }

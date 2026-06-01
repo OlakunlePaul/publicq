@@ -18,4 +18,8 @@ public class SchoolBrandingConfiguration : IConfigurationModel
     public string SchoolPhone { get; set; } = "0800-SCHOOL-123";
     
     public string? SchoolLogoUrl { get; set; }
+    
+    public string? ManagerSignatureUrl { get; set; }
+    
+    public string? OfficialStampUrl { get; set; }
 }
