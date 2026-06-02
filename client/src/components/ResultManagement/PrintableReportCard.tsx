@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AssessmentDetailsDto, TermDto, SessionDto } from '../../models/academic';
 import { configurationService } from '../../services/configurationService';
 import { SchoolBrandingConfiguration } from '../../models/school-branding-configuration';
@@ -48,7 +49,7 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
   // Helper styles specifically for the print layout
   const tableBorder = '1px solid #000';
   
-  return (
+  const content = (
     <div style={overlayStyle} className="printable-report-overlay">
       <style>
         {`
@@ -330,6 +331,8 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
       </div>
     </div>
   );
+
+  return createPortal(content, document.body);
 };
 
 // Styles for the viewing overlay (non-print)
