@@ -243,7 +243,7 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
         </div>
 
         {/* Traits and Attendance Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px', marginBottom: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px', marginBottom: '20px', pageBreakInside: 'avoid' }}>
           {/* Attendance */}
           <div>
             <div style={sectionTitleStyle}>Attendance</div>
