@@ -91,6 +91,11 @@ export const resultService = {
     });
   },
 
+  updateAssessmentDetails: async (assessmentId: string, details: any): Promise<{ isSuccess: boolean }> => {
+    await api.patch(`results/${assessmentId}/details`, details);
+    return { isSuccess: true };
+  },
+
   // Added missing methods for ResultManagement.tsx compatibility
   saveBulkScores: async (payload: any): Promise<{ isSuccess: boolean, message?: string }> => {
     await api.post('results/bulk-scores', payload);

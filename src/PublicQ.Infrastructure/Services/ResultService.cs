@@ -364,6 +364,21 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
         assessment.TimesSchoolOpened = request.TimesSchoolOpened ?? assessment.TimesSchoolOpened;
         assessment.TimesPresent = request.TimesPresent ?? assessment.TimesPresent;
         assessment.TimesAbsent = request.TimesAbsent ?? assessment.TimesAbsent;
+        
+        // Affective
+        assessment.Regularity = request.Regularity ?? assessment.Regularity;
+        assessment.Punctuality = request.Punctuality ?? assessment.Punctuality;
+        assessment.Neatness = request.Neatness ?? assessment.Neatness;
+        assessment.AttitudeInSchool = request.AttitudeInSchool ?? assessment.AttitudeInSchool;
+        assessment.SocialActivities = request.SocialActivities ?? assessment.SocialActivities;
+
+        // Psychomotor
+        assessment.IndoorGames = request.IndoorGames ?? assessment.IndoorGames;
+        assessment.FieldGames = request.FieldGames ?? assessment.FieldGames;
+        assessment.TrackGames = request.TrackGames ?? assessment.TrackGames;
+        assessment.Jumps = request.Jumps ?? assessment.Jumps;
+        assessment.Swims = request.Swims ?? assessment.Swims;
+
         assessment.ClassTeacherComment = request.ClassTeacherComment ?? assessment.ClassTeacherComment;
         assessment.HeadTeacherComment = request.HeadTeacherComment ?? assessment.HeadTeacherComment;
 

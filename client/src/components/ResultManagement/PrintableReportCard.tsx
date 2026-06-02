@@ -212,7 +212,7 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
                     <td style={{...tdStyle, textAlign: 'center'}}>{score.examScore ?? '-'}</td>
                     <td style={{...tdStyle, textAlign: 'center', fontWeight: 'bold'}}>{total}</td>
                     <td style={{...tdStyle, textAlign: 'center'}}>{grade}</td>
-                    <td style={tdStyle}>{score.subjectRemark || gradeRemarkMap[grade] || '-'}</td>
+                    <td style={tdStyle}>{(score.subjectRemark && score.subjectRemark !== '-') ? score.subjectRemark : (gradeRemarkMap[grade] || '-')}</td>
                   </tr>
                 );
               })}

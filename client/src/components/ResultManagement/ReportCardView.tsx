@@ -89,8 +89,7 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
     setSuccess('');
 
     try {
-      await resultService.updateStatus(assessmentId, 0); // Status update dummy or actual details update
-      // resultService should have an updateAssessmentDetails method, let's assume it or use updateStatus
+      await resultService.updateAssessmentDetails(assessmentId, formData);
       setSuccess('Report card details updated successfully.');
       setTimeout(() => {
         onSaved();
