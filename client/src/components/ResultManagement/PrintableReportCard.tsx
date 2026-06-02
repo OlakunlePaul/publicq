@@ -126,25 +126,27 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
 
       <div id="printable-report-card" ref={printRef} style={pageStyle}>
         {/* Header Section */}
-        <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '3px solid #000', paddingBottom: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '15px', borderBottom: '3px solid #000', paddingBottom: '10px' }}>
           {branding?.schoolLogoUrl && (
             <img 
               src={getAssetUrl(branding.schoolLogoUrl)!} 
               alt="School Logo" 
-              style={{ maxHeight: '80px', marginBottom: '10px', display: 'block', marginLeft: 'auto', marginRight: 'auto' }} 
+              style={{ maxHeight: '80px', objectFit: 'contain' }} 
             />
           )}
-          <div style={{ fontSize: '32px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1e3a8a' }}>
-            {branding?.schoolName || 'Day & Boarding School'}
-          </div>
-          <div style={{ fontSize: '14px', marginTop: '4px' }}>
-            {branding?.schoolAddress || '123 Education Avenue, Knowledge City.'} Tel: {branding?.schoolPhone || '0800-SCHOOL-123'}
-          </div>
-          <div style={{ fontSize: '20px', fontWeight: 'bold', marginTop: '10px', textTransform: 'uppercase' }}>
-            {termInfo?.name || 'Academic Term'} Report
-          </div>
-          <div style={{ fontSize: '14px', fontWeight: 'bold', marginTop: '4px' }}>
-            {sessionInfo?.name || 'Academic Session'}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '26px', fontWeight: 'bold', textTransform: 'uppercase', color: '#1e3a8a' }}>
+              {branding?.schoolName || 'Day & Boarding School'}
+            </div>
+            <div style={{ fontSize: '13px', marginTop: '2px' }}>
+              {branding?.schoolAddress || '123 Education Avenue, Knowledge City.'} Tel: {branding?.schoolPhone || '0800-SCHOOL-123'}
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '6px', textTransform: 'uppercase' }}>
+              {termInfo?.name || 'Academic Term'} Report
+            </div>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', marginTop: '2px' }}>
+              {sessionInfo?.name || 'Academic Session'}
+            </div>
           </div>
         </div>
 
