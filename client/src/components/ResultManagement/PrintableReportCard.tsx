@@ -53,6 +53,15 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
       <style>
         {`
           @media print {
+            @page {
+              margin: 10mm;
+            }
+            html, body {
+              height: auto !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              overflow: visible !important;
+            }
             body * {
               visibility: hidden;
             }
@@ -78,6 +87,18 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
               margin: 0 !important;
               box-sizing: border-box;
               box-shadow: none !important;
+              page-break-after: auto;
+            }
+            /* Hide print button in print */
+            .print-btn-container {
+              display: none !important;
+            }
+            /* Ensure the app behind doesn't stretch the page */
+            #root {
+              display: none !important;
+            }
+            .printable-report-overlay {
+              display: block !important;
             }
             .no-print {
               display: none !important;
