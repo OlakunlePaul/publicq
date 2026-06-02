@@ -266,16 +266,16 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
         {/* Comments Footer */}
         <div style={{ marginTop: '30px' }}>
           <div style={{ marginBottom: '15px' }}>
-            <span style={{ fontWeight: 'bold' }}>Class Teacher's Comment: </span>
-            <span style={{ fontStyle: 'italic', borderBottom: '1px dotted #000', display: 'inline-block', width: 'calc(100% - 180px)' }}>
-              {report.classTeacherComment || '.........................................................................................'}
-            </span>
+            <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Class Teacher's Comment: </div>
+            <div style={{ fontStyle: 'italic', borderBottom: '1px dotted #ccc', lineHeight: '1.6', minHeight: '24px' }}>
+              {report.classTeacherComment || ''}
+            </div>
           </div>
           <div style={{ marginBottom: '15px' }}>
-            <span style={{ fontWeight: 'bold' }}>Head Teacher's Comment: </span>
-            <span style={{ fontStyle: 'italic', borderBottom: '1px dotted #000', display: 'inline-block', width: 'calc(100% - 180px)' }}>
-              {report.headTeacherComment || '.........................................................................................'}
-            </span>
+            <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Head Teacher's Comment: </div>
+            <div style={{ fontStyle: 'italic', borderBottom: '1px dotted #ccc', lineHeight: '1.6', minHeight: '24px' }}>
+              {report.headTeacherComment || ''}
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
             <div>
