@@ -4,6 +4,22 @@ import { resultService } from '../../services/resultService';
 import { ValidationMessage } from '../Shared/ValidationComponents';
 import { Sparkles } from 'lucide-react';
 
+const gradeRemarkMap: Record<string, string> = {
+  'A1': 'Excellent', 'B2': 'Very Good', 'B3': 'Good',
+  'C4': 'Credit', 'C5': 'Credit', 'C6': 'Pass',
+  'D7': 'Pass', 'E8': 'Poor', 'F9': 'Fail'
+};
+
+const getCalculatedGrade = (total: number) => {
+  if (total >= 75) return 'A1';
+  if (total >= 70) return 'B2';
+  if (total >= 65) return 'B3';
+  if (total >= 60) return 'C4';
+  if (total >= 50) return 'C6';
+  if (total >= 40) return 'E8';
+  return 'F9';
+};
+
 interface ReportCardViewProps {
   assessmentId: string;
   onClose: () => void;
@@ -106,21 +122,14 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
     
     const avg = report.averageScore || 0;
     let academic = "showing steady progress";
-    if (avg >= 85) academic = "demonstrating outstanding academic excellence";
-    else if (avg >= 70) academic = "performing very well across most subjects";
-    else if (avg >= 50) academic = "showing average performance but with room for improvement";
-    else academic = "requiring more focus and dedication to improve academic performance";
+    let traitGrade = 'C';
+    
+    if (avg >= 85) { academic = "demonstrating outstanding academic excellence"; traitGrade = 'A'; }
+    else if (avg >= 70) { academic = "performing very well across most subjects"; traitGrade = 'B'; }
+    else if (avg >= 50) { academic = "showing average performance but with room for improvement"; traitGrade = 'C'; }
+    else { academic = "requiring more focus and dedication to improve academic performance"; traitGrade = 'D'; }
 
-    const att = formData.attitudeInSchool || '';
-    let behavior = "";
-    if (['A', 'B', '5', '4', 'A1', 'B2', 'B3'].includes(att.toUpperCase())) behavior = " Their positive attitude and good behavior are commendable.";
-    else if (['D', 'E', '2', '1', 'D7', 'E8', 'F9'].includes(att.toUpperCase())) behavior = " There is a need for better conduct and focus during classes.";
-
-    const sports = formData.fieldGames || formData.trackGames || '';
-    let physical = "";
-    if (['A', 'B', '5', '4'].includes(sports.toUpperCase())) physical = " They also show great enthusiasm in physical activities.";
-
-    const classComment = `${report.studentName} is ${academic}.${behavior}${physical}`;
+    const classComment = `${report.studentName} is ${academic}. Their positive attitude and good behavior are commendable. They also show great enthusiasm in physical activities.`;
     
     let headComment = "A satisfactory result.";
     if (avg >= 75) headComment = "An excellent result. Keep up the good work!";
@@ -131,7 +140,17 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
     setFormData(prev => ({
       ...prev,
       classTeacherComment: classComment,
-      headTeacherComment: headComment
+      headTeacherComment: headComment,
+      regularity: prev.regularity || traitGrade,
+      punctuality: prev.punctuality || traitGrade,
+      neatness: prev.neatness || traitGrade,
+      attitudeInSchool: prev.attitudeInSchool || traitGrade,
+      socialActivities: prev.socialActivities || traitGrade,
+      indoorGames: prev.indoorGames || traitGrade,
+      fieldGames: prev.fieldGames || traitGrade,
+      trackGames: prev.trackGames || traitGrade,
+      jumps: prev.jumps || traitGrade,
+      swims: prev.swims || traitGrade
     }));
   };
 
@@ -173,18 +192,24 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
                 </thead>
                 <tbody>
                     {report.subjectScores && report.subjectScores.length > 0 ? (
-                        report.subjectScores.map((score, i) => (
-                            <tr key={i} style={{ borderBottom: i === report.subjectScores.length - 1 ? 'none' : '1px solid #f3f4f6' }}>
-                                <td style={tableTdStyle}><strong>{score.subjectName || 'Subject'}</strong></td>
-                                <td style={tableTdStyle}>{score.testScore ?? '-'}</td>
-                                <td style={tableTdStyle}>{score.examScore ?? '-'}</td>
-                                <td style={{ ...tableTdStyle, fontWeight: 700, color: (score.totalScore ?? 0) < 40 ? '#ef4444' : '#111827' }}>
-                                    {score.totalScore ?? '-'}
-                                </td>
-                                <td style={tableTdStyle}>{score.grade || '-'}</td>
-                                <td style={tableTdStyle}>{score.subjectRemark || '-'}</td>
-                            </tr>
-                        ))
+                        report.subjectScores.map((score, i) => {
+                            const total = score.totalScore || ((score.testScore ?? 0) + (score.examScore ?? 0));
+                            const calcGrade = score.grade && score.grade !== '-' ? score.grade : getCalculatedGrade(total);
+                            const calcRemark = (score.subjectRemark && score.subjectRemark !== '-') ? score.subjectRemark : (gradeRemarkMap[calcGrade] || '-');
+                            
+                            return (
+                                <tr key={i} style={{ borderBottom: i === report.subjectScores.length - 1 ? 'none' : '1px solid #f3f4f6' }}>
+                                    <td style={tableTdStyle}><strong>{score.subjectName || 'Subject'}</strong></td>
+                                    <td style={tableTdStyle}>{score.testScore ?? '-'}</td>
+                                    <td style={tableTdStyle}>{score.examScore ?? '-'}</td>
+                                    <td style={{ ...tableTdStyle, fontWeight: 700, color: total < 40 ? '#ef4444' : '#111827' }}>
+                                        {total > 0 ? total : '-'}
+                                    </td>
+                                    <td style={tableTdStyle}>{calcGrade}</td>
+                                    <td style={tableTdStyle}>{calcRemark}</td>
+                                </tr>
+                            );
+                        })
                     ) : (
                         <tr><td colSpan={6} style={{ ...tableTdStyle, textAlign: 'center', color: '#9ca3af' }}>No scores available</td></tr>
                     )}
@@ -201,7 +226,7 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
             <SummaryItem label="Total Marks" value={`${report.totalMarksObtained ?? '-'} / ${report.totalMarksObtainable ?? '-'}`} />
             <SummaryItem label="Average" value={`${report.averageScore?.toFixed(2) ?? '-'}%`} />
             <SummaryItem label="Class Position" value={`${report.positionInClass ?? '-'} / ${report.numberInClass ?? '-'}`} />
-            <SummaryItem label="Overall Grade" value={report.overallGrade || '-'} />
+            <SummaryItem label="Overall Grade" value={(report.overallGrade && report.overallGrade !== '-') ? report.overallGrade : (report.averageScore ? getCalculatedGrade(report.averageScore) : '-')} />
           </div>
         </div>
 
@@ -300,11 +325,11 @@ const TraitInput = ({ label, name, value, onChange, disabled }: { label: string,
   </div>
 );
 
-const SummaryItem = ({ label, value }: { label: string, value: string | number }) => (
-    <div>
-        <div style={{ fontSize: '12px', color: '#60a5fa', fontWeight: 600, marginBottom: '2px' }}>{label}</div>
-        <div style={{ fontSize: '18px', color: '#ffffff', fontWeight: 700 }}>{value}</div>
-    </div>
+const SummaryItem: React.FC<{ label: string, value: string | number }> = ({ label, value }) => (
+  <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <span style={{ fontSize: '13px', color: '#3b82f6', marginBottom: '4px' }}>{label}</span>
+    <span style={{ fontSize: '18px', fontWeight: 700, color: '#1e3a8a' }}>{value}</span>
+  </div>
 );
 
 const tableThStyle: React.CSSProperties = {
