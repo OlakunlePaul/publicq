@@ -141,16 +141,16 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
       ...prev,
       classTeacherComment: classComment,
       headTeacherComment: headComment,
-      regularity: prev.regularity || traitGrade,
-      punctuality: prev.punctuality || traitGrade,
-      neatness: prev.neatness || traitGrade,
-      attitudeInSchool: prev.attitudeInSchool || traitGrade,
-      socialActivities: prev.socialActivities || traitGrade,
-      indoorGames: prev.indoorGames || traitGrade,
-      fieldGames: prev.fieldGames || traitGrade,
-      trackGames: prev.trackGames || traitGrade,
-      jumps: prev.jumps || traitGrade,
-      swims: prev.swims || traitGrade
+      regularity: traitGrade,
+      punctuality: traitGrade,
+      neatness: traitGrade,
+      attitudeInSchool: traitGrade,
+      socialActivities: traitGrade,
+      indoorGames: traitGrade,
+      fieldGames: traitGrade,
+      trackGames: traitGrade,
+      jumps: traitGrade,
+      swims: traitGrade
     }));
   };
 
