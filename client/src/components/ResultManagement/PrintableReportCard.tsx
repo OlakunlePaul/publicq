@@ -322,17 +322,17 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
           {isAdminOrManager && (
             <div style={{ marginTop: '50px', display: 'flex', justifyContent: 'space-between', padding: '0 20px', pageBreakInside: 'avoid' }}>
               <div style={{ textAlign: 'center', width: '250px' }}>
-                <div style={{ borderBottom: '1px solid #000', height: '60px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                <div style={{ borderBottom: '1px solid #000', height: '80px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
                   {branding?.managerSignatureUrl && (
-                    <img src={getAssetUrl(branding.managerSignatureUrl)!} alt="Signature" style={{ maxHeight: '55px', maxWidth: '200px', objectFit: 'contain' }} />
+                    <img src={getAssetUrl(branding.managerSignatureUrl)!} alt="Signature" style={{ maxHeight: '75px', maxWidth: '200px', objectFit: 'contain' }} />
                   )}
                 </div>
                 <div style={{ marginTop: '8px', fontWeight: 'bold' }}>Manager / Admin Signature</div>
               </div>
               <div style={{ textAlign: 'center', width: '200px' }}>
-                <div style={{ borderBottom: '1px solid #000', height: '60px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                <div style={{ borderBottom: '1px solid #000', height: '80px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
                   {branding?.officialStampUrl && (
-                    <img src={getAssetUrl(branding.officialStampUrl)!} alt="Stamp" style={{ maxHeight: '55px', maxWidth: '180px', objectFit: 'contain' }} />
+                    <img src={getAssetUrl(branding.officialStampUrl)!} alt="Stamp" style={{ maxHeight: '75px', maxWidth: '180px', objectFit: 'contain' }} />
                   )}
                 </div>
                 <div style={{ marginTop: '8px', fontWeight: 'bold' }}>Official Stamp</div>
@@ -405,36 +405,36 @@ const sectionTitleStyle: React.CSSProperties = {
   fontWeight: 'bold',
   textTransform: 'uppercase',
   backgroundColor: '#f3f4f6',
-  padding: '4px 8px',
+  padding: '2px 4px',
   border: '1px solid #000',
   borderBottom: 'none',
-  fontSize: '12px'
+  fontSize: '11px'
 };
 
 const thStyle: React.CSSProperties = {
   border: '1px solid #000',
-  padding: '8px',
+  padding: '6px 4px',
   textAlign: 'left',
   fontWeight: 'bold',
-  fontSize: '12px',
+  fontSize: '11px',
   textTransform: 'uppercase'
 };
 
 const tdStyle: React.CSSProperties = {
   border: '1px solid #000',
-  padding: '6px 8px',
-  fontSize: '13px'
+  padding: '4px',
+  fontSize: '12px'
 };
 
 const tdInfoStyle: React.CSSProperties = {
-  padding: '4px 0',
-  fontSize: '14px'
+  padding: '2px 0',
+  fontSize: '13px'
 };
 
 const tdTraitStyle: React.CSSProperties = {
   border: '1px solid #000',
-  padding: '4px 8px',
-  fontSize: '12px'
+  padding: '2px 4px',
+  fontSize: '11px'
 };
 
 export default PrintableReportCard;
