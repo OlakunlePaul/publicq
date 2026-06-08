@@ -175,12 +175,22 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
                 <td style={{ ...tdInfoStyle, borderBottom: '1px solid #000' }}>{report.numberInClass || '-'}</td>
               </tr>
               <tr>
-                <td style={tdInfoStyle}>Total Marks:</td>
-                <td style={{ ...tdInfoStyle, borderBottom: '1px solid #000' }}>{report.totalMarksObtained} / {report.totalMarksObtainable}</td>
+                <td style={{ ...tdInfoStyle, width: '40%' }}>Total Marks:</td>
+                <td style={{ ...tdInfoStyle, borderBottom: '1px solid #000', fontWeight: 'bold' }}>
+                  {report.totalMarksObtained}
+                </td>
+              </tr>
+              <tr>
+                <td style={tdInfoStyle}>Subjects Evaluated:</td>
+                <td style={{ ...tdInfoStyle, borderBottom: '1px solid #000', fontWeight: 'bold' }}>
+                  {report.subjectScores?.length || 0}
+                </td>
               </tr>
               <tr>
                 <td style={tdInfoStyle}>Final Average:</td>
-                <td style={{ ...tdInfoStyle, borderBottom: '1px solid #000', fontWeight: 'bold' }}>{report.averageScore?.toFixed(2) || '-'}%</td>
+                <td style={{ ...tdInfoStyle, borderBottom: '1px solid #000', fontWeight: 'bold' }}>
+                  {report.averageScore?.toFixed(2) || '-'}%
+                </td>
               </tr>
               <tr>
                 <td style={tdInfoStyle}>Position/Grade:</td>
