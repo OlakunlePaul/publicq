@@ -322,17 +322,17 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
           {isAdminOrManager && (
             <div style={{ marginTop: '50px', display: 'flex', justifyContent: 'space-between', padding: '0 20px', pageBreakInside: 'avoid' }}>
               <div style={{ textAlign: 'center', width: '250px' }}>
-                <div style={{ borderBottom: '1px solid #000', height: '80px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                <div style={{ borderBottom: '1px solid #000', height: '110px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
                   {branding?.managerSignatureUrl && (
-                    <img src={getAssetUrl(branding.managerSignatureUrl)!} alt="Signature" style={{ maxHeight: '75px', maxWidth: '200px', objectFit: 'contain' }} />
+                    <img src={getAssetUrl(branding.managerSignatureUrl)!} alt="Signature" style={{ maxHeight: '100px', maxWidth: '240px', objectFit: 'contain' }} />
                   )}
                 </div>
                 <div style={{ marginTop: '8px', fontWeight: 'bold' }}>Manager / Admin Signature</div>
               </div>
-              <div style={{ textAlign: 'center', width: '200px' }}>
-                <div style={{ borderBottom: '1px solid #000', height: '80px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+              <div style={{ textAlign: 'center', width: '250px' }}>
+                <div style={{ borderBottom: '1px solid #000', height: '110px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
                   {branding?.officialStampUrl && (
-                    <img src={getAssetUrl(branding.officialStampUrl)!} alt="Stamp" style={{ maxHeight: '75px', maxWidth: '180px', objectFit: 'contain' }} />
+                    <img src={getAssetUrl(branding.officialStampUrl)!} alt="Stamp" style={{ maxHeight: '100px', maxWidth: '240px', objectFit: 'contain' }} />
                   )}
                 </div>
                 <div style={{ marginTop: '8px', fontWeight: 'bold' }}>Official Stamp</div>
