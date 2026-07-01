@@ -945,19 +945,29 @@ public class UserService(
 
         var enrollmentLookup = enrollments
             .GroupBy(sa => sa.StudentId)
-            .ToDictionary(g => g.Key, g => g.First());
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         foreach (var user in users)
         {
-            if (enrollmentLookup.TryGetValue(user.Id, out var enrollment))
+            if (enrollmentLookup.TryGetValue(user.Id, out var userEnrollments) && userEnrollments.Any())
             {
-                user.ClassName = enrollment.ClassLevel?.Name;
-                user.SessionName = enrollment.Session?.Name;
-                user.TermName = enrollment.Term?.Name;
+                var latestEnrollment = userEnrollments.First();
+                user.ClassName = latestEnrollment.ClassLevel?.Name;
+                user.SessionName = latestEnrollment.Session?.Name;
                 
-                if (enrollment.ClassLevel != null && !string.IsNullOrEmpty(enrollment.ClassLevel.SectionOrArm))
+                var termsForLatestSessionAndClass = userEnrollments
+                    .Where(e => e.SessionId == latestEnrollment.SessionId && e.ClassLevelId == latestEnrollment.ClassLevelId)
+                    .Select(e => e.Term?.Name)
+                    .Where(name => !string.IsNullOrEmpty(name))
+                    .Distinct()
+                    .Reverse()
+                    .ToList();
+
+                user.TermName = string.Join(", ", termsForLatestSessionAndClass);
+                
+                if (latestEnrollment.ClassLevel != null && !string.IsNullOrEmpty(latestEnrollment.ClassLevel.SectionOrArm))
                 {
-                    user.ClassName += $" ({enrollment.ClassLevel.SectionOrArm})";
+                    user.ClassName += $" ({latestEnrollment.ClassLevel.SectionOrArm})";
                 }
             }
         }

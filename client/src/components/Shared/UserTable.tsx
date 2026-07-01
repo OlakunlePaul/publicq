@@ -389,24 +389,26 @@ const UserTable: React.FC<UserTableProps> = ({
           <table className={userTableStyles.table}>
             <thead className={userTableStyles.tableHead}>
               <tr>
-                <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>
-                  {selectionMode === 'multiple' && displayUsers.length > 0 ? (
-                    <div className={userTableStyles.selectAllHeader}>
-                      <input
-                        type="checkbox"
-                        checked={areAllCurrentPageSelected}
-                        ref={(input) => {
-                          if (input) input.indeterminate = areSomeCurrentPageSelected && !areAllCurrentPageSelected;
-                        }}
-                        onChange={handleSelectAllToggle}
-                        className={userTableStyles.selectAllCheckbox}
-                      />
-                      <span className={userTableStyles.selectLabel}>Select</span>
-                    </div>
-                  ) : (
-                    'Select'
-                  )}
-                </th>
+                {selectionMode !== 'none' && (
+                  <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>
+                    {selectionMode === 'multiple' && displayUsers.length > 0 ? (
+                      <div className={userTableStyles.selectAllHeader}>
+                        <input
+                          type="checkbox"
+                          checked={areAllCurrentPageSelected}
+                          ref={(input) => {
+                            if (input) input.indeterminate = areSomeCurrentPageSelected && !areAllCurrentPageSelected;
+                          }}
+                          onChange={handleSelectAllToggle}
+                          className={userTableStyles.selectAllCheckbox}
+                        />
+                        <span className={userTableStyles.selectLabel}>Select</span>
+                      </div>
+                    ) : (
+                      'Select'
+                    )}
+                  </th>
+                )}
                 {visibleColumns.includes('id') && <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>ID</th>}
                 {visibleColumns.includes('email') && <th className={`${userTableStyles.th} ${userTableStyles.noPrint}`}>Email</th>}
                 {visibleColumns.includes('fullName') && <th className={userTableStyles.th}>Full Name</th>}
