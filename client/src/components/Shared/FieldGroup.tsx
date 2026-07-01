@@ -47,7 +47,6 @@ const FieldGroup = forwardRef<HTMLInputElement, FieldGroupProps>(({
   );
 
   // Combine error and helper text, prioritizing error
-  const description = error || helperText;
   const hasError = !!error;
 
   return (

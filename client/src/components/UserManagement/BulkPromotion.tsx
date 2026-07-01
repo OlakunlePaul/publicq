@@ -3,8 +3,7 @@ import { User } from '../../models/user';
 import { SessionDto, TermDto, ClassLevelDto } from '../../models/academic';
 import { academicStructureService } from '../../services/academicStructureService';
 import { userService } from '../../services/userService';
-import styles from './BulkPromotion.module.css'; // Will create this or use inline styles, maybe we don't need it if we use tailwind? Wait, this project uses vanilla css. Let's just create a basic one or use inline.
-// Wait, I should use standard styles. UserManagement uses UserManagement.module.css. I will just create BulkPromotion.module.css or use inline.
+
 
 const BulkPromotion: React.FC = () => {
   const [sessions, setSessions] = useState<SessionDto[]>([]);
