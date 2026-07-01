@@ -662,4 +662,47 @@ public class UsersController(
 
         return result.ToActionResult();
     }
+
+    /// <summary>
+    /// Fetches students enrolled in a specific class for a given session and term.
+    /// </summary>
+    [Authorize(Constants.ManagersPolicy)]
+    [HttpGet("students/class")]
+    public async Task<IActionResult> GetStudentsByClassAsync(
+        [FromQuery] Guid sessionId,
+        [FromQuery] Guid termId,
+        [FromQuery] Guid classLevelId,
+        CancellationToken cancellationToken)
+    {
+        var result = await userService.GetStudentsByClassAsync(sessionId, termId, classLevelId, cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>
+    /// Bulk enroll students into a new class level for a given session and term.
+    /// </summary>
+    [Authorize(Constants.ManagersPolicy)]
+    [HttpPost("students/bulk-enrollment")]
+    public async Task<IActionResult> BulkEnrollStudentsAsync(
+        [FromBody] BulkStudentEnrollmentRequest request,
+        [FromServices] IValidator<BulkStudentEnrollmentRequest> validator,
+        CancellationToken cancellationToken)
+    {
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            return Response<string, GenericOperationStatuses>.Failure(GenericOperationStatuses.BadRequest,
+                    "Validation failed",
+                    validationResult.Errors.Select(e => e.ErrorMessage).ToList())
+                .ToActionResult();
+        }
+
+        var result = await userService.BulkEnrollStudentsAsync(
+            request.StudentIds,
+            request.SessionId,
+            request.TermId,
+            request.ClassLevelId,
+            cancellationToken);
+        return result.ToActionResult();
+    }
 }

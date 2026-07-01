@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User } from '../../models/user';
 import { userService } from '../../services/userService';
 import { academicStructureService } from '../../services/academicStructureService';
-import { SessionDto, TermDto, ClassLevelDto } from '../../models/academic';
+import { SessionDto, TermDto } from '../../models/academic';
 import userManagementStyles from './UserManagement.module.css';
 
 interface ManageEnrollmentsModalProps {
@@ -20,11 +20,9 @@ const ManageEnrollmentsModal: React.FC<ManageEnrollmentsModalProps> = ({
 }) => {
   const [sessions, setSessions] = useState<SessionDto[]>([]);
   const [terms, setTerms] = useState<TermDto[]>([]);
-  const [classLevels, setClassLevels] = useState<ClassLevelDto[]>([]);
   
   const [selectedSessionId, setSelectedSessionId] = useState('');
   const [selectedTermId, setSelectedTermId] = useState('');
-  const [selectedClassId, setSelectedClassId] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,7 +33,6 @@ const ManageEnrollmentsModal: React.FC<ManageEnrollmentsModalProps> = ({
       loadInitialData();
       setSelectedSessionId('');
       setSelectedTermId('');
-      setSelectedClassId('');
       setError('');
       setSuccessMessage('');
     }
@@ -52,12 +49,8 @@ const ManageEnrollmentsModal: React.FC<ManageEnrollmentsModalProps> = ({
 
   const loadInitialData = async () => {
     try {
-      const [sessionsRes, classesRes] = await Promise.all([
-        academicStructureService.getSessions(),
-        academicStructureService.getClassLevels()
-      ]);
+      const sessionsRes = await academicStructureService.getSessions();
       setSessions(sessionsRes.data || []);
-      setClassLevels(classesRes.data || []);
     } catch (err) {
       setError('Failed to load academic structure data.');
     }
@@ -74,8 +67,8 @@ const ManageEnrollmentsModal: React.FC<ManageEnrollmentsModalProps> = ({
 
   const handleEnroll = async () => {
     if (!user) return;
-    if (!selectedSessionId || !selectedTermId || !selectedClassId) {
-      setError('Please select Session, Term, and Class.');
+    if (!selectedSessionId || !selectedTermId) {
+      setError('Please select Session and Term.');
       return;
     }
 
@@ -86,8 +79,7 @@ const ManageEnrollmentsModal: React.FC<ManageEnrollmentsModalProps> = ({
     try {
       await userService.addStudentEnrollment(user.id, {
         sessionId: selectedSessionId,
-        termId: selectedTermId,
-        classLevelId: selectedClassId
+        termId: selectedTermId
       });
       setSuccessMessage('Enrollment added successfully!');
       setTimeout(() => {
@@ -162,24 +154,6 @@ const ManageEnrollmentsModal: React.FC<ManageEnrollmentsModalProps> = ({
                 ))}
               </select>
             </div>
-
-            <div className={userManagementStyles.formGroup}>
-              <label className={userManagementStyles.formLabel}>Class Level: <span style={{color: '#dc2626'}}>*</span></label>
-              <select
-                value={selectedClassId}
-                onChange={(e) => setSelectedClassId(e.target.value)}
-                className={userManagementStyles.formInput}
-                style={{ backgroundColor: 'white' }}
-                disabled={loading}
-              >
-                <option value="">Select Class</option>
-                {classLevels.map(cl => (
-                  <option key={cl.id} value={cl.id}>
-                    {cl.name} {cl.sectionOrArm ? `(${cl.sectionOrArm})` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
         </div>
         
@@ -193,7 +167,7 @@ const ManageEnrollmentsModal: React.FC<ManageEnrollmentsModalProps> = ({
           </button>
           <button 
             onClick={handleEnroll} 
-            disabled={loading || !selectedSessionId || !selectedTermId || !selectedClassId}
+            disabled={loading || !selectedSessionId || !selectedTermId}
             className={userManagementStyles.modalConfirmButton}
           >
             {loading ? 'Enrolling...' : 'Add Enrollment'}

@@ -36,8 +36,9 @@ import { cn } from '../utils/cn';
 import cssStyles from './Admin.module.css';
 import HandbookModal from '../components/Shared/HandbookModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import BulkPromotion from '../components/UserManagement/BulkPromotion';
 
-type AdminSection = 'dashboard' | 'users' | 'groups' | 'assignments' | 'assessments' | 'reports' | 'email' | 'banners' | 'pages' | 'ai' | 'ai-chat' | 'security' | 'cache' | 'storage' | 's3-storage' | 'logs' | 'admissions' | 'branding' | 'academic' | 'results' | 'permissions';
+type AdminSection = 'dashboard' | 'users' | 'groups' | 'assignments' | 'assessments' | 'reports' | 'email' | 'banners' | 'pages' | 'ai' | 'ai-chat' | 'security' | 'cache' | 'storage' | 's3-storage' | 'logs' | 'admissions' | 'branding' | 'academic' | 'results' | 'permissions' | 'promotions';
 
 // Animated Counter Component
 const AnimatedCounter = ({ target, duration = 1000, delay = 0 }: { target: number; duration?: number; delay?: number }) => {
@@ -251,7 +252,8 @@ const Admin = () => {
       branding: { title: 'School Profile', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Branding" style={{width: '24px', height: '24px'}} />, description: 'The School Signage – Configuring your school\'s public identity, logo, and theme.' },
       academic: { title: 'School Structure', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Academic" style={{width: '24px', height: '24px'}} />, description: 'The Blueprint – Organizing the school\'s Sessions, Terms, Classes, and Subjects.' },
       results: { title: 'Report Cards', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Results" style={{width: '24px', height: '24px'}} />, description: 'The Result Office – Compiling scores, ranking students, and issuing official reports.' },
-      permissions: { title: 'Staff Permissions', icon: <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="Permissions" style={{width: '24px', height: '24px'}} />, description: 'The Master Keys – Granting and managing access levels for teachers and staff.' }
+      permissions: { title: 'Staff Permissions', icon: <img src="https://cdn-icons-png.flaticon.com/512/3064/3064155.png" alt="Permissions" style={{width: '24px', height: '24px'}} />, description: 'The Master Keys – Granting and managing access levels for teachers and staff.' },
+      promotions: { title: 'Bulk Promotions', icon: <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="Promotions" style={{width: '24px', height: '24px'}} />, description: 'The Registry – Promote students in bulk to a new class level.' }
     };
     return sectionMap[section] || sectionMap.dashboard;
   };
@@ -356,6 +358,7 @@ const Admin = () => {
       case 'results': return <ResultManagement />;
       case 'branding': return <SchoolBrandingManagement />;
       case 'permissions': return <PermissionManagement />;
+      case 'promotions': return <BulkPromotion />;
       default: return <DashboardContent userCount={userCount} studentCount={studentCount} teacherCount={teacherCount} groupCount={groupCount} moduleCount={moduleCount} assignmentCount={assignmentCount} questionCount={questionCount} loading={dashboardLoading} error={dashboardError} onNavigate={navigateToSection} />;
     }
   };
@@ -393,6 +396,11 @@ const Admin = () => {
           {UserPolicies.hasContributorAccess(userRoles) && (
             <button onClick={() => navigateToSection('users')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'users' })}>
               <img src="https://cdn-icons-png.flaticon.com/512/3126/3126647.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Users
+            </button>
+          )}
+          {UserPolicies.hasManagerAccess(userRoles) && (
+            <button onClick={() => navigateToSection('promotions')} className={cn(cssStyles.navButton, { [cssStyles.activeNavButton]: activeSection === 'promotions' })}>
+              <img src="https://cdn-icons-png.flaticon.com/512/2991/2991106.png" alt="" style={{width: '18px', height: '18px', marginRight: '12px'}} /> Bulk Promotions
             </button>
           )}
           {UserPolicies.hasManagerAccess(userRoles) && (

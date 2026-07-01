@@ -119,8 +119,20 @@ export const userService = {
     return r.data;  
   },
 
-  addStudentEnrollment: async (studentId: string, data: { sessionId: string, termId: string, classLevelId: string }): Promise<Response<GenericOperationStatuses>> => {
+  addStudentEnrollment: async (studentId: string, data: { sessionId: string, termId: string, classLevelId?: string }): Promise<Response<GenericOperationStatuses>> => {
     const r = await axios.post<Response<GenericOperationStatuses>>(`users/student/${studentId}/enrollment`, data);
+    return r.data;
+  },
+
+  getStudentsByClass: async (sessionId: string, termId: string, classLevelId: string): Promise<ResponseWithData<User[], GenericOperationStatuses>> => {
+    const r = await axios.get<ResponseWithData<User[], GenericOperationStatuses>>('users/students/class', {
+      params: { sessionId, termId, classLevelId },
+    });
+    return r.data;
+  },
+
+  bulkEnrollStudents: async (data: { studentIds: string[], sessionId: string, termId: string, classLevelId: string }): Promise<Response<GenericOperationStatuses>> => {
+    const r = await axios.post<Response<GenericOperationStatuses>>('users/students/bulk-enrollment', data);
     return r.data;
   },
 

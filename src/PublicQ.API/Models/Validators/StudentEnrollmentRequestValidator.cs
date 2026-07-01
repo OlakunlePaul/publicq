@@ -9,6 +9,5 @@ public class StudentEnrollmentRequestValidator : AbstractValidator<StudentEnroll
     {
         RuleFor(x => x.SessionId).NotEmpty().WithMessage("Session ID is required.");
         RuleFor(x => x.TermId).NotEmpty().WithMessage("Term ID is required.");
-        RuleFor(x => x.ClassLevelId).NotEmpty().WithMessage("Class Level ID is required.");
     }
 }

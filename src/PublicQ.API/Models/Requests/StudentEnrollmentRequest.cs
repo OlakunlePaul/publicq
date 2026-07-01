@@ -20,8 +20,7 @@ public class StudentEnrollmentRequest
     public Guid TermId { get; set; }
 
     /// <summary>
-    /// The class level ID (e.g. JSS1).
+    /// The class level ID (e.g. JSS1). Optional.
     /// </summary>
-    [Required]
-    public Guid ClassLevelId { get; set; }
+    public Guid? ClassLevelId { get; set; }
 }

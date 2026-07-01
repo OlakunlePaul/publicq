@@ -296,8 +296,27 @@ public interface IUserService
     /// <returns>Returns <see cref="GenericOperationStatuses"/> wrapped into <see cref="Response{TStatus}"/></returns>
     Task<Response<GenericOperationStatuses>> AddStudentEnrollmentAsync(
         string studentId, 
-        Guid classLevelId, 
+        Guid? classLevelId, 
         Guid sessionId, 
         Guid termId, 
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Fetch students enrolled in a specific class for a given session and term.
+    /// </summary>
+    Task<Response<IList<User>, GenericOperationStatuses>> GetStudentsByClassAsync(
+        Guid sessionId,
+        Guid termId,
+        Guid classLevelId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Bulk enroll students into a new class level for a given session and term.
+    /// </summary>
+    Task<Response<GenericOperationStatuses>> BulkEnrollStudentsAsync(
+        List<string> studentIds,
+        Guid sessionId,
+        Guid termId,
+        Guid classLevelId,
         CancellationToken cancellationToken);
 }
