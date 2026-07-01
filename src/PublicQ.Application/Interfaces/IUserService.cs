@@ -284,4 +284,20 @@ public interface IUserService
         string token, 
         string newPassword, 
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Add or update a student's enrollment in a specific session and term.
+    /// </summary>
+    /// <param name="studentId">The student's unique ID</param>
+    /// <param name="classLevelId">The class level ID</param>
+    /// <param name="sessionId">The session ID</param>
+    /// <param name="termId">The term ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Returns <see cref="GenericOperationStatuses"/> wrapped into <see cref="Response{TStatus}"/></returns>
+    Task<Response<GenericOperationStatuses>> AddStudentEnrollmentAsync(
+        string studentId, 
+        Guid classLevelId, 
+        Guid sessionId, 
+        Guid termId, 
+        CancellationToken cancellationToken);
 }

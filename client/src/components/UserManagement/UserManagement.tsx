@@ -6,6 +6,7 @@ import { StudentCreateRequest } from '../../models/student-create-request';
 import { UserRoleAssignmentRequest } from '../../models/user-role-assignment-request';
 import { UserRole } from '../../models/UserRole';
 import UserTable from '../Shared/UserTable';
+import ManageEnrollmentsModal from './ManageEnrollmentsModal';
 import { configurationService } from '../../services/configurationService';
 import { PasswordPolicyOptions } from '../../models/password-policy-options';
 import { StudentImport } from '../../models/student-import';
@@ -1193,6 +1194,10 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
     isOpen: boolean;
     user: UserWithRoles | null;
   }>({ isOpen: false, user: null });
+  const [manageEnrollmentsModal, setManageEnrollmentsModal] = useState<{
+    isOpen: boolean;
+    user: User | null;
+  }>({ isOpen: false, user: null });
   const [importResultModal, setImportResultModal] = useState<{
     isOpen: boolean;
     result: any | null;
@@ -1469,6 +1474,19 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
     setRoleManagementModal({ isOpen: false, user: null });
   };
 
+  const handleManageEnrollments = (user: User) => {
+    setManageEnrollmentsModal({ isOpen: true, user });
+  };
+
+  const confirmManageEnrollments = () => {
+    setManageEnrollmentsModal({ isOpen: false, user: null });
+    loadUsers(userManagementData.currentPage, pageSize, searchTerm, searchType, selectedRoleFilter);
+  };
+
+  const cancelManageEnrollments = () => {
+    setManageEnrollmentsModal({ isOpen: false, user: null });
+  };
+
   const handlePrintStudentList = () => {
     window.print();
   };
@@ -1693,6 +1711,12 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
         onUnassignRole={unassignRole}
         onCancel={cancelRoleManagement}
       />
+      <ManageEnrollmentsModal
+        isOpen={manageEnrollmentsModal.isOpen}
+        user={manageEnrollmentsModal.user}
+        onConfirm={confirmManageEnrollments}
+        onCancel={cancelManageEnrollments}
+      />
       <ImportResultModal
         isOpen={importResultModal.isOpen}
         result={importResultModal.result}
@@ -1816,6 +1840,8 @@ const UserManagement = ({ userManagementData, setUserManagementData, currentUser
               handleDeleteUser(user.email || '', user.id);
             } else if (action === 'manageRoles') {
               handleManageRoles(user);
+            } else if (action === 'manageEnrollments') {
+              handleManageEnrollments(user);
             }
           }}
           maxHeight="70vh"

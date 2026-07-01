@@ -632,4 +632,34 @@ public class UsersController(
         
         return result.ToActionResult();
     }
+
+    /// <summary>
+    /// Adds or updates a student's enrollment in a specific session and term.
+    /// </summary>
+    [Authorize(Constants.ManagersPolicy)]
+    [HttpPost("student/{id}/enrollment")]
+    public async Task<IActionResult> AddStudentEnrollmentAsync(
+        [FromRoute] string id,
+        [FromBody] StudentEnrollmentRequest request,
+        [FromServices] IValidator<StudentEnrollmentRequest> validator,
+        CancellationToken cancellationToken)
+    {
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            return Response<string, GenericOperationStatuses>.Failure(GenericOperationStatuses.BadRequest,
+                    "Validation failed",
+                    validationResult.Errors.Select(e => e.ErrorMessage).ToList())
+                .ToActionResult();
+        }
+
+        var result = await userService.AddStudentEnrollmentAsync(
+            id,
+            request.ClassLevelId,
+            request.SessionId,
+            request.TermId,
+            cancellationToken);
+
+        return result.ToActionResult();
+    }
 }

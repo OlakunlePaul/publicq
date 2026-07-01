@@ -119,6 +119,11 @@ export const userService = {
     return r.data;  
   },
 
+  addStudentEnrollment: async (studentId: string, data: { sessionId: string, termId: string, classLevelId: string }): Promise<Response<GenericOperationStatuses>> => {
+    const r = await axios.post<Response<GenericOperationStatuses>>(`users/student/${studentId}/enrollment`, data);
+    return r.data;
+  },
+
   downloadSampleCsv: (): void => {
     const csvContent = [
       // Header

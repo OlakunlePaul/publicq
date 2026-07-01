@@ -1841,4 +1841,63 @@ public class UserService(
                 studentId, classLevelId, activeSession.Name, activeTerm.Name);
         }
     }
+
+    /// <inheritdoc cref="IUserService.AddStudentEnrollmentAsync"/>
+    public async Task<Response<GenericOperationStatuses>> AddStudentEnrollmentAsync(
+        string studentId, 
+        Guid classLevelId, 
+        Guid sessionId, 
+        Guid termId, 
+        CancellationToken cancellationToken)
+    {
+        Guard.AgainstNullOrWhiteSpace(studentId, nameof(studentId));
+
+        var student = await dbContext.Students.FirstOrDefaultAsync(s => s.Id == studentId.ToUpperInvariant(), cancellationToken);
+        if (student == null)
+        {
+            return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, $"Student with ID '{studentId}' not found.");
+        }
+
+        var sessionExists = await dbContext.Sessions.AnyAsync(s => s.Id == sessionId, cancellationToken);
+        if (!sessionExists) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Session not found.");
+
+        var termExists = await dbContext.Terms.AnyAsync(t => t.Id == termId && t.SessionId == sessionId, cancellationToken);
+        if (!termExists) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Term not found for the given session.");
+
+        var classExists = await dbContext.ClassLevels.AnyAsync(c => c.Id == classLevelId, cancellationToken);
+        if (!classExists) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Class level not found.");
+
+        var assessment = await dbContext.StudentAssessments
+            .FirstOrDefaultAsync(a => a.StudentId == student.Id && a.SessionId == sessionId && a.TermId == termId, cancellationToken);
+
+        if (assessment != null)
+        {
+            if (assessment.ClassLevelId != classLevelId)
+            {
+                assessment.ClassLevelId = classLevelId;
+                await dbContext.SaveChangesAsync(cancellationToken);
+                logger.LogInformation("Updated student {StudentId} class level to {ClassLevelId} for session {SessionId} and term {TermId}.", student.Id, classLevelId, sessionId, termId);
+                return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Student enrollment updated successfully.");
+            }
+            return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Student is already enrolled in this class for the selected term and session.");
+        }
+
+        var newAssessment = new StudentAssessmentEntity
+        {
+            Id = Guid.NewGuid(),
+            StudentId = student.Id,
+            SessionId = sessionId,
+            TermId = termId,
+            ClassLevelId = classLevelId,
+            Status = ModerationStatus.Draft,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        dbContext.StudentAssessments.Add(newAssessment);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        
+        logger.LogInformation("Enrolled student {StudentId} in class {ClassLevelId} for session {SessionId} and term {TermId}.", student.Id, classLevelId, sessionId, termId);
+
+        return Response<GenericOperationStatuses>.Success(GenericOperationStatuses.Completed, "Student enrolled successfully.");
+    }
 }

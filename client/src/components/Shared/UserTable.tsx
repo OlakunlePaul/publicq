@@ -35,7 +35,7 @@ interface UserTableProps {
   selectionMode?: 'single' | 'multiple' | 'none';
   showActions?: boolean;
   maxHeight?: string;
-  onUserAction?: (action: 'edit' | 'delete' | 'resetPassword' | 'manageRoles', user: User) => void;
+  onUserAction?: (action: 'edit' | 'delete' | 'resetPassword' | 'manageRoles' | 'manageEnrollments', user: User) => void;
   title?: string;
   emptyMessage?: string;
   searchPlaceholder?: string;
@@ -539,6 +539,17 @@ const UserTable: React.FC<UserTableProps> = ({
                               className={userTableStyles.actionButton}
                             >
                               Reset
+                            </button>
+                          )}
+                          {!user.hasCredential && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onUserAction?.('manageEnrollments', user);
+                              }} 
+                              className={userTableStyles.actionButtonSecondary}
+                            >
+                              Enrollments
                             </button>
                           )}
                           <button 
