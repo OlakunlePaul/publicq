@@ -26,7 +26,7 @@ export const ModuleInfoHeader: React.FC<ModuleInfoHeaderProps> = ({
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
 
-  const canPublish = UserPolicies.hasModeratorAccess(userRoles);
+  const canPublish = UserPolicies.hasContributorAccess(userRoles);
 
   // Add mobile responsive styles
   useEffect(() => {
@@ -130,7 +130,7 @@ export const ModuleInfoHeader: React.FC<ModuleInfoHeaderProps> = ({
                 {moduleVersion.isPublished 
                   ? ' For published modules, you can create new versions.' 
                   : ''
-                } For publishing modules, please contact moderators.
+                }
               </div>
             </div>
           </div>

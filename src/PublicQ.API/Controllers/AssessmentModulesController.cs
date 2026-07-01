@@ -399,7 +399,7 @@ public class AssessmentModulesController(IAssessmentService assessmentService) :
     /// <param name="id">The ID of the version to publish.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>HTTP response indicating success or failure.</returns>
-    [Authorize(Constants.ModeratorsPolicy)]
+    [Authorize(Constants.ContributorsPolicy)]
     [HttpPatch("versions/{id:guid}/publish")]
     public async Task<IActionResult> PublishModuleVersionAsync(Guid id, CancellationToken cancellationToken)
     {
