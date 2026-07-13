@@ -30,13 +30,13 @@ export const assessmentService = {
     return response.data;
   },
 
-  fetchAllModules: async (pageNumber: number, pageSize: number): Promise<ResponseWithData<PaginatedResponse<AssessmentModuleDto>, GenericOperationStatuses>> => {
-    const response = await axios.get<ResponseWithData<PaginatedResponse<AssessmentModuleDto>, GenericOperationStatuses>>('assessmentModules/all', { params: { pageNumber, pageSize } });
+  fetchAllModules: async (pageNumber: number, pageSize: number, sessionId?: string, termId?: string): Promise<ResponseWithData<PaginatedResponse<AssessmentModuleDto>, GenericOperationStatuses>> => {
+    const response = await axios.get<ResponseWithData<PaginatedResponse<AssessmentModuleDto>, GenericOperationStatuses>>('assessmentModules/all', { params: { pageNumber, pageSize, sessionId, termId } });
     return response.data;
   },
 
-  fetchAllModulesByTitle: async (title: string, pageNumber: number, pageSize: number): Promise<ResponseWithData<PaginatedResponse<AssessmentModuleDto>, GenericOperationStatuses>> => {
-    const response = await axios.get<ResponseWithData<PaginatedResponse<AssessmentModuleDto>, GenericOperationStatuses>>('assessmentModules', { params: { title, pageNumber, pageSize } });
+  fetchAllModulesByTitle: async (title: string, pageNumber: number, pageSize: number, sessionId?: string, termId?: string): Promise<ResponseWithData<PaginatedResponse<AssessmentModuleDto>, GenericOperationStatuses>> => {
+    const response = await axios.get<ResponseWithData<PaginatedResponse<AssessmentModuleDto>, GenericOperationStatuses>>('assessmentModules', { params: { title, pageNumber, pageSize, sessionId, termId } });
     return response.data;
   },
 

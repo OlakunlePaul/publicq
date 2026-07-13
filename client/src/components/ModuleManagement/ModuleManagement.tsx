@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { AssessmentModuleDto } from '../../models/assessment-module';
 import { assessmentService } from '../../services/assessmentService';
 import { formatDateToLocal } from '../../utils/dateUtils';
+import { SessionDto, TermDto } from '../../models/academic';
+import { academicStructureService } from '../../services/academicStructureService';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -135,6 +137,10 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [pageSize, setPageSize] = useState(10);
+  const [sessions, setSessions] = useState<SessionDto[]>([]);
+  const [terms, setTerms] = useState<TermDto[]>([]);
+  const [selectedSession, setSelectedSession] = useState('');
+  const [selectedTerm, setSelectedTerm] = useState('');
   const initialMountRef = useRef(true);
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
@@ -268,7 +274,43 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
     };
   }, []);
 
-  const loadModules = useCallback(async (page: number = pageNumber, searchTerm: string = '', currentPageSize: number = pageSize) => {
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const sessResp = await academicStructureService.getSessions();
+        if (sessResp.isSuccess) setSessions(sessResp.data || []);
+      } catch (err: any) {
+        console.error('Failed to load sessions', err);
+      }
+    };
+    fetchInitialData();
+  }, []);
+
+  useEffect(() => {
+    const fetchTerms = async () => {
+      if (!selectedSession) {
+        setTerms([]);
+        setSelectedTerm('');
+        return;
+      }
+      try {
+        const termResp = await academicStructureService.getTermsBySession(selectedSession);
+        if (termResp.isSuccess) {
+          setTerms(termResp.data || []);
+          if (termResp.data && termResp.data.length > 0) {
+            setSelectedTerm(termResp.data[0].id);
+          } else {
+            setSelectedTerm('');
+          }
+        }
+      } catch (err: any) {
+        console.error('Failed to load terms', err);
+      }
+    };
+    fetchTerms();
+  }, [selectedSession]);
+
+  const loadModules = useCallback(async (page: number = pageNumber, searchTerm: string = search, currentPageSize: number = pageSize, sessId: string = selectedSession, termId: string = selectedTerm) => {
     setLoading(true);
     setError('');
 
@@ -277,10 +319,10 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
       
       if (searchTerm.trim()) {
         // Use the search method when there's a search term
-        response = await assessmentService.fetchAllModulesByTitle(searchTerm.trim(), page, currentPageSize);
+        response = await assessmentService.fetchAllModulesByTitle(searchTerm.trim(), page, currentPageSize, sessId || undefined, termId || undefined);
       } else {
         // Use the general fetch method when no search term
-        response = await assessmentService.fetchAllModules(page, currentPageSize);
+        response = await assessmentService.fetchAllModules(page, currentPageSize, sessId || undefined, termId || undefined);
       }
       
       if (!response.isFailed) {
@@ -323,7 +365,7 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
     } finally {
       setLoading(false);
     }
-  }, [pageNumber, pageSize, setModuleManagementData]);
+  }, [pageNumber, pageSize, search, selectedSession, selectedTerm, setModuleManagementData]);
 
   // Load modules only if data hasn't been loaded yet
   useEffect(() => {
@@ -340,20 +382,20 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
     }
     
     // Reset to page 1 when page size changes and reload data
-    loadModules(1, search, pageSize);
-  }, [pageSize, search, loadModules]);
+    loadModules(1, search, pageSize, selectedSession, selectedTerm);
+  }, [pageSize, search, selectedSession, selectedTerm, loadModules]);
 
   const handlePrevious = () => {
     if (pageNumber > 1) {
       const newPage = pageNumber - 1;
-      loadModules(newPage, search, pageSize);
+      loadModules(newPage, search, pageSize, selectedSession, selectedTerm);
     }
   };
 
   const handleNext = () => {
     if (pageNumber < totalPages) {
       const newPage = pageNumber + 1;
-      loadModules(newPage, search, pageSize);
+      loadModules(newPage, search, pageSize, selectedSession, selectedTerm);
     }
   };
 
@@ -545,6 +587,27 @@ const ModuleManagement = ({ moduleManagementData, setModuleManagementData, onNav
               <strong>Keyboard Shortcut:</strong> Press <kbd style={styles.kbd}>Ctrl+N</kbd> to quickly create a new module.
             </p>
           </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <select
+            value={selectedSession}
+            onChange={(e) => setSelectedSession(e.target.value)}
+            style={{...styles.search, width: '200px', marginBottom: 0}}
+          >
+            <option value="">-- All Sessions --</option>
+            {sessions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+
+          <select
+            value={selectedTerm}
+            onChange={(e) => setSelectedTerm(e.target.value)}
+            style={{...styles.search, width: '200px', marginBottom: 0}}
+            disabled={!selectedSession}
+          >
+            <option value="">-- All Terms --</option>
+            {terms.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
         </div>
 
         <input

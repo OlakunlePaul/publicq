@@ -187,6 +187,16 @@ public class AssignmentEntity
     public Guid? ClassLevelId { get; set; }
     
     /// <summary>
+    /// Gets or sets the foreign key reference to the session.
+    /// </summary>
+    public Guid? SessionId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the foreign key reference to the term.
+    /// </summary>
+    public Guid? TermId { get; set; }
+    
+    /// <summary>
     /// Gets or sets the user username of the administrator who updated this assignment.
     /// Tracks assignment ownership for audit and permission purposes.
     /// </summary>
@@ -236,6 +246,16 @@ public class AssignmentEntity
     /// Gets or sets the class level associated with this assignment.
     /// </summary>
     public Persistence.Entities.Academic.ClassLevelEntity? ClassLevel { get; set; }
+
+    /// <summary>
+    /// Gets or sets the session associated with this assignment.
+    /// </summary>
+    public Persistence.Entities.Academic.SessionEntity? Session { get; set; }
+
+    /// <summary>
+    /// Gets or sets the term associated with this assignment.
+    /// </summary>
+    public Persistence.Entities.Academic.TermEntity? Term { get; set; }
     
     /// <summary>
     /// Gets or sets the collection of student assignments linking specific exam takers to this assignment.
@@ -279,7 +299,9 @@ public class AssignmentEntity
             MaxTabSwitches = MaxTabSwitches,
             EnforceProgressionLock = EnforceProgressionLock,
             ProgressionOrder = ProgressionOrder,
-            IsForEntireClassLevel = IsForEntireClassLevel
+            IsForEntireClassLevel = IsForEntireClassLevel,
+            SessionId = SessionId,
+            TermId = TermId
         };
     }
     
@@ -308,7 +330,9 @@ public class AssignmentEntity
             MaxTabSwitches = MaxTabSwitches,
             EnforceProgressionLock = EnforceProgressionLock,
             ProgressionOrder = ProgressionOrder,
-            IsForEntireClassLevel = IsForEntireClassLevel
+            IsForEntireClassLevel = IsForEntireClassLevel,
+            SessionId = SessionId,
+            TermId = TermId
         };
     }
 

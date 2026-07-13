@@ -27,5 +27,13 @@ public class AssignmentCreateValidator : AbstractValidator<AssignmentCreateDto>
         RuleFor(x => x.GroupId)
             .NotEmpty()
             .WithMessage("GroupId is required.");
+            
+        RuleFor(x => x.SessionId)
+            .NotEmpty()
+            .WithMessage("Session is required.");
+            
+        RuleFor(x => x.TermId)
+            .NotEmpty()
+            .WithMessage("Term is required.");
     }
 }

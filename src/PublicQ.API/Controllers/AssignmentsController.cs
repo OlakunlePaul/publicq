@@ -61,9 +61,11 @@ public class AssignmentsController(IAssignmentService assignmentService) : Contr
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string? titleFilter = default,
+        [FromQuery] Guid? sessionId = null,
+        [FromQuery] Guid? termId = null,
         CancellationToken cancellationToken = default)
     {
-        var response = await assignmentService.GetAssignmentsAsync(pageNumber, pageSize, titleFilter, cancellationToken);
+        var response = await assignmentService.GetAssignmentsAsync(pageNumber, pageSize, titleFilter, sessionId, termId, cancellationToken);
         
         return response.ToActionResult();
     }

@@ -38,4 +38,14 @@ public class AssessmentModuleDto
     /// Used to filter modules by subject when presenting them to students.
     /// </summary>
     public Guid? SubjectId { get; set; }
+
+    /// <summary>
+    /// Optional session tag for this assessment module.
+    /// </summary>
+    public Guid? SessionId { get; set; }
+
+    /// <summary>
+    /// Optional term tag for this assessment module.
+    /// </summary>
+    public Guid? TermId { get; set; }
 }

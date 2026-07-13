@@ -98,6 +98,8 @@ public class AssessmentModulesController(IAssessmentService assessmentService) :
     [Authorize(Constants.ContributorsPolicy)]
     [HttpGet("all")]
     public async Task<IActionResult> GetAllModulesAsync(
+        [FromQuery] Guid? sessionId,
+        [FromQuery] Guid? termId,
         [FromQuery] GetPaginatedEntitiesRequest request,
         [FromServices] IValidator<GetPaginatedEntitiesRequest> validator,
         CancellationToken cancellationToken)
@@ -112,7 +114,7 @@ public class AssessmentModulesController(IAssessmentService assessmentService) :
                 .ToActionResult();
         }
         
-        var response = await assessmentService.GetModulesAsync(request.PageNumber, request.PageSize, cancellationToken);
+        var response = await assessmentService.GetModulesAsync(sessionId, termId, request.PageNumber, request.PageSize, cancellationToken);
         
         return response.ToActionResult();
     }
@@ -129,6 +131,8 @@ public class AssessmentModulesController(IAssessmentService assessmentService) :
     [HttpGet]
     public async Task<IActionResult> GetModulesByTitleAsync(
         [FromQuery] string title,
+        [FromQuery] Guid? sessionId,
+        [FromQuery] Guid? termId,
         [FromQuery] GetPaginatedEntitiesRequest request,
         [FromServices] IValidator<GetPaginatedEntitiesRequest> validator,
         CancellationToken cancellationToken)
@@ -150,7 +154,7 @@ public class AssessmentModulesController(IAssessmentService assessmentService) :
                 .ToActionResult();
         }
         
-        var response = await assessmentService.GetModulesByTitleAsync(title, request.PageNumber, request.PageSize, cancellationToken);
+        var response = await assessmentService.GetModulesByTitleAsync(title, sessionId, termId, request.PageNumber, request.PageSize, cancellationToken);
         
         return response.ToActionResult();
     }

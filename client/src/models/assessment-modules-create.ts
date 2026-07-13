@@ -9,6 +9,8 @@ export interface AssessmentModuleCreateDto {
   durationInMinutes: number;
   createdByUserId: string;
   subjectId?: string; // Guid
+  sessionId: string;
+  termId: string;
 }
 
 export interface AssessmentModuleVersionCreateDto {

@@ -436,7 +436,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             var studentIds = assessments.Select(a => a.StudentId).ToList();
 
             var onlineScores = await dbContext.StudentAssignments
-                .Where(eta => studentIds.Contains(eta.StudentId) && eta.Assignment.IsPublished && eta.Assignment.SubjectId != null)
+                .Where(eta => studentIds.Contains(eta.StudentId) && eta.Assignment.IsPublished && eta.Assignment.SubjectId != null && eta.Assignment.SessionId == sessionId && eta.Assignment.TermId == termId)
                 .Include(eta => eta.Assignment)
                 .Include(eta => eta.ModuleProgress)
                     .ThenInclude(mp => mp.QuestionResponses)

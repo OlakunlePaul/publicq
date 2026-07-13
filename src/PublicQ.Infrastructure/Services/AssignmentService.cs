@@ -527,6 +527,8 @@ public class AssignmentService(
         int pageNumber = 1,
         int pageSize = 10,
         string? titleFilter = null,
+        Guid? sessionId = null,
+        Guid? termId = null,
         CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Get assignments request received.");
@@ -557,6 +559,16 @@ public class AssignmentService(
             .Include(a => a.StudentAssignments)
             .Include(a => a.Group)
             .AsQueryable();
+
+        if (sessionId.HasValue)
+        {
+            query = query.Where(a => a.SessionId == sessionId.Value);
+        }
+
+        if (termId.HasValue)
+        {
+            query = query.Where(a => a.TermId == termId.Value);
+        }
 
         var totalCount = await query.LongCountAsync(cancellationToken);
 
@@ -695,6 +707,13 @@ public class AssignmentService(
                     .ToHashSet();
                 
                 isCompleted = a.Group.GroupMemberEntities.All(gme => completedModuleIds.Contains(gme.Id));
+            }
+            
+            // If the assignment has ended, we treat it as completed so it doesn't block future assignments.
+            if (a.EndDateUtc <= now)
+            {
+                isCompleted = true;
+                dto.IsCompleted = true;
             }
             
             dto.IsCompleted = isCompleted;

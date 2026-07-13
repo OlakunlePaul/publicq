@@ -59,6 +59,8 @@ public class AssessmentService(
         {
             CreatedByUser = dto.CreatedByUser,
             CreatedAtUtc = DateTime.UtcNow,
+            SessionId = dto.SessionId,
+            TermId = dto.TermId,
             Versions = new List<AssessmentModuleVersionEntity> { moduleVersionEntity }
         };
 
@@ -124,17 +126,21 @@ public class AssessmentService(
 
     /// <inheritdoc cref="IAssessmentService.GetModulesAsync"/>
     public async Task<Response<PaginatedResponse<AssessmentModuleDto>, GenericOperationStatuses>> GetModulesAsync(
+        Guid? sessionId = null,
+        Guid? termId = null,
         int pageNumber = 1,
         int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        return await GetModulesByTitleAsync(string.Empty, pageNumber, pageSize, cancellationToken);
+        return await GetModulesByTitleAsync(string.Empty, sessionId, termId, pageNumber, pageSize, cancellationToken);
     }
 
     /// <inheritdoc cref="IAssessmentService.GetModulesByTitleAsync"/>
     public async Task<Response<PaginatedResponse<AssessmentModuleDto>, GenericOperationStatuses>>
         GetModulesByTitleAsync(
             string title = "",
+            Guid? sessionId = null,
+            Guid? termId = null,
             int pageNumber = 1,
             int pageSize = 10,
             CancellationToken cancellationToken = default)
@@ -151,6 +157,16 @@ public class AssessmentService(
             .Where(m => m.Versions.Any(v =>
                 (titleIsEmpty || EF.Functions.Like(v.Title, $"%{title}%"))
             ));
+
+        if (sessionId.HasValue)
+        {
+            baseQuery = baseQuery.Where(m => m.SessionId == sessionId.Value);
+        }
+
+        if (termId.HasValue)
+        {
+            baseQuery = baseQuery.Where(m => m.TermId == termId.Value);
+        }
 
         var totalCount = await baseQuery.LongCountAsync(cancellationToken);
 

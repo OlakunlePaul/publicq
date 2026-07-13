@@ -64,6 +64,26 @@ public class AssessmentModuleEntity
     /// Navigation property to the subject this module is tagged with.
     /// </summary>
     public SubjectEntity? Subject { get; set; }
+
+    /// <summary>
+    /// Optional session tag for this assessment module.
+    /// </summary>
+    public Guid? SessionId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the session this module is tagged with.
+    /// </summary>
+    public SessionEntity? Session { get; set; }
+
+    /// <summary>
+    /// Optional term tag for this assessment module.
+    /// </summary>
+    public Guid? TermId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the term this module is tagged with.
+    /// </summary>
+    public TermEntity? Term { get; set; }
     
     /// <summary>
     /// Converts the entity to a Data Transfer Object (DTO).
@@ -82,7 +102,9 @@ public class AssessmentModuleEntity
             CreatedAtUtc = CreatedAtUtc,
             HasPublishedVersions = Versions.Any(v => v.IsPublished),
             LatestVersion = latestVersion?.ConvertToDto() ?? new AssessmentModuleVersionDto(),
-            SubjectId = SubjectId
+            SubjectId = SubjectId,
+            SessionId = SessionId,
+            TermId = TermId
         };
     }
 }

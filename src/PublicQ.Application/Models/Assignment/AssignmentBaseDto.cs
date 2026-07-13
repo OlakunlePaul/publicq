@@ -91,6 +91,16 @@ public abstract class AssignmentBaseDto
     public Guid? ClassLevelId { get; set; }
 
     /// <summary>
+    /// Gets or sets the foreign key reference to the session.
+    /// </summary>
+    public Guid? SessionId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the foreign key reference to the term.
+    /// </summary>
+    public Guid? TermId { get; set; }
+
+    /// <summary>
     /// Maximum number of tab switches allowed before the exam is locked.
     /// Default is 3. Set to 0 to disable tab switch monitoring.
     /// </summary>

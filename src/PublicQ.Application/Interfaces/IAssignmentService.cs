@@ -114,6 +114,8 @@ public interface IAssignmentService
         int pageNumber = 1,
         int pageSize = 10,
         string? titleFilter = null,
+        Guid? sessionId = null,
+        Guid? termId = null,
         CancellationToken cancellationToken = default);
     
     /// <summary>

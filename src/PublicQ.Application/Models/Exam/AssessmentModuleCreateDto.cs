@@ -30,4 +30,14 @@ public class AssessmentModuleCreateDto
     /// Created by user, indicating who created the test module.
     /// </summary>
     public string CreatedByUser { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional session tag for this assessment module.
+    /// </summary>
+    public Guid? SessionId { get; set; }
+
+    /// <summary>
+    /// Optional term tag for this assessment module.
+    /// </summary>
+    public Guid? TermId { get; set; }
 }

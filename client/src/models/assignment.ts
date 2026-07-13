@@ -94,6 +94,16 @@ export interface AssignmentBase {
    * students explicitly assigned via StudentAssignments.
    */
   isForEntireClassLevel?: boolean;
+
+  /**
+   * The session this assignment is associated with.
+   */
+  sessionId?: string;
+
+  /**
+   * The term this assignment is associated with.
+   */
+  termId?: string;
 }
 
 /**

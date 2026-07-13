@@ -14,9 +14,9 @@ export const assignmentService = {
     return response.data;
   },
 
-  getAssignmentsAsync: async (pageNumber: number, pageSize: number, filterTitle?: string): Promise<ResponseWithData<PaginatedResponse<Assignment>, GenericOperationStatuses>> => {
+  getAssignmentsAsync: async (pageNumber: number, pageSize: number, filterTitle?: string, sessionId?: string, termId?: string): Promise<ResponseWithData<PaginatedResponse<Assignment>, GenericOperationStatuses>> => {
     const response = await axios.get<ResponseWithData<PaginatedResponse<Assignment>, GenericOperationStatuses>>('assignments',
-      { params: { pageNumber, pageSize, filterTitle } });
+      { params: { pageNumber, pageSize, filterTitle, sessionId, termId } });
     return response.data;
   },
 

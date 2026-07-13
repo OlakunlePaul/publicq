@@ -10,7 +10,7 @@ import { AssessmentModuleVersionUpdateDto } from "../../models/assessment-module
 import { VALIDATION_CONSTRAINTS } from "../../constants/contstants";
 import { parseFileUploadError } from "../../utils/fileUploadErrorHandler";
 import { academicStructureService } from "../../services/academicStructureService";
-import { SubjectDto } from "../../models/academic";
+import { SubjectDto, SessionDto, TermDto } from "../../models/academic";
 
 type PreviewFile = File | StaticFileDto;
 
@@ -26,10 +26,14 @@ export const ModuleForm = ({ onSuccess, onBackToModules }: Props) => {
     passingScorePercentage: 70,
     durationInMinutes: 60,
     createdByUserId: "user-id-placeholder",
-    subjectId: ""
+    subjectId: "",
+    sessionId: "",
+    termId: ""
   });
 
   const [subjects, setSubjects] = useState<SubjectDto[]>([]);
+  const [sessions, setSessions] = useState<SessionDto[]>([]);
+  const [terms, setTerms] = useState<TermDto[]>([]);
 
   const [errors, setErrors] = useState<string[]>([]);
   const [staticFiles, setStaticFiles] = useState<PreviewFile[]>([]);
@@ -46,8 +50,35 @@ export const ModuleForm = ({ onSuccess, onBackToModules }: Props) => {
         console.error("Failed to load subjects", error);
       }
     };
+    
+    const loadSessions = async () => {
+      try {
+        const { data } = await academicStructureService.getSessions();
+        setSessions(data || []);
+      } catch (error) {
+        console.error("Failed to load sessions", error);
+      }
+    };
+    
     loadSubjects();
+    loadSessions();
   }, []);
+
+  useEffect(() => {
+    const loadTerms = async () => {
+      if (!form.sessionId) {
+        setTerms([]);
+        return;
+      }
+      try {
+        const { data } = await academicStructureService.getTermsBySession(form.sessionId);
+        setTerms(data || []);
+      } catch (error) {
+        console.error("Failed to load terms", error);
+      }
+    };
+    loadTerms();
+  }, [form.sessionId]);
 
   const validateForm = useCallback((): string[] => {
     const errors: string[] = [];
@@ -80,8 +111,17 @@ export const ModuleForm = ({ onSuccess, onBackToModules }: Props) => {
     // Passing score validation
     if (form.passingScorePercentage < 1) {
       errors.push('Passing score must be at least 1%');
-    } else if (form.passingScorePercentage > 100) {
+    }
+    if (form.passingScorePercentage > 100) {
       errors.push('Passing score cannot exceed 100%');
+    }
+
+    if (!form.sessionId) {
+      errors.push('Session is required');
+    }
+
+    if (!form.termId) {
+      errors.push('Term is required');
     }
 
     return errors;
@@ -107,6 +147,12 @@ export const ModuleForm = ({ onSuccess, onBackToModules }: Props) => {
       case 'passingScorePercentage':
         if (form.passingScorePercentage < 1) return 'Passing score must be at least 1%';
         if (form.passingScorePercentage > 100) return 'Passing score cannot exceed 100%';
+        break;
+      case 'sessionId':
+        if (!form.sessionId) return 'Session is required';
+        break;
+      case 'termId':
+        if (!form.termId) return 'Term is required';
         break;
     }
     return null;
@@ -298,6 +344,69 @@ export const ModuleForm = ({ onSuccess, onBackToModules }: Props) => {
             </div>
             {touched.description && getFieldError('description') && (
               <div style={styles.fieldError}>{getFieldError('description')}</div>
+            )}
+          </FormGroup>
+
+          <FormGroup label="Session">
+            <select
+              value={form.sessionId || ""}
+              onChange={(e) => {
+                setForm({ ...form, sessionId: e.target.value, termId: "" });
+                setTouched({ ...touched, sessionId: true });
+              }}
+              style={{
+                ...styles.input,
+                borderColor: touched.sessionId && !isFieldValid('sessionId') ? '#ef4444' : '#d1d5db',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = touched.sessionId && !isFieldValid('sessionId') ? '#ef4444' : '#3b82f6';
+              }}
+              onBlur={(e) => {
+                setTouched({ ...touched, sessionId: true });
+                e.currentTarget.style.borderColor = touched.sessionId && !isFieldValid('sessionId') ? '#ef4444' : '#d1d5db';
+              }}
+            >
+              <option value="">Select a session</option>
+              {sessions.map(s => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            {touched.sessionId && getFieldError('sessionId') && (
+              <div style={styles.fieldError}>{getFieldError('sessionId')}</div>
+            )}
+          </FormGroup>
+
+          <FormGroup label="Term">
+            <select
+              value={form.termId || ""}
+              onChange={(e) => {
+                setForm({ ...form, termId: e.target.value });
+                setTouched({ ...touched, termId: true });
+              }}
+              style={{
+                ...styles.input,
+                borderColor: touched.termId && !isFieldValid('termId') ? '#ef4444' : '#d1d5db',
+              }}
+              disabled={!form.sessionId}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = touched.termId && !isFieldValid('termId') ? '#ef4444' : '#3b82f6';
+              }}
+              onBlur={(e) => {
+                setTouched({ ...touched, termId: true });
+                e.currentTarget.style.borderColor = touched.termId && !isFieldValid('termId') ? '#ef4444' : '#d1d5db';
+              }}
+            >
+              <option value="">{form.sessionId ? 'Select a term' : 'Please select a session first'}</option>
+              {terms.map(t => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            {touched.termId && getFieldError('termId') && (
+              <div style={styles.fieldError}>{getFieldError('termId')}</div>
             )}
           </FormGroup>
 

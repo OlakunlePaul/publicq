@@ -6,7 +6,7 @@ import { assignmentService } from '../../services/assignmentService';
 import { groupService } from '../../services/groupService';
 import { userService } from '../../services/userService';
 import { academicStructureService } from '../../services/academicStructureService';
-import { SubjectDto, ClassLevelDto } from '../../models/academic';
+import { SubjectDto, ClassLevelDto, SessionDto, TermDto } from '../../models/academic';
 import { formatDateToLocal } from '../../utils/dateUtils';
 import UserTable from '../Shared/UserTable';
 import { VALIDATION_CONSTRAINTS } from '../../constants/contstants';
@@ -45,11 +45,15 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
     enforceProgressionLock: true,
     progressionOrder: 0,
     isForEntireClassLevel: true,
+    sessionId: '',
+    termId: '',
   });
   const [error, setError] = useState('');
   const [groups, setGroups] = useState<Group[]>([]);
   const [subjects, setSubjects] = useState<SubjectDto[]>([]);
   const [classLevels, setClassLevels] = useState<ClassLevelDto[]>([]);
+  const [sessions, setSessions] = useState<SessionDto[]>([]);
+  const [terms, setTerms] = useState<TermDto[]>([]);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -57,6 +61,7 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
       loadGroups();
       loadSubjects();
       loadClassLevels();
+      loadSessions();
       
       if (assignment) {
         // Convert UTC dates to local datetime-local format
@@ -78,7 +83,12 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           enforceProgressionLock: assignment.enforceProgressionLock ?? true,
           progressionOrder: assignment.progressionOrder ?? 0,
           isForEntireClassLevel: assignment.isForEntireClassLevel ?? true,
+          sessionId: assignment.sessionId || '',
+          termId: assignment.termId || '',
         });
+        if (assignment.sessionId) {
+          loadTerms(assignment.sessionId);
+        }
       } else {
         // Set default dates: start date = today, end date = next week
         const now = new Date();
@@ -100,6 +110,8 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           enforceProgressionLock: true,
           progressionOrder: 0,
           isForEntireClassLevel: true,
+          sessionId: '',
+          termId: '',
         });
       }
       setError('');
@@ -142,6 +154,14 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
       setError('End date must be after start date');
       return false;
     }
+    if (!formData.sessionId) {
+      setError('Session is required');
+      return false;
+    }
+    if (!formData.termId) {
+      setError('Term is required');
+      return false;
+    }
     if (!formData.groupId) {
       setError('Group selection is required');
       return false;
@@ -173,6 +193,8 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           enforceProgressionLock: formData.enforceProgressionLock,
           progressionOrder: formData.progressionOrder,
           isForEntireClassLevel: formData.isForEntireClassLevel,
+          sessionId: formData.sessionId,
+          termId: formData.termId,
         });
       } else {
         // Create new assignment
@@ -191,6 +213,8 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
           enforceProgressionLock: formData.enforceProgressionLock,
           progressionOrder: formData.progressionOrder,
           isForEntireClassLevel: formData.isForEntireClassLevel,
+          sessionId: formData.sessionId,
+          termId: formData.termId,
         });
       }
     }
@@ -242,10 +266,41 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
     }
   };
 
+  const loadSessions = async () => {
+    try {
+      const { data } = await academicStructureService.getSessions();
+      setSessions(data || []);
+    } catch (error) {
+      console.error('Failed to load sessions', error);
+    }
+  };
 
+  const loadTerms = async (sessionId: string) => {
+    if (!sessionId) {
+      setTerms([]);
+      return;
+    }
+    try {
+      const { data } = await academicStructureService.getTermsBySession(sessionId);
+      setTerms(data || []);
+    } catch (error) {
+      console.error('Failed to load terms', error);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+    
+    if (name === 'sessionId') {
+      loadTerms(value);
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        termId: ''
+      }));
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
@@ -266,7 +321,46 @@ const AssignmentFormModal = ({ isOpen, assignment, apiError, onConfirm, onCancel
         {apiError && <p className={cssStyles.formError}>{apiError}</p>}
         <div className={cssStyles.formContainer}>
 
+          <div className={cssStyles.formGroup}>
+            <label className={cssStyles.formLabel}>
+              Session: <span style={{color: '#dc2626'}}>*</span>
+            </label>
+            <select
+              name="sessionId"
+              value={formData.sessionId}
+              onChange={handleInputChange}
+              className={cssStyles.formSelect}
+              required
+            >
+              <option value="">Select a session</option>
+              {sessions.map(s => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
+          <div className={cssStyles.formGroup}>
+            <label className={cssStyles.formLabel}>
+              Term: <span style={{color: '#dc2626'}}>*</span>
+            </label>
+            <select
+              name="termId"
+              value={formData.termId}
+              onChange={handleInputChange}
+              className={cssStyles.formSelect}
+              required
+              disabled={!formData.sessionId}
+            >
+              <option value="">{formData.sessionId ? 'Select a term' : 'Please select a session first'}</option>
+              {terms.map(t => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className={cssStyles.formGroup}>
             <label className={cssStyles.formLabel}>
               Link to Subject:

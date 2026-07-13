@@ -39,6 +39,8 @@ public interface IAssessmentService
     /// </param>
     /// <returns>Returns <see cref="PaginatedResponse{T}"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
     Task<Response<PaginatedResponse<AssessmentModuleDto>, GenericOperationStatuses>> GetModulesAsync(
+        Guid? sessionId = null,
+        Guid? termId = null,
         int pageNumber = 1,
         int pageSize = 10,
         CancellationToken cancellationToken = default);
@@ -59,6 +61,8 @@ public interface IAssessmentService
     /// <returns>Returns <see cref="PaginatedResponse{T}"/> wrapped into <see cref="Response{TData, TStatus}"/></returns>
     Task<Response<PaginatedResponse<AssessmentModuleDto>, GenericOperationStatuses>> GetModulesByTitleAsync(
         string title,
+        Guid? sessionId = null,
+        Guid? termId = null,
         int pageNumber = 1,
         int pageSize = 10,
         CancellationToken cancellationToken = default);

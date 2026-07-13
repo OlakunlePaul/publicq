@@ -36,5 +36,13 @@ public class AssessmentModuleCreateDtoValidator : AbstractValidator<AssessmentMo
         RuleFor(x => x.DurationInMinutes)
             .GreaterThanOrEqualTo(0)
             .WithMessage("Module duration must be greater than or equal to 0 minutes.");
+            
+        RuleFor(x => x.SessionId)
+            .NotEmpty()
+            .WithMessage("Session is required.");
+            
+        RuleFor(x => x.TermId)
+            .NotEmpty()
+            .WithMessage("Term is required.");
     }
 }
