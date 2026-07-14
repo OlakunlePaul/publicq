@@ -14,21 +14,25 @@ namespace PublicQ.Infrastructure.Migrations
             migrationBuilder.AddColumn<Guid>(
                 name: "SessionId",
                 table: "Assignments",
+                type: "uuid",
                 nullable: true);
 
             migrationBuilder.AddColumn<Guid>(
                 name: "TermId",
                 table: "Assignments",
+                type: "uuid",
                 nullable: true);
 
             migrationBuilder.AddColumn<Guid>(
                 name: "SessionId",
                 table: "AssessmentModules",
+                type: "uuid",
                 nullable: true);
 
             migrationBuilder.AddColumn<Guid>(
                 name: "TermId",
                 table: "AssessmentModules",
+                type: "uuid",
                 nullable: true);
 
             migrationBuilder.CreateIndex(
