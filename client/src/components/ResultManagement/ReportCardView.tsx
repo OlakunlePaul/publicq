@@ -186,6 +186,13 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
                         <th style={tableThStyle}>Test (40)</th>
                         <th style={tableThStyle}>Exam (60)</th>
                         <th style={tableThStyle}>Total (100)</th>
+                        {report.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null) && (
+                            <>
+                                <th style={tableThStyle}>1st Term</th>
+                                <th style={tableThStyle}>2nd Term</th>
+                                <th style={tableThStyle}>Average</th>
+                            </>
+                        )}
                         <th style={tableThStyle}>Grade</th>
                         <th style={tableThStyle}>Remark</th>
                     </tr>
@@ -194,7 +201,9 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
                     {report.subjectScores && report.subjectScores.length > 0 ? (
                         report.subjectScores.map((score, i) => {
                             const total = score.totalScore || ((score.testScore ?? 0) + (score.examScore ?? 0));
-                            const calcGrade = score.grade && score.grade !== '-' ? score.grade : getCalculatedGrade(total);
+                            const hasCumulative = report.subjectScores.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null);
+                            const scoreToGrade = hasCumulative && score.cumulativeAverage != null ? score.cumulativeAverage : total;
+                            const calcGrade = score.grade && score.grade !== '-' ? score.grade : getCalculatedGrade(scoreToGrade);
                             const calcRemark = (score.subjectRemark && score.subjectRemark !== '-') ? score.subjectRemark : (gradeRemarkMap[calcGrade] || '-');
                             
                             return (
@@ -205,13 +214,22 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
                                     <td style={{ ...tableTdStyle, fontWeight: 700, color: total < 40 ? '#ef4444' : '#111827' }}>
                                         {total > 0 ? total : '-'}
                                     </td>
+                                    {hasCumulative && (
+                                        <>
+                                            <td style={tableTdStyle}>{score.firstTermScore != null ? score.firstTermScore.toFixed(1) : '-'}</td>
+                                            <td style={tableTdStyle}>{score.secondTermScore != null ? score.secondTermScore.toFixed(1) : '-'}</td>
+                                            <td style={{ ...tableTdStyle, fontWeight: 700, color: (score.cumulativeAverage || 0) < 40 ? '#ef4444' : '#111827' }}>
+                                                {score.cumulativeAverage != null ? score.cumulativeAverage.toFixed(1) : '-'}
+                                            </td>
+                                        </>
+                                    )}
                                     <td style={tableTdStyle}>{calcGrade}</td>
                                     <td style={tableTdStyle}>{calcRemark}</td>
                                 </tr>
                             );
                         })
                     ) : (
-                        <tr><td colSpan={6} style={{ ...tableTdStyle, textAlign: 'center', color: '#9ca3af' }}>No scores available</td></tr>
+                        <tr><td colSpan={9} style={{ ...tableTdStyle, textAlign: 'center', color: '#9ca3af' }}>No scores available</td></tr>
                     )}
                 </tbody>
             </table>

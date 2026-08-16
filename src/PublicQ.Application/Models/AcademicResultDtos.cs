@@ -49,6 +49,9 @@ public record StudentSubjectScoreDto
     public decimal? TestScore { get; init; }
     public decimal? ExamScore { get; init; }
     public decimal? TotalScore { get; init; }
+    public decimal? FirstTermScore { get; init; }
+    public decimal? SecondTermScore { get; init; }
+    public decimal? CumulativeAverage { get; init; }
     public string? Grade { get; init; }
     public string? SubjectRemark { get; init; }
 }

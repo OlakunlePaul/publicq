@@ -222,6 +222,13 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
                 <th style={thStyle}>Test Score (40)</th>
                 <th style={thStyle}>Exam Score (60)</th>
                 <th style={thStyle}>Total (100)</th>
+                {report.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null) && (
+                    <>
+                        <th style={thStyle}>1st Term</th>
+                        <th style={thStyle}>2nd Term</th>
+                        <th style={thStyle}>Average</th>
+                    </>
+                )}
                 <th style={thStyle}>Grade</th>
                 <th style={thStyle}>Remark</th>
               </tr>
@@ -231,13 +238,15 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
                 const test = score.testScore || 0;
                 const exam = score.examScore || 0;
                 const total = test + exam;
+                const hasCumulative = report.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null) ?? false;
+                const scoreToGrade = hasCumulative && score.cumulativeAverage != null ? score.cumulativeAverage : total;
                 let grade = 'F9';
-                if (total >= 75) grade = 'A1';
-                else if (total >= 70) grade = 'B2';
-                else if (total >= 65) grade = 'B3';
-                else if (total >= 60) grade = 'C4';
-                else if (total >= 50) grade = 'C6';
-                else if (total >= 40) grade = 'E8';
+                if (scoreToGrade >= 75) grade = 'A1';
+                else if (scoreToGrade >= 70) grade = 'B2';
+                else if (scoreToGrade >= 65) grade = 'B3';
+                else if (scoreToGrade >= 60) grade = 'C4';
+                else if (scoreToGrade >= 50) grade = 'C6';
+                else if (scoreToGrade >= 40) grade = 'E8';
 
                 return (
                   <tr key={idx}>
@@ -245,7 +254,14 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
                     <td style={{...tdStyle, textAlign: 'center'}}>{score.testScore ?? '-'}</td>
                     <td style={{...tdStyle, textAlign: 'center'}}>{score.examScore ?? '-'}</td>
                     <td style={{...tdStyle, textAlign: 'center', fontWeight: 'bold'}}>{total}</td>
-                    <td style={{...tdStyle, textAlign: 'center'}}>{grade}</td>
+                    {hasCumulative && (
+                        <>
+                            <td style={{...tdStyle, textAlign: 'center'}}>{score.firstTermScore != null ? score.firstTermScore.toFixed(1) : '-'}</td>
+                            <td style={{...tdStyle, textAlign: 'center'}}>{score.secondTermScore != null ? score.secondTermScore.toFixed(1) : '-'}</td>
+                            <td style={{...tdStyle, textAlign: 'center', fontWeight: 'bold'}}>{score.cumulativeAverage != null ? score.cumulativeAverage.toFixed(1) : '-'}</td>
+                        </>
+                    )}
+                    <td style={{...tdStyle, textAlign: 'center'}}>{score.grade && score.grade !== '-' ? score.grade : grade}</td>
                     <td style={tdStyle}>{(score.subjectRemark && score.subjectRemark !== '-') ? score.subjectRemark : (gradeRemarkMap[grade] || '-')}</td>
                   </tr>
                 );

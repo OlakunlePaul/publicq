@@ -31,7 +31,7 @@ const ResultManagement: React.FC = () => {
   const [selectedSubject, setSelectedSubject] = useState('');
 
   const [students, setStudents] = useState<any[]>([]);
-  const [scores, setScores] = useState<Record<string, { testScore: string, examScore: string }>>({});
+  const [scores, setScores] = useState<Record<string, { testScore: string, examScore: string, firstTermScore?: string, secondTermScore?: string }>>({});
   
   const [loading, setLoading] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(true);
@@ -240,22 +240,26 @@ const ResultManagement: React.FC = () => {
       setStudents(assessments as any);
         
       // Initialize scores state
-      const initialScores: Record<string, { testScore: string, examScore: string }> = {};
+      const initialScores: Record<string, { testScore: string, examScore: string, firstTermScore?: string, secondTermScore?: string }> = {};
       const subjectObj = subjects.find(s => s.id === selectedSubject);
 
       assessments.forEach(stu => {
         let defaultTest = '';
         let defaultExam = '';
+        let defaultT1 = '';
+        let defaultT2 = '';
         
         if (subjectObj && stu.subjectScores) {
           const existingScore = stu.subjectScores.find((s: any) => s.subjectName === subjectObj.name);
           if (existingScore) {
             defaultTest = existingScore.testScore != null ? String(existingScore.testScore) : '';
             defaultExam = existingScore.examScore != null ? String(existingScore.examScore) : '';
+            defaultT1 = existingScore.firstTermScore != null ? String(existingScore.firstTermScore) : '';
+            defaultT2 = existingScore.secondTermScore != null ? String(existingScore.secondTermScore) : '';
           }
         }
         
-        initialScores[stu.studentId] = { testScore: defaultTest, examScore: defaultExam };
+        initialScores[stu.studentId] = { testScore: defaultTest, examScore: defaultExam, firstTermScore: defaultT1, secondTermScore: defaultT2 };
       });
       setScores(initialScores);
       
@@ -269,12 +273,14 @@ const ResultManagement: React.FC = () => {
     }
   };
 
-  const handleScoreChange = (studentId: string, field: 'testScore' | 'examScore', value: string) => {
-    // Validate max scores: Test 40, Exam 60
+  const handleScoreChange = (studentId: string, field: 'testScore' | 'examScore' | 'firstTermScore' | 'secondTermScore', value: string) => {
+    // Validate max scores: Test 40, Exam 60, Cumulative up to 100
     let numVal = parseInt(value);
     if (!isNaN(numVal)) {
       if (field === 'testScore' && numVal > 40) numVal = 40;
       if (field === 'examScore' && numVal > 60) numVal = 60;
+      if (field === 'firstTermScore' && numVal > 100) numVal = 100;
+      if (field === 'secondTermScore' && numVal > 100) numVal = 100;
       if (numVal < 0) numVal = 0;
       value = numVal.toString();
     }
@@ -306,8 +312,10 @@ const ResultManagement: React.FC = () => {
       scores: students.map(stu => ({
         studentId: stu.studentId,
         subjectId: selectedSubject,
-        testScore: scores[stu.studentId]?.testScore !== '' ? parseInt(scores[stu.studentId].testScore) : undefined,
-        examScore: scores[stu.studentId]?.examScore !== '' ? parseInt(scores[stu.studentId].examScore) : undefined,
+        testScore: scores[stu.studentId]?.testScore !== '' ? parseInt(scores[stu.studentId].testScore as string) : undefined,
+        examScore: scores[stu.studentId]?.examScore !== '' ? parseInt(scores[stu.studentId].examScore as string) : undefined,
+        firstTermScore: scores[stu.studentId]?.firstTermScore ? parseInt(scores[stu.studentId].firstTermScore as string) : undefined,
+        secondTermScore: scores[stu.studentId]?.secondTermScore ? parseInt(scores[stu.studentId].secondTermScore as string) : undefined,
       }))
     };
 
@@ -726,6 +734,12 @@ const ResultManagement: React.FC = () => {
                   <th style={thStyle}>Test Score (40)</th>
                   <th style={thStyle}>Exam Score (60)</th>
                   <th style={thStyle}>Total (100)</th>
+                  {terms.find(t => t.id === selectedTerm)?.isCumulativeTerm === true && (
+                    <>
+                      <th style={thStyle}>1st Term (100)</th>
+                      <th style={thStyle}>2nd Term (100)</th>
+                    </>
+                  )}
                   <th style={thStyle}>Actions</th>
                 </tr>
               </thead>
@@ -773,6 +787,30 @@ const ResultManagement: React.FC = () => {
                           {total}
                         </span>
                       </td>
+                      {terms.find(t => t.id === selectedTerm)?.isCumulativeTerm === true && (
+                        <>
+                          <td style={tdStyle} data-label="1st Term Score">
+                            <input 
+                              type="number" 
+                              min="0" max="100"
+                              style={inputStyle}
+                              className="result-management-score-input"
+                              value={scores[stu.studentId]?.firstTermScore || ''}
+                              onChange={(e) => handleScoreChange(stu.studentId, 'firstTermScore', e.target.value)}
+                            />
+                          </td>
+                          <td style={tdStyle} data-label="2nd Term Score">
+                            <input 
+                              type="number" 
+                              min="0" max="100"
+                              style={inputStyle}
+                              className="result-management-score-input"
+                              value={scores[stu.studentId]?.secondTermScore || ''}
+                              onChange={(e) => handleScoreChange(stu.studentId, 'secondTermScore', e.target.value)}
+                            />
+                          </td>
+                        </>
+                      )}
                       <td style={{ ...tdStyle, display: 'flex', gap: '8px' }} data-label="Actions">
                         <button 
                           onClick={() => setSelectedAssessmentId(stu.id)}

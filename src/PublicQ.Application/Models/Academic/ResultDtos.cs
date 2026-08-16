@@ -32,6 +32,9 @@ public record SubjectScoreDto(
     decimal? TestScore,
     decimal? ExamScore,
     decimal? TotalScore,
+    decimal? FirstTermScore,
+    decimal? SecondTermScore,
+    decimal? CumulativeAverage,
     string? Grade,
     string? SubjectRemark);
 

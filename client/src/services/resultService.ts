@@ -14,6 +14,9 @@ export interface SubjectScore {
   testScore: number;
   examScore: number;
   totalScore: number;
+  firstTermScore?: number;
+  secondTermScore?: number;
+  cumulativeAverage?: number;
   grade: string;
   subjectRemark: string;
 }

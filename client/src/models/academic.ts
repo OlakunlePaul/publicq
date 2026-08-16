@@ -38,6 +38,7 @@ export interface TermDto {
     endDate?: string;
     nextTermBegins?: string;
     isActive: boolean;
+    isCumulativeTerm?: boolean;
 }
 
 export interface TermCreateDto {
@@ -47,6 +48,7 @@ export interface TermCreateDto {
     endDate?: string;
     nextTermBegins?: string;
     isActive: boolean;
+    isCumulativeTerm?: boolean;
 }
 
 export interface ClassLevelDto {
@@ -98,6 +100,9 @@ export interface StudentSubjectScoreDto {
     testScore?: number;
     examScore?: number;
     totalScore?: number;
+    firstTermScore?: number;
+    secondTermScore?: number;
+    cumulativeAverage?: number;
     grade?: string;
     subjectRemark?: string;
 }

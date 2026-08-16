@@ -53,6 +53,11 @@ public class TermEntity
     public bool IsActive { get; set; }
 
     /// <summary>
+    /// Indicates if this term is a cumulative term (e.g. Third Term) where yearly average is calculated.
+    /// </summary>
+    public bool IsCumulativeTerm { get; set; }
+
+    /// <summary>
     /// Navigation property to the parent session.
     /// </summary>
     public SessionEntity Session { get; set; } = default!;

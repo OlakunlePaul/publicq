@@ -45,6 +45,24 @@ public class SubjectScoreEntity
     public decimal? TotalScore { get; set; }
 
     /// <summary>
+    /// First term total score (used for cumulative 3rd term results).
+    /// </summary>
+    [Range(0, 100)]
+    public decimal? FirstTermScore { get; set; }
+
+    /// <summary>
+    /// Second term total score (used for cumulative 3rd term results).
+    /// </summary>
+    [Range(0, 100)]
+    public decimal? SecondTermScore { get; set; }
+
+    /// <summary>
+    /// Cumulative average for the year ((TotalScore + FirstTermScore + SecondTermScore) / 3).
+    /// </summary>
+    [Range(0, 100)]
+    public decimal? CumulativeAverage { get; set; }
+
+    /// <summary>
     /// Calculated grade based on TotalScore (e.g., A, B, C, F).
     /// </summary>
     [MaxLength(5)]

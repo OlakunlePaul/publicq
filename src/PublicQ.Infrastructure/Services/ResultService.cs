@@ -214,6 +214,9 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             TestScore = s.TestScore,
             ExamScore = s.ExamScore,
             TotalScore = s.TotalScore,
+            FirstTermScore = s.FirstTermScore,
+            SecondTermScore = s.SecondTermScore,
+            CumulativeAverage = s.CumulativeAverage,
             Grade = s.Grade,
             SubjectRemark = s.SubjectRemark
         });
@@ -301,6 +304,11 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             score.TestScore = (entry.TestScore ?? 0) > 40 ? 40 : (entry.TestScore ?? 0);
             score.ExamScore = (entry.ExamScore ?? 0) > 60 ? 60 : (entry.ExamScore ?? 0);
             score.TotalScore = score.TestScore + score.ExamScore;
+            
+            if (entry.FirstTermScore.HasValue)
+                score.FirstTermScore = entry.FirstTermScore.Value > 100 ? 100 : entry.FirstTermScore.Value;
+            if (entry.SecondTermScore.HasValue)
+                score.SecondTermScore = entry.SecondTermScore.Value > 100 ? 100 : entry.SecondTermScore.Value;
             // Re-calculate Grade and Remark immediately
             var scoreVal = (int)Math.Round(score.TotalScore.Value);
             var gradeRange = classLevel?.GradingSchema?.GradeRanges?.FirstOrDefault(r => scoreVal >= r.MinScore && scoreVal <= r.MaxScore);
@@ -319,6 +327,9 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 .ThenInclude(s => s != null ? s.GradeRanges : null)
             .FirstOrDefaultAsync(c => c.Id == classLevelId, cancellationToken);
 
+        var term = await dbContext.Terms.FirstOrDefaultAsync(t => t.Id == termId, cancellationToken);
+        bool isCumulative = term?.IsCumulativeTerm ?? false;
+
         var assessments = await dbContext.StudentAssessments
             .Include(a => a.SubjectScores)
             .Where(a => a.SessionId == sessionId && a.TermId == termId && a.ClassLevelId == classLevelId)
@@ -326,16 +337,46 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
 
         if (!assessments.Any()) return Response<GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "No assessments found for this class.");
 
+        var studentIds = assessments.Select(a => a.StudentId).ToList();
+
+        var previousAssessments = isCumulative 
+            ? await dbContext.StudentAssessments
+                .Include(a => a.Term)
+                .Include(a => a.SubjectScores)
+                .Where(a => a.SessionId == sessionId && a.TermId != termId && studentIds.Contains(a.StudentId))
+                .ToListAsync(cancellationToken)
+            : new List<StudentAssessmentEntity>();
+
         var schema = classLevel?.GradingSchema;
         var gradeRanges = schema?.GradeRanges.OrderByDescending(r => r.MinScore).ToList();
 
         foreach (var a in assessments)
         {
+            var studentPreviousAssessments = isCumulative 
+                ? previousAssessments.Where(pa => pa.StudentId == a.StudentId).OrderBy(pa => pa.Term?.StartDate ?? DateTime.MaxValue).ToList() 
+                : new List<StudentAssessmentEntity>();
+
             foreach (var s in a.SubjectScores)
             {
-                if (gradeRanges != null && s.TotalScore.HasValue)
+                if (isCumulative)
                 {
-                    var scoreVal = (int)Math.Round(s.TotalScore.Value);
+                    var t1Score = studentPreviousAssessments.ElementAtOrDefault(0)?.SubjectScores.FirstOrDefault(ss => ss.SubjectId == s.SubjectId)?.TotalScore;
+                    var t2Score = studentPreviousAssessments.ElementAtOrDefault(1)?.SubjectScores.FirstOrDefault(ss => ss.SubjectId == s.SubjectId)?.TotalScore;
+                    
+                    if (t1Score.HasValue) s.FirstTermScore = t1Score.Value;
+                    if (t2Score.HasValue) s.SecondTermScore = t2Score.Value;
+
+                    decimal sum = (s.TotalScore ?? 0) + (s.FirstTermScore ?? 0) + (s.SecondTermScore ?? 0);
+                    s.CumulativeAverage = sum / 3m;
+                }
+
+                if (gradeRanges != null)
+                {
+                    var scoreToGrade = isCumulative && s.CumulativeAverage.HasValue 
+                                        ? s.CumulativeAverage.Value 
+                                        : (s.TotalScore ?? 0);
+
+                    var scoreVal = (int)Math.Round(scoreToGrade);
                     var range = gradeRanges.FirstOrDefault(r => scoreVal >= r.MinScore && scoreVal <= r.MaxScore);
                     if (range != null)
                     {
@@ -345,7 +386,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 }
             }
 
-            a.TotalMarksObtained = a.SubjectScores.Sum(s => s.TotalScore);
+            a.TotalMarksObtained = a.SubjectScores.Sum(s => isCumulative ? (s.CumulativeAverage ?? 0) : (s.TotalScore ?? 0));
             a.TotalMarksObtainable = a.SubjectScores.Count * 100;
             a.AverageScore = a.TotalMarksObtainable > 0 ? (a.TotalMarksObtained / a.TotalMarksObtainable) * 100 : 0;
         }
@@ -520,6 +561,9 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 s.TestScore,
                 s.ExamScore,
                 s.TotalScore,
+                s.FirstTermScore,
+                s.SecondTermScore,
+                s.CumulativeAverage,
                 s.Grade,
                 s.SubjectRemark
             ));
