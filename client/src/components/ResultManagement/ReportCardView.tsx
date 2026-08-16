@@ -22,12 +22,13 @@ const getCalculatedGrade = (total: number) => {
 
 interface ReportCardViewProps {
   assessmentId: string;
+  isCumulativeTerm?: boolean;
   onClose: () => void;
   onSaved: () => void;
   readOnly?: boolean;
 }
 
-const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, onSaved, readOnly = false }) => {
+const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, isCumulativeTerm = false, onClose, onSaved, readOnly = false }) => {
   const [report, setReport] = useState<AssessmentDetailsDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -186,7 +187,7 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
                         <th style={tableThStyle}>Test (40)</th>
                         <th style={tableThStyle}>Exam (60)</th>
                         <th style={tableThStyle}>Total (100)</th>
-                        {report.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null) && (
+                        {(isCumulativeTerm || report.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null)) && (
                             <>
                                 <th style={tableThStyle}>1st Term</th>
                                 <th style={tableThStyle}>2nd Term</th>
@@ -201,7 +202,7 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, onClose, 
                     {report.subjectScores && report.subjectScores.length > 0 ? (
                         report.subjectScores.map((score, i) => {
                             const total = score.totalScore || ((score.testScore ?? 0) + (score.examScore ?? 0));
-                            const hasCumulative = report.subjectScores.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null);
+                            const hasCumulative = isCumulativeTerm || report.subjectScores.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null);
                             const scoreToGrade = hasCumulative && score.cumulativeAverage != null ? score.cumulativeAverage : total;
                             const calcGrade = score.grade && score.grade !== '-' ? score.grade : getCalculatedGrade(scoreToGrade);
                             const calcRemark = (score.subjectRemark && score.subjectRemark !== '-') ? score.subjectRemark : (gradeRemarkMap[calcGrade] || '-');

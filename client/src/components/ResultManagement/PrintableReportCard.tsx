@@ -222,7 +222,7 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
                 <th style={thStyle}>Test Score (40)</th>
                 <th style={thStyle}>Exam Score (60)</th>
                 <th style={thStyle}>Total (100)</th>
-                {report.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null) && (
+                {(termInfo?.isCumulativeTerm || report.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null)) && (
                     <>
                         <th style={thStyle}>1st Term</th>
                         <th style={thStyle}>2nd Term</th>
@@ -238,7 +238,7 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
                 const test = score.testScore || 0;
                 const exam = score.examScore || 0;
                 const total = test + exam;
-                const hasCumulative = report.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null) ?? false;
+                const hasCumulative = termInfo?.isCumulativeTerm || report.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null) || false;
                 const scoreToGrade = hasCumulative && score.cumulativeAverage != null ? score.cumulativeAverage : total;
                 let grade = 'F9';
                 if (scoreToGrade >= 75) grade = 'A1';

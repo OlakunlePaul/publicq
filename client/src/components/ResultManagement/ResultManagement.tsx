@@ -866,6 +866,7 @@ const ResultManagement: React.FC = () => {
         <div style={modalOverlayStyle}>
           <ReportCardView 
             assessmentId={selectedAssessmentId} 
+            isCumulativeTerm={terms.find(t => t.id === selectedTerm)?.isCumulativeTerm || false}
             onClose={() => setSelectedAssessmentId(null)}
             onSaved={() => setSelectedAssessmentId(null)}
           />

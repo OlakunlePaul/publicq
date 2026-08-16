@@ -148,6 +148,54 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
         return Response<StudentAssessmentDto, GenericOperationStatuses>.Success(MapToDto(assessment), GenericOperationStatuses.Completed);
     }
 
+    private async Task PopulateCumulativeScoresAsync(IEnumerable<StudentAssessmentEntity> assessments, Guid sessionId, Guid termId, CancellationToken cancellationToken)
+    {
+        var term = await dbContext.Terms.FirstOrDefaultAsync(t => t.Id == termId, cancellationToken);
+        if (term == null || !term.IsCumulativeTerm) return;
+
+        var studentIds = assessments.Select(a => a.StudentId).Distinct().ToList();
+        if (!studentIds.Any()) return;
+        
+        var previousAssessments = await dbContext.StudentAssessments
+            .Include(a => a.Term)
+            .Include(a => a.SubjectScores)
+            .Where(a => a.SessionId == sessionId && a.TermId != termId && studentIds.Contains(a.StudentId))
+            .ToListAsync(cancellationToken);
+
+        foreach (var a in assessments)
+        {
+            var pastForStudent = previousAssessments.Where(pa => pa.StudentId == a.StudentId).ToList();
+            
+            var t1Assessment = pastForStudent.FirstOrDefault(pa => pa.Term != null && (pa.Term.Name.Contains("First", StringComparison.OrdinalIgnoreCase) || pa.Term.Name.Contains("1st", StringComparison.OrdinalIgnoreCase)));
+            var t2Assessment = pastForStudent.FirstOrDefault(pa => pa.Term != null && (pa.Term.Name.Contains("Second", StringComparison.OrdinalIgnoreCase) || pa.Term.Name.Contains("2nd", StringComparison.OrdinalIgnoreCase)));
+
+            if (t1Assessment == null && t2Assessment == null)
+            {
+                var sorted = pastForStudent.OrderBy(pa => pa.Term?.StartDate ?? DateTime.MaxValue).ToList();
+                t1Assessment = sorted.ElementAtOrDefault(0);
+                t2Assessment = sorted.ElementAtOrDefault(1);
+            }
+
+            foreach (var s in a.SubjectScores)
+            {
+                if (!s.FirstTermScore.HasValue)
+                {
+                    s.FirstTermScore = t1Assessment?.SubjectScores.FirstOrDefault(ss => ss.SubjectId == s.SubjectId)?.TotalScore;
+                }
+                if (!s.SecondTermScore.HasValue)
+                {
+                    s.SecondTermScore = t2Assessment?.SubjectScores.FirstOrDefault(ss => ss.SubjectId == s.SubjectId)?.TotalScore;
+                }
+
+                if (s.FirstTermScore.HasValue || s.SecondTermScore.HasValue || (s.TotalScore ?? 0) > 0)
+                {
+                    decimal sum = (s.TotalScore ?? 0) + (s.FirstTermScore ?? 0) + (s.SecondTermScore ?? 0);
+                    s.CumulativeAverage = sum / 3m;
+                }
+            }
+        }
+    }
+
     public async Task<Response<IEnumerable<StudentAssessmentDto>, GenericOperationStatuses>> GetClassAssessmentsAsync(Guid sessionId, Guid termId, Guid classLevelId, CancellationToken cancellationToken)
     {
         var assessments = await dbContext.StudentAssessments
@@ -158,10 +206,12 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             .Include(a => a.SubjectScores)
                 .ThenInclude(s => s.Subject)
             .Where(a => a.SessionId == sessionId && a.TermId == termId && a.ClassLevelId == classLevelId)
-            .Select(a => MapToDto(a))
             .ToListAsync(cancellationToken);
 
-        return Response<IEnumerable<StudentAssessmentDto>, GenericOperationStatuses>.Success(assessments, GenericOperationStatuses.Completed);
+        await PopulateCumulativeScoresAsync(assessments, sessionId, termId, cancellationToken);
+
+        var dtos = assessments.Select(a => MapToDto(a)).ToList();
+        return Response<IEnumerable<StudentAssessmentDto>, GenericOperationStatuses>.Success(dtos, GenericOperationStatuses.Completed);
     }
 
     public async Task<Response<IEnumerable<StudentAssessmentDto>, GenericOperationStatuses>> GetParentChildrenResultsAsync(string parentUserId, CancellationToken cancellationToken)
@@ -206,6 +256,8 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             .FirstOrDefaultAsync(a => a.Id == assessmentId, cancellationToken);
 
         if (assessment == null) return Response<AssessmentDetailsDto, GenericOperationStatuses>.Failure(GenericOperationStatuses.NotFound, "Assessment not found.");
+
+        await PopulateCumulativeScoresAsync(new List<StudentAssessmentEntity> { assessment }, assessment.SessionId, assessment.TermId, cancellationToken);
 
         var subjects = assessment.SubjectScores.Select(s => new StudentSubjectScoreDto
         {
@@ -339,36 +391,18 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
 
         var studentIds = assessments.Select(a => a.StudentId).ToList();
 
-        var previousAssessments = isCumulative 
-            ? await dbContext.StudentAssessments
-                .Include(a => a.Term)
-                .Include(a => a.SubjectScores)
-                .Where(a => a.SessionId == sessionId && a.TermId != termId && studentIds.Contains(a.StudentId))
-                .ToListAsync(cancellationToken)
-            : new List<StudentAssessmentEntity>();
+        if (isCumulative)
+        {
+            await PopulateCumulativeScoresAsync(assessments, sessionId, termId, cancellationToken);
+        }
 
         var schema = classLevel?.GradingSchema;
         var gradeRanges = schema?.GradeRanges.OrderByDescending(r => r.MinScore).ToList();
 
         foreach (var a in assessments)
         {
-            var studentPreviousAssessments = isCumulative 
-                ? previousAssessments.Where(pa => pa.StudentId == a.StudentId).OrderBy(pa => pa.Term?.StartDate ?? DateTime.MaxValue).ToList() 
-                : new List<StudentAssessmentEntity>();
-
             foreach (var s in a.SubjectScores)
             {
-                if (isCumulative)
-                {
-                    var t1Score = studentPreviousAssessments.ElementAtOrDefault(0)?.SubjectScores.FirstOrDefault(ss => ss.SubjectId == s.SubjectId)?.TotalScore;
-                    var t2Score = studentPreviousAssessments.ElementAtOrDefault(1)?.SubjectScores.FirstOrDefault(ss => ss.SubjectId == s.SubjectId)?.TotalScore;
-                    
-                    if (t1Score.HasValue) s.FirstTermScore = t1Score.Value;
-                    if (t2Score.HasValue) s.SecondTermScore = t2Score.Value;
-
-                    decimal sum = (s.TotalScore ?? 0) + (s.FirstTermScore ?? 0) + (s.SecondTermScore ?? 0);
-                    s.CumulativeAverage = sum / 3m;
-                }
 
                 if (gradeRanges != null)
                 {
