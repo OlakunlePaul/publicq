@@ -20,6 +20,7 @@ const TermFormModal = ({ isOpen, term, sessionId, onConfirm, onCancel, apiError 
     endDate: '',
     nextTermBegins: '',
     isActive: false,
+    isCumulativeTerm: false,
   });
   const [error, setError] = useState('');
 
@@ -33,9 +34,10 @@ const TermFormModal = ({ isOpen, term, sessionId, onConfirm, onCancel, apiError 
           endDate: term.endDate ? term.endDate.split('T')[0] : '',
           nextTermBegins: term.nextTermBegins ? term.nextTermBegins.split('T')[0] : '',
           isActive: term.isActive,
+          isCumulativeTerm: term.isCumulativeTerm || false,
         });
       } else {
-        setFormData({ sessionId, name: '', startDate: '', endDate: '', nextTermBegins: '', isActive: false });
+        setFormData({ sessionId, name: '', startDate: '', endDate: '', nextTermBegins: '', isActive: false, isCumulativeTerm: false });
       }
       setError('');
     }
@@ -121,6 +123,18 @@ const TermFormModal = ({ isOpen, term, sessionId, onConfirm, onCancel, apiError 
               onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
             />
             Set as Active Term
+          </label>
+        </div>
+
+        <div style={styles.formGroup}>
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}>
+            <input
+              type="checkbox"
+              style={{ marginRight: '8px', cursor: 'pointer' }}
+              checked={formData.isCumulativeTerm}
+              onChange={(e) => setFormData({ ...formData, isCumulativeTerm: e.target.checked })}
+            />
+            Is Cumulative Term (e.g., 3rd Term)
           </label>
         </div>
 
