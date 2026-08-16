@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -13,26 +13,26 @@ namespace PublicQ.Infrastructure.Migrations
             migrationBuilder.AddColumn<bool>(
                 name: "IsCumulativeTerm",
                 table: "Terms",
-                type: "INTEGER",
+                type: "boolean",
                 nullable: false,
                 defaultValue: false);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "CumulativeAverage",
                 table: "SubjectScores",
-                type: "TEXT",
+                type: "numeric",
                 nullable: true);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "FirstTermScore",
                 table: "SubjectScores",
-                type: "TEXT",
+                type: "numeric",
                 nullable: true);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "SecondTermScore",
                 table: "SubjectScores",
-                type: "TEXT",
+                type: "numeric",
                 nullable: true);
         }
 
