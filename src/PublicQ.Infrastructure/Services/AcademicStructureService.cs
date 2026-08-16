@@ -142,7 +142,7 @@ public class AcademicStructureService(
             .Include(t => t.Session)
             .Where(t => t.SessionId == sessionId)
             .OrderBy(t => t.StartDate)
-            .Select(t => new TermDto(t.Id, t.SessionId, t.Session.Name, t.Name, t.StartDate, t.EndDate, t.NextTermBegins, t.IsActive))
+            .Select(t => new TermDto(t.Id, t.SessionId, t.Session.Name, t.Name, t.StartDate, t.EndDate, t.NextTermBegins, t.IsActive, t.IsCumulativeTerm))
             .ToListAsync(cancellationToken);
 
         return Response<IList<TermDto>, GenericOperationStatuses>.Success(
@@ -163,7 +163,8 @@ public class AcademicStructureService(
             StartDate = EnsureUtc(dto.StartDate),
             EndDate = EnsureUtc(dto.EndDate),
             NextTermBegins = EnsureUtc(dto.NextTermBegins),
-            IsActive = dto.IsActive
+            IsActive = dto.IsActive,
+            IsCumulativeTerm = dto.IsCumulativeTerm
         };
 
         if (term.IsActive)
@@ -176,7 +177,7 @@ public class AcademicStructureService(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Response<TermDto, GenericOperationStatuses>.Success(
-            new TermDto(term.Id, term.SessionId, "Session", term.Name, term.StartDate, term.EndDate, term.NextTermBegins, term.IsActive),
+            new TermDto(term.Id, term.SessionId, "Session", term.Name, term.StartDate, term.EndDate, term.NextTermBegins, term.IsActive, term.IsCumulativeTerm),
             GenericOperationStatuses.Completed, "Term created successfully.");
     }
 
@@ -334,10 +335,11 @@ public class AcademicStructureService(
             foreach (var actt in activeTerms) actt.IsActive = false;
         }
         term.IsActive = dto.IsActive;
+        term.IsCumulativeTerm = dto.IsCumulativeTerm;
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return Response<TermDto, GenericOperationStatuses>.Success(
-            new TermDto(term.Id, term.SessionId, "Session", term.Name, term.StartDate, term.EndDate, term.NextTermBegins, term.IsActive),
+            new TermDto(term.Id, term.SessionId, "Session", term.Name, term.StartDate, term.EndDate, term.NextTermBegins, term.IsActive, term.IsCumulativeTerm),
             GenericOperationStatuses.Completed, "Term updated successfully.");
     }
 
