@@ -36,8 +36,8 @@ const BroadsheetView: React.FC<BroadsheetViewProps> = ({ sessionId, termId, clas
                     subjects.forEach(sub => {
                         const existing = stu.subjectScores.find(ss => ss.subjectName === sub.name);
                         scoresMap[stu.studentId][sub.id] = {
-                            test: existing?.testScore?.toString() || '',
-                            exam: existing?.examScore?.toString() || ''
+                            test: existing?.testScore != null ? existing.testScore.toString() : '',
+                            exam: existing?.examScore != null ? existing.examScore.toString() : ''
                         };
                     });
                 });
@@ -64,6 +64,26 @@ const BroadsheetView: React.FC<BroadsheetViewProps> = ({ sessionId, termId, clas
         }));
     };
 
+    const handleClearZeros = () => {
+        if (!window.confirm("This will clear all subjects where both test and exam are 0 (or empty) across all students on this broadsheet. Genuine scores (e.g. Test 0, Exam 23) will NOT be cleared. Continue?")) return;
+        setLocalScores(prev => {
+            const next = { ...prev };
+            Object.keys(next).forEach(studentId => {
+                next[studentId] = { ...next[studentId] };
+                Object.keys(next[studentId]).forEach(subjectId => {
+                    const score = next[studentId][subjectId];
+                    const t = score.test?.trim();
+                    const e = score.exam?.trim();
+                    if ((t === '0' || t === '') && (e === '0' || e === '')) {
+                        next[studentId][subjectId] = { test: '', exam: '' };
+                    }
+                });
+            });
+            return next;
+        });
+        setSuccess('Cleared 0/0 subjects. Click "Save All Changes" to permanently remove them from records.');
+    };
+
     const handleSaveAll = async () => {
         setSaving(true);
         setError('');
@@ -72,13 +92,20 @@ const BroadsheetView: React.FC<BroadsheetViewProps> = ({ sessionId, termId, clas
         const allScores: any[] = [];
         Object.entries(localScores).forEach(([studentId, subjectMap]) => {
             Object.entries(subjectMap).forEach(([subjectId, score]) => {
-                // Only send if at least one score is entered
                 if (score.test !== '' || score.exam !== '') {
                     allScores.push({
                         studentId,
                         subjectId,
                         testScore: score.test !== '' ? parseFloat(score.test) : 0,
                         examScore: score.exam !== '' ? parseFloat(score.exam) : 0
+                    });
+                } else {
+                    // Both test and exam are empty: signal to backend to remove/clear this score
+                    allScores.push({
+                        studentId,
+                        subjectId,
+                        testScore: null,
+                        examScore: null
                     });
                 }
             });
@@ -100,6 +127,20 @@ const BroadsheetView: React.FC<BroadsheetViewProps> = ({ sessionId, termId, clas
             const resp = await resultService.saveBulkScores(payload);
             if (resp.isSuccess) {
                 setSuccess('Broadsheet scores saved successfully.');
+                const updatedData = await resultService.getClassResults(sessionId, termId, classLevelId);
+                setAssessments(updatedData);
+                const scoresMap: Record<string, Record<string, { test: string, exam: string }>> = {};
+                updatedData.forEach(stu => {
+                    scoresMap[stu.studentId] = {};
+                    subjects.forEach(sub => {
+                        const existing = stu.subjectScores.find(ss => ss.subjectName === sub.name);
+                        scoresMap[stu.studentId][sub.id] = {
+                            test: existing?.testScore != null ? existing.testScore.toString() : '',
+                            exam: existing?.examScore != null ? existing.examScore.toString() : ''
+                        };
+                    });
+                });
+                setLocalScores(scoresMap);
             } else {
                 setError(resp.message || 'Failed to save scores.');
             }
@@ -117,6 +158,13 @@ const BroadsheetView: React.FC<BroadsheetViewProps> = ({ sessionId, termId, clas
             <div style={headerStyle}>
                 <h3 style={{ margin: 0 }}>Class Broadsheet (Manual Entry)</h3>
                 <div style={{ display: 'flex', gap: '12px' }}>
+                    <button 
+                        onClick={handleClearZeros} 
+                        style={{ ...cancelButtonStyle, backgroundColor: '#fef2f2', color: '#b91c1c', borderColor: '#fca5a5' }}
+                        title="Clear all unoffered subjects where test and exam are 0"
+                    >
+                        Clear 0/0 (Not Offering)
+                    </button>
                     <button onClick={onClose} style={cancelButtonStyle}>Close</button>
                     <button onClick={handleSaveAll} style={saveButtonStyle} disabled={saving}>
                         {saving ? 'Saving...' : 'Save All Changes'}

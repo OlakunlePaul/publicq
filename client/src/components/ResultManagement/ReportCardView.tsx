@@ -204,8 +204,12 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, isCumulat
                             const total = score.totalScore || ((score.testScore ?? 0) + (score.examScore ?? 0));
                             const hasCumulative = isCumulativeTerm || report.subjectScores.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null);
                             const scoreToGrade = hasCumulative && score.cumulativeAverage != null ? score.cumulativeAverage : total;
-                            const calcGrade = score.grade && score.grade !== '-' ? score.grade : getCalculatedGrade(scoreToGrade);
-                            const calcRemark = (score.subjectRemark && score.subjectRemark !== '-') ? score.subjectRemark : (gradeRemarkMap[calcGrade] || '-');
+                            const calcGrade = (hasCumulative && score.cumulativeAverage != null)
+                                ? getCalculatedGrade(scoreToGrade)
+                                : (score.grade && score.grade !== '-' ? score.grade : getCalculatedGrade(scoreToGrade));
+                            const calcRemark = (hasCumulative && score.cumulativeAverage != null)
+                                ? (gradeRemarkMap[calcGrade] || '-')
+                                : ((score.subjectRemark && score.subjectRemark !== '-') ? score.subjectRemark : (gradeRemarkMap[calcGrade] || '-'));
                             
                             return (
                                 <tr key={i} style={{ borderBottom: i === report.subjectScores.length - 1 ? 'none' : '1px solid #f3f4f6' }}>

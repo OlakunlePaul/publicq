@@ -261,8 +261,16 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
                             <td style={{...tdStyle, textAlign: 'center', fontWeight: 'bold'}}>{score.cumulativeAverage != null ? score.cumulativeAverage.toFixed(1) : '-'}</td>
                         </>
                     )}
-                    <td style={{...tdStyle, textAlign: 'center'}}>{score.grade && score.grade !== '-' ? score.grade : grade}</td>
-                    <td style={tdStyle}>{(score.subjectRemark && score.subjectRemark !== '-') ? score.subjectRemark : (gradeRemarkMap[grade] || '-')}</td>
+                    <td style={{...tdStyle, textAlign: 'center'}}>
+                      {(hasCumulative && score.cumulativeAverage != null)
+                        ? grade
+                        : (score.grade && score.grade !== '-' ? score.grade : grade)}
+                    </td>
+                    <td style={tdStyle}>
+                      {(hasCumulative && score.cumulativeAverage != null)
+                        ? (gradeRemarkMap[grade] || '-')
+                        : ((score.subjectRemark && score.subjectRemark !== '-') ? score.subjectRemark : (gradeRemarkMap[grade] || '-'))}
+                    </td>
                   </tr>
                 );
               })}
