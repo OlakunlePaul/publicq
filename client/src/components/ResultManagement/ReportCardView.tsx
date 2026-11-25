@@ -97,7 +97,7 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, isCumulat
       }
     };
     fetchDetails();
-  }, [assessmentId]);
+  }, [assessmentId, isCumulativeTerm]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (readOnly) return;
