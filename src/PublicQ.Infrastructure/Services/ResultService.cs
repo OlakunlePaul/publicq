@@ -7,6 +7,7 @@ using PublicQ.Infrastructure.Persistence;
 using PublicQ.Infrastructure.Persistence.Entities.Academic;
 using PublicQ.Shared;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace PublicQ.Infrastructure.Services;
 
@@ -216,9 +217,11 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 a.AverageScore = a.TotalMarksObtainable > 0 ? (a.TotalMarksObtained / a.TotalMarksObtainable) * 100 : 0;
             }
 
-            if (string.IsNullOrWhiteSpace(a.HeadTeacherComment) || a.HeadTeacherComment.Contains("next term", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(a.HeadTeacherComment) || 
+                a.HeadTeacherComment.Contains("promoted", StringComparison.OrdinalIgnoreCase) || 
+                a.HeadTeacherComment.Contains("next term", StringComparison.OrdinalIgnoreCase))
             {
-                a.HeadTeacherComment = "They are promoted to the next class based on performance.";
+                a.HeadTeacherComment = GetPromotionComment(a.AverageScore ?? 0, a.ClassLevel?.Name);
             }
         }
     }
@@ -505,9 +508,11 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             var overallRange = gradeRanges?.FirstOrDefault(r => avgVal >= r.MinScore && avgVal <= r.MaxScore);
             a.OverallGrade = overallRange?.Symbol ?? GetDefaultGrade(avgVal);
 
-            if (isCumulative && (string.IsNullOrWhiteSpace(a.HeadTeacherComment) || a.HeadTeacherComment.Contains("next term", StringComparison.OrdinalIgnoreCase)))
+            if (isCumulative && (string.IsNullOrWhiteSpace(a.HeadTeacherComment) || 
+                a.HeadTeacherComment.Contains("promoted", StringComparison.OrdinalIgnoreCase) || 
+                a.HeadTeacherComment.Contains("next term", StringComparison.OrdinalIgnoreCase)))
             {
-                a.HeadTeacherComment = "They are promoted to the next class based on performance.";
+                a.HeadTeacherComment = GetPromotionComment(a.AverageScore ?? 0, classLevel?.Name);
             }
         }
 
@@ -735,4 +740,63 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
         "D7" or "E8" or "D" or "E" => "Fair",
         _ => "Fail"
     };
+
+    private static string GetPromotionComment(decimal average, string? currentClassName)
+    {
+        string currentClass = !string.IsNullOrWhiteSpace(currentClassName) ? currentClassName.Trim() : "this class";
+        string nextClass = GetNextClassName(currentClassName);
+
+        if (nextClass == "Graduation" || Regex.IsMatch(currentClass, @"(?:SS|SSS)\s*3", RegexOptions.IgnoreCase))
+        {
+            if (average >= 50)
+                return "Congratulations on completing your secondary school education! We wish you great success in your future endeavors.";
+            
+            return $"Advised to repeat {currentClass}. We encourage parents to work closely with the school next session to help unlock the student's true potential.";
+        }
+
+        if (average >= 90)
+            return $"You are promoted to {nextClass} with flying colors! An outstanding academic performance.";
+        if (average >= 50)
+            return $"You are promoted to {nextClass}. Keep up the good momentum in the new class.";
+        if (average >= 40)
+            return $"You are promoted to {nextClass} on trial. We encourage parents to work closely with the school next session to help build stronger consistency.";
+
+        return $"Advised to repeat {currentClass}. We encourage parents to work closely with the school next session to help unlock the student's true potential.";
+    }
+
+    private static string GetNextClassName(string? currentClassName)
+    {
+        if (string.IsNullOrWhiteSpace(currentClassName)) return "the next class";
+        string name = currentClassName.Trim();
+
+        var jssMatch = Regex.Match(name, @"^(?:JSS|J\.S\.S|JS)\s*([1-3])", RegexOptions.IgnoreCase);
+        if (jssMatch.Success && int.TryParse(jssMatch.Groups[1].Value, out int jLevel))
+        {
+            if (jLevel == 1) return "JSS 2";
+            if (jLevel == 2) return "JSS 3";
+            if (jLevel == 3) return "SS 1";
+        }
+
+        var sssMatch = Regex.Match(name, @"^(?:SSS|SS|S\.S\.S)\s*([1-3])", RegexOptions.IgnoreCase);
+        if (sssMatch.Success && int.TryParse(sssMatch.Groups[1].Value, out int sLevel))
+        {
+            if (sLevel == 1) return "SS 2";
+            if (sLevel == 2) return "SS 3";
+            if (sLevel == 3) return "Graduation";
+        }
+
+        var primaryMatch = Regex.Match(name, @"^(Primary|Basic|Grade|Year|Class)\s*(\d+)", RegexOptions.IgnoreCase);
+        if (primaryMatch.Success && int.TryParse(primaryMatch.Groups[2].Value, out int pLevel))
+        {
+            string prefix = primaryMatch.Groups[1].Value;
+            if (pLevel >= 6) return "JSS 1";
+            return $"{prefix} {pLevel + 1}";
+        }
+
+        if (Regex.IsMatch(name, @"creche", RegexOptions.IgnoreCase)) return "KG 1";
+        if (Regex.IsMatch(name, @"kg\s*1|kindergarten\s*1|nursery\s*1", RegexOptions.IgnoreCase)) return "KG 2";
+        if (Regex.IsMatch(name, @"kg\s*2|kindergarten\s*2|nursery\s*2", RegexOptions.IgnoreCase)) return "Primary 1";
+
+        return "the next class";
+    }
 }

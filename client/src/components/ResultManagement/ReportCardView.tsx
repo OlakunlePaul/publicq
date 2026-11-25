@@ -3,6 +3,7 @@ import { AssessmentDetailsDto, UpdateAssessmentDetailsDto } from '../../models/a
 import { resultService } from '../../services/resultService';
 import { ValidationMessage } from '../Shared/ValidationComponents';
 import { Sparkles } from 'lucide-react';
+import { getPromotionComment } from './PrintableReportCard';
 
 const gradeRemarkMap: Record<string, string> = {
   'A1': 'Excellent', 'B2': 'Very Good', 'B3': 'Good',
@@ -64,7 +65,10 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, isCumulat
           const data = resp as unknown as AssessmentDetailsDto;
           setReport(data);
           const isThird = isCumulativeTerm || data.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null);
-          const isOldComment = data.headTeacherComment && ["An excellent result", "A good performance", "A fair performance", "Poor performance", "A satisfactory result", "next term"].some(c => data.headTeacherComment?.includes(c));
+          const isOldComment = data.headTeacherComment && (
+            data.headTeacherComment.includes("promoted") ||
+            ["An excellent result", "A good performance", "A fair performance", "Poor performance", "A satisfactory result", "next term"].some(c => data.headTeacherComment?.includes(c))
+          );
 
           setFormData({
             timesSchoolOpened: data.timesSchoolOpened,
@@ -82,8 +86,8 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, isCumulat
             swims: data.swims || '',
             classTeacherComment: data.classTeacherComment || '',
             headTeacherComment: (isThird && (!data.headTeacherComment || isOldComment))
-              ? "They are promoted to the next class based on performance."
-              : (data.headTeacherComment || (isThird ? "They are promoted to the next class based on performance." : ''))
+              ? getPromotionComment(data.averageScore || 0, data.className)
+              : (data.headTeacherComment || (isThird ? getPromotionComment(data.averageScore || 0, data.className) : ''))
           });
         }
       } catch (err: any) {
@@ -139,7 +143,7 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, isCumulat
     
     const isThird = isCumulativeTerm || report.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null);
     let headComment = isThird
-      ? "They are promoted to the next class based on performance."
+      ? getPromotionComment(avg, report.className)
       : (avg >= 75 ? "An excellent result. Keep up the good work!"
         : avg >= 60 ? "A good performance. Aim higher next term."
         : avg >= 50 ? "A fair performance. More effort is needed next term."

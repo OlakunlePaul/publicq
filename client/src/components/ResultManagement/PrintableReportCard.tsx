@@ -19,6 +19,64 @@ const gradeRemarkMap: Record<string, string> = {
   'D7': 'Pass', 'E8': 'Poor', 'F9': 'Fail'
 };
 
+export const getNextClassName = (currentClassName?: string | null): string => {
+  if (!currentClassName) return 'the next class';
+  const name = currentClassName.trim();
+  
+  const jssMatch = name.match(/^(?:JSS|J\.S\.S|JS)\s*([1-3])/i);
+  if (jssMatch) {
+    const level = parseInt(jssMatch[1], 10);
+    if (level === 1) return 'JSS 2';
+    if (level === 2) return 'JSS 3';
+    if (level === 3) return 'SS 1';
+  }
+
+  const sssMatch = name.match(/^(?:SSS|SS|S\.S\.S)\s*([1-3])/i);
+  if (sssMatch) {
+    const level = parseInt(sssMatch[1], 10);
+    if (level === 1) return 'SS 2';
+    if (level === 2) return 'SS 3';
+    if (level === 3) return 'Graduation';
+  }
+
+  const primaryMatch = name.match(/^(Primary|Basic|Grade|Year|Class)\s*(\d+)/i);
+  if (primaryMatch) {
+    const prefix = primaryMatch[1];
+    const level = parseInt(primaryMatch[2], 10);
+    if (level >= 6) return 'JSS 1';
+    return `${prefix} ${level + 1}`;
+  }
+
+  if (/creche/i.test(name)) return 'KG 1';
+  if (/kg\s*1|kindergarten\s*1|nursery\s*1/i.test(name)) return 'KG 2';
+  if (/kg\s*2|kindergarten\s*2|nursery\s*2/i.test(name)) return 'Primary 1';
+
+  return 'the next class';
+};
+
+export const getPromotionComment = (average: number, currentClassName?: string | null): string => {
+  const currentClass = currentClassName?.trim() || 'this class';
+  const nextClass = getNextClassName(currentClassName);
+
+  if (nextClass === 'Graduation' || /(?:SS|SSS)\s*3/i.test(currentClass)) {
+    if (average >= 50) {
+      return "Congratulations on completing your secondary school education! We wish you great success in your future endeavors.";
+    }
+    return `Advised to repeat ${currentClass}. We encourage parents to work closely with the school next session to help unlock the student's true potential.`;
+  }
+
+  if (average >= 90) {
+    return `You are promoted to ${nextClass} with flying colors! An outstanding academic performance.`;
+  }
+  if (average >= 50) {
+    return `You are promoted to ${nextClass}. Keep up the good momentum in the new class.`;
+  }
+  if (average >= 40) {
+    return `You are promoted to ${nextClass} on trial. We encourage parents to work closely with the school next session to help build stronger consistency.`;
+  }
+  return `Advised to repeat ${currentClass}. We encourage parents to work closely with the school next session to help unlock the student's true potential.`;
+};
+
 const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termInfo, sessionInfo, onClose, isAdminOrManager }) => {
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -337,11 +395,14 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
                   termInfo?.name?.toLowerCase().includes('third') || 
                   termInfo?.name?.toLowerCase().includes('3rd') || 
                   report.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null);
-                const isOldComment = report.headTeacherComment && ["An excellent result", "A good performance", "A fair performance", "Poor performance", "A satisfactory result", "next term"].some(c => report.headTeacherComment?.includes(c));
+                const isOldComment = report.headTeacherComment && (
+                  report.headTeacherComment.includes("promoted") || 
+                  ["An excellent result", "A good performance", "A fair performance", "Poor performance", "A satisfactory result", "next term"].some(c => report.headTeacherComment?.includes(c))
+                );
                 if (isCumulative && (!report.headTeacherComment || isOldComment)) {
-                  return "They are promoted to the next class based on performance.";
+                  return getPromotionComment(report.averageScore || 0, report.className);
                 }
-                return report.headTeacherComment || (isCumulative ? "They are promoted to the next class based on performance." : '');
+                return report.headTeacherComment || (isCumulative ? getPromotionComment(report.averageScore || 0, report.className) : '');
               })()}
             </div>
           </div>
