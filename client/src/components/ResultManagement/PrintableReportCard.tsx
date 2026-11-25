@@ -177,7 +177,7 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
               <tr>
                 <td style={{ ...tdInfoStyle, width: '40%' }}>Total Marks:</td>
                 <td style={{ ...tdInfoStyle, borderBottom: '1px solid #000', fontWeight: 'bold' }}>
-                  {report.totalMarksObtained}
+                  {report.totalMarksObtained != null ? Number(report.totalMarksObtained).toFixed(1) : '-'}
                 </td>
               </tr>
               <tr>

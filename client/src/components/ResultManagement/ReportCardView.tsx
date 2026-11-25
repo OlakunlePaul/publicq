@@ -246,7 +246,7 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, isCumulat
         <div style={{ backgroundColor: '#eff6ff', padding: '20px', borderRadius: '12px', border: '1px solid #bfdbfe' }}>
           <h3 style={{ marginTop: 0, fontSize: '15px', fontWeight: 600, color: '#1e40af', marginBottom: '16px' }}>Term Summary</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <SummaryItem label="Total Marks" value={`${report.totalMarksObtained ?? '-'} / ${report.totalMarksObtainable ?? '-'}`} />
+            <SummaryItem label="Total Marks" value={`${report.totalMarksObtained != null ? Number(report.totalMarksObtained).toFixed(1) : '-'} / ${report.totalMarksObtainable ?? '-'}`} />
             <SummaryItem label="Average" value={`${report.averageScore?.toFixed(2) ?? '-'}%`} />
             <SummaryItem label="Class Position" value={`${report.positionInClass ?? '-'} / ${report.numberInClass ?? '-'}`} />
             <SummaryItem label="Overall Grade" value={(report.overallGrade && report.overallGrade !== '-') ? report.overallGrade : (report.averageScore ? getCalculatedGrade(report.averageScore) : '-')} />

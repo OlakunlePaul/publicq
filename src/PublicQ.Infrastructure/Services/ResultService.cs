@@ -211,7 +211,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
 
             if (a.SubjectScores.Any())
             {
-                a.TotalMarksObtained = a.SubjectScores.Sum(s => s.CumulativeAverage ?? 0);
+                a.TotalMarksObtained = Math.Round(a.SubjectScores.Sum(s => s.CumulativeAverage ?? 0), 1);
                 a.TotalMarksObtainable = a.SubjectScores.Count * 100;
                 a.AverageScore = a.TotalMarksObtainable > 0 ? (a.TotalMarksObtained / a.TotalMarksObtainable) * 100 : 0;
             }
@@ -492,7 +492,7 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 }
             }
 
-            a.TotalMarksObtained = a.SubjectScores.Sum(s => isCumulative ? (s.CumulativeAverage ?? 0) : (s.TotalScore ?? 0));
+            a.TotalMarksObtained = Math.Round(a.SubjectScores.Sum(s => isCumulative ? (s.CumulativeAverage ?? 0) : (s.TotalScore ?? 0)), 1);
             a.TotalMarksObtainable = a.SubjectScores.Count * 100;
             a.AverageScore = a.TotalMarksObtainable > 0 ? (a.TotalMarksObtained / a.TotalMarksObtainable) * 100 : 0;
 
