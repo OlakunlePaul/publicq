@@ -1938,25 +1938,34 @@ public class UserService(
         Guid classLevelId,
         CancellationToken cancellationToken)
     {
-        var studentIds = await dbContext.StudentAssessments
-            .Where(a => a.SessionId == sessionId && a.TermId == termId && a.ClassLevelId == classLevelId)
+        var query = dbContext.StudentAssessments
+            .Where(a => a.SessionId == sessionId && a.ClassLevelId == classLevelId);
+
+        if (termId != Guid.Empty)
+        {
+            query = query.Where(a => a.TermId == termId);
+        }
+
+        var studentIds = await query
             .Select(a => a.StudentId)
+            .Distinct()
             .ToListAsync(cancellationToken);
 
-        var users = await dbContext.Users
-            .Where(u => studentIds.Contains(u.Id))
-            .Select(u => new User
+        var students = await dbContext.Students
+            .Where(s => studentIds.Contains(s.Id))
+            .OrderBy(s => s.FullName)
+            .Select(s => new User
             {
-                Id = u.Id,
-                Email = u.Email,
-                FullName = u.FullName,
-                DateOfBirth = u.DateOfBirth,
-                AdmissionNumber = u.AdmissionNumber,
-                HasCredential = true // Defaulting or inferring, you could join if needed
+                Id = s.Id,
+                Email = s.Email,
+                FullName = s.FullName,
+                DateOfBirth = s.DateOfBirth,
+                AdmissionNumber = s.AdmissionNumber,
+                HasCredential = true
             })
             .ToListAsync(cancellationToken);
 
-        return Response<IList<User>, GenericOperationStatuses>.Success(users, GenericOperationStatuses.Completed);
+        return Response<IList<User>, GenericOperationStatuses>.Success(students, GenericOperationStatuses.Completed);
     }
 
     /// <inheritdoc cref="IUserService.BulkEnrollStudentsAsync"/>
@@ -1980,8 +1989,9 @@ public class UserService(
 
         foreach (var studentId in studentIds)
         {
-            // Verify student exists
-            var studentExists = await dbContext.Users.AnyAsync(u => u.Id == studentId, cancellationToken);
+            // Verify student exists in Students table (or Users)
+            var studentExists = await dbContext.Students.AnyAsync(s => s.Id == studentId, cancellationToken)
+                || await dbContext.Users.AnyAsync(u => u.Id == studentId, cancellationToken);
             if (!studentExists) continue;
 
             // Check if already enrolled in this session and term
