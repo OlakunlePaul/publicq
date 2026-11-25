@@ -215,6 +215,11 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
                 a.TotalMarksObtainable = a.SubjectScores.Count * 100;
                 a.AverageScore = a.TotalMarksObtainable > 0 ? (a.TotalMarksObtained / a.TotalMarksObtainable) * 100 : 0;
             }
+
+            if (string.IsNullOrWhiteSpace(a.HeadTeacherComment) || a.HeadTeacherComment.Contains("next term", StringComparison.OrdinalIgnoreCase))
+            {
+                a.HeadTeacherComment = "They are promoted to the next class based on performance.";
+            }
         }
     }
 
@@ -499,6 +504,11 @@ public class ResultService(ApplicationDbContext dbContext) : IResultService
             var avgVal = (int)Math.Round(a.AverageScore ?? 0);
             var overallRange = gradeRanges?.FirstOrDefault(r => avgVal >= r.MinScore && avgVal <= r.MaxScore);
             a.OverallGrade = overallRange?.Symbol ?? GetDefaultGrade(avgVal);
+
+            if (isCumulative && (string.IsNullOrWhiteSpace(a.HeadTeacherComment) || a.HeadTeacherComment.Contains("next term", StringComparison.OrdinalIgnoreCase)))
+            {
+                a.HeadTeacherComment = "They are promoted to the next class based on performance.";
+            }
         }
 
         var ranked = assessments.OrderByDescending(a => a.AverageScore).ToList();

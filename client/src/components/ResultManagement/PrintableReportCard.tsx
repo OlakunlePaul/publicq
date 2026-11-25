@@ -332,7 +332,17 @@ const PrintableReportCard: React.FC<PrintableReportCardProps> = ({ report, termI
           <div style={{ marginBottom: '15px', pageBreakInside: 'avoid' }}>
             <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Head Teacher's Comment: </div>
             <div style={{ fontStyle: 'italic', borderBottom: '1px dotted #ccc', lineHeight: '1.6', minHeight: '24px' }}>
-              {report.headTeacherComment || ''}
+              {(() => {
+                const isCumulative = termInfo?.isCumulativeTerm || 
+                  termInfo?.name?.toLowerCase().includes('third') || 
+                  termInfo?.name?.toLowerCase().includes('3rd') || 
+                  report.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null);
+                const isOldComment = report.headTeacherComment && ["An excellent result", "A good performance", "A fair performance", "Poor performance", "A satisfactory result", "next term"].some(c => report.headTeacherComment?.includes(c));
+                if (isCumulative && (!report.headTeacherComment || isOldComment)) {
+                  return "They are promoted to the next class based on performance.";
+                }
+                return report.headTeacherComment || (isCumulative ? "They are promoted to the next class based on performance." : '');
+              })()}
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>

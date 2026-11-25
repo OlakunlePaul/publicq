@@ -63,6 +63,9 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, isCumulat
           // Use type assertion if needed but we know it's AssessmentDetailsDto
           const data = resp as unknown as AssessmentDetailsDto;
           setReport(data);
+          const isThird = isCumulativeTerm || data.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null);
+          const isOldComment = data.headTeacherComment && ["An excellent result", "A good performance", "A fair performance", "Poor performance", "A satisfactory result", "next term"].some(c => data.headTeacherComment?.includes(c));
+
           setFormData({
             timesSchoolOpened: data.timesSchoolOpened,
             timesPresent: data.timesPresent,
@@ -78,7 +81,9 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, isCumulat
             jumps: data.jumps || '',
             swims: data.swims || '',
             classTeacherComment: data.classTeacherComment || '',
-            headTeacherComment: data.headTeacherComment || ''
+            headTeacherComment: (isThird && (!data.headTeacherComment || isOldComment))
+              ? "They are promoted to the next class based on performance."
+              : (data.headTeacherComment || (isThird ? "They are promoted to the next class based on performance." : ''))
           });
         }
       } catch (err: any) {
@@ -132,11 +137,13 @@ const ReportCardView: React.FC<ReportCardViewProps> = ({ assessmentId, isCumulat
 
     const classComment = `${report.studentName} is ${academic}. Their positive attitude and good behavior are commendable. They also show great enthusiasm in physical activities.`;
     
-    let headComment = "A satisfactory result.";
-    if (avg >= 75) headComment = "An excellent result. Keep up the good work!";
-    else if (avg >= 60) headComment = "A good performance. Aim higher next term.";
-    else if (avg >= 50) headComment = "A fair performance. More effort is needed next term.";
-    else headComment = "Poor performance. Parents should please monitor their studies at home.";
+    const isThird = isCumulativeTerm || report.subjectScores?.some(s => s.firstTermScore != null || s.secondTermScore != null || s.cumulativeAverage != null);
+    let headComment = isThird
+      ? "They are promoted to the next class based on performance."
+      : (avg >= 75 ? "An excellent result. Keep up the good work!"
+        : avg >= 60 ? "A good performance. Aim higher next term."
+        : avg >= 50 ? "A fair performance. More effort is needed next term."
+        : "Poor performance. Parents should please monitor their studies at home.");
 
     setFormData(prev => ({
       ...prev,
